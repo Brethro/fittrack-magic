@@ -191,7 +191,7 @@ const GoalsPage = () => {
     const carbGrams = Math.round(carbCalories / 4);
     
     updateUserData({
-      goalType: form.goalType as "weight" | "bodyFat",
+      goalType: form.goalType,
       goalValue,
       goalDate: form.goalDate,
       tdee,
@@ -231,7 +231,7 @@ const GoalsPage = () => {
           <Tabs 
             defaultValue="weight" 
             value={form.goalType}
-            onValueChange={(value) => setForm(prev => ({ ...prev, goalType: value }))}
+            onValueChange={(value: "weight" | "bodyFat") => setForm(prev => ({ ...prev, goalType: value }))}
             className="glass-panel rounded-lg p-4"
           >
             <TabsList className="grid w-full grid-cols-2 mb-4">
