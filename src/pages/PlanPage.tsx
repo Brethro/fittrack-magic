@@ -1,18 +1,22 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, differenceInCalendarDays, addDays } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
+import { format, differenceInCalendarDays, addDays, isAfter } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
 import { useToast } from "@/components/ui/use-toast";
 import { useUserData } from "@/contexts/UserDataContext";
-import { ArrowUpRight, Flame, Plus, Target, Utensils } from "lucide-react";
+import { ArrowUpRight, Flame, Plus, Target, Utensils, Weight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { WeightLogList } from "@/components/WeightLogList";
+import { Button } from "@/components/ui/button";
+import WeightLogDialog from "@/components/WeightLogDialog";
 
 const PlanPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userData, recalculateNutrition } = useUserData();
+  const [weightDialogOpen, setWeightDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!userData.goalValue || !userData.goalDate) {
@@ -78,7 +82,7 @@ const PlanPage = () => {
     // Start with today
     data.push({
       date: format(today, "MMM d"),
-      weight: parseFloat(startWeight.toFixed(1)),
+      projection: parseFloat(startWeight.toFixed(1)),
       tooltipDate: format(today, "MMMM d, yyyy")
     });
     
@@ -95,8 +99,9 @@ const PlanPage = () => {
       
       data.push({
         date: format(currentDate, "MMM d"),
-        weight: parseFloat(currentWeight.toFixed(1)),
-        tooltipDate: format(currentDate, "MMMM d, yyyy")
+        projection: parseFloat(currentWeight.toFixed(1)),
+        tooltipDate: format(currentDate, "MMMM d, yyyy"),
+        fullDate: currentDate
       });
     }
     
@@ -106,16 +111,59 @@ const PlanPage = () => {
     if (format(goalDate, "MMM d") !== lastPoint.date) {
       data.push({
         date: format(goalDate, "MMM d"),
-        weight: parseFloat(targetWeight.toFixed(1)),
-        tooltipDate: format(goalDate, "MMMM d, yyyy")
+        projection: parseFloat(targetWeight.toFixed(1)),
+        tooltipDate: format(goalDate, "MMMM d, yyyy"),
+        fullDate: goalDate
       });
     } else {
       // Make sure the last point has exactly the target weight
       data[data.length - 1] = {
         ...lastPoint,
-        weight: parseFloat(targetWeight.toFixed(1))
+        projection: parseFloat(targetWeight.toFixed(1))
       };
     }
+    
+    // Add actual weight log data
+    if (userData.weightLog && userData.weightLog.length > 0) {
+      // Create a map of dates to weight log entries for quick lookup
+      const weightLogMap = new Map();
+      userData.weightLog.forEach(entry => {
+        const dateKey = format(entry.date, "MMM d");
+        // If there are multiple entries for the same date, use the latest one
+        if (!weightLogMap.has(dateKey) || 
+            isAfter(entry.date, weightLogMap.get(dateKey).date)) {
+          weightLogMap.set(dateKey, entry);
+        }
+      });
+      
+      // Now enhance our data array with actual weight values
+      data.forEach(point => {
+        const dateKey = point.date;
+        if (weightLogMap.has(dateKey)) {
+          point.actual = weightLogMap.get(dateKey).weight;
+        }
+      });
+      
+      // Add any weight log entries that aren't already in our data
+      weightLogMap.forEach((entry, dateKey) => {
+        if (!data.some(point => point.date === dateKey)) {
+          data.push({
+            date: dateKey,
+            actual: entry.weight,
+            tooltipDate: format(entry.date, "MMMM d, yyyy"),
+            fullDate: entry.date
+          });
+        }
+      });
+    }
+    
+    // Sort by date
+    data.sort((a, b) => {
+      if (a.fullDate && b.fullDate) {
+        return a.fullDate.getTime() - b.fullDate.getTime();
+      }
+      return a.date.localeCompare(b.date);
+    });
     
     console.log("Generated chart data:", data);
     return data;
@@ -128,9 +176,14 @@ const PlanPage = () => {
       return (
         <div className="glass-panel p-2 text-xs">
           <p className="font-medium">{payload[0].payload.tooltipDate}</p>
-          <p>
-            Weight: {payload[0].value} {userData.useMetric ? "kg" : "lbs"}
-          </p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="flex items-center gap-1">
+              {entry.name === "projection" ? "Projected: " : "Actual: "}
+              <span className="font-medium" style={{ color: entry.color }}>
+                {entry.value} {userData.useMetric ? "kg" : "lbs"}
+              </span>
+            </p>
+          ))}
         </div>
       );
     }
@@ -255,7 +308,7 @@ const PlanPage = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="glass-panel rounded-lg p-4"
+              className="glass-panel rounded-lg p-4 mb-4"
             >
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg font-medium">
@@ -267,13 +320,17 @@ const PlanPage = () => {
                     <span className="inline-block w-2 h-2 bg-violet-500 rounded-full mr-1"></span>
                     <span>Projection</span>
                   </div>
+                  <div className="flex items-center">
+                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    <span>Actual</span>
+                  </div>
                 </div>
               </div>
               
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={generateChartData()}
+                    data={chartData}
                     margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -290,11 +347,21 @@ const PlanPage = () => {
                     <RechartsTooltip content={<CustomTooltip />} />
                     <Line 
                       type="monotone" 
-                      dataKey="weight" 
+                      dataKey="projection" 
+                      name="Projection"
                       stroke="#8b5cf6" 
                       strokeWidth={2}
                       dot={{ fill: '#8b5cf6', r: 4 }}
                       activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="actual" 
+                      name="Actual"
+                      stroke="#10b981" 
+                      strokeWidth={2}
+                      dot={{ fill: '#10b981', r: 4 }}
+                      activeDot={{ fill: '#6ee7b7', r: 6, stroke: '#10b981', strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -318,6 +385,27 @@ const PlanPage = () => {
                   </p>
                 </div>
               </div>
+              
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWeightDialogOpen(true)}
+                  className="w-full flex items-center justify-center gap-1"
+                >
+                  <Weight className="h-4 w-4" />
+                  Log Weight
+                </Button>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.25 }}
+              className="glass-panel rounded-lg p-4"
+            >
+              <WeightLogList />
             </motion.div>
           </section>
           
@@ -379,6 +467,11 @@ const PlanPage = () => {
           </section>
         </motion.div>
       </AnimatePresence>
+      
+      <WeightLogDialog
+        open={weightDialogOpen}
+        onOpenChange={setWeightDialogOpen}
+      />
     </div>
   );
 };

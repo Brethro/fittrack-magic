@@ -1,5 +1,12 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { differenceInCalendarDays } from "date-fns";
+
+export type WeightLogEntry = {
+  id: string;
+  date: Date;
+  weight: number;
+};
 
 export type UserData = {
   age: number | null;
@@ -20,6 +27,7 @@ export type UserData = {
     carbs: number | null;
     fats: number | null;
   };
+  weightLog: WeightLogEntry[];
 };
 
 const initialUserData: UserData = {
@@ -41,6 +49,7 @@ const initialUserData: UserData = {
     carbs: null,
     fats: null,
   },
+  weightLog: [],
 };
 
 type UserDataContextType = {
@@ -48,6 +57,9 @@ type UserDataContextType = {
   updateUserData: (data: Partial<UserData>) => void;
   clearUserData: () => void;
   recalculateNutrition: () => void;
+  addWeightLogEntry: (entry: Omit<WeightLogEntry, "id">) => void;
+  updateWeightLogEntry: (entry: WeightLogEntry) => void;
+  deleteWeightLogEntry: (id: string) => void;
 };
 
 const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
@@ -62,6 +74,16 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Convert goalDate string back to Date object if it exists
       if (parsedData.goalDate) {
         parsedData.goalDate = new Date(parsedData.goalDate);
+      }
+      
+      // Convert weight log dates back to Date objects
+      if (parsedData.weightLog) {
+        parsedData.weightLog = parsedData.weightLog.map((entry: any) => ({
+          ...entry,
+          date: new Date(entry.date)
+        }));
+      } else {
+        parsedData.weightLog = [];
       }
       
       return parsedData;
@@ -82,6 +104,35 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clearUserData = () => {
     setUserData(initialUserData);
     localStorage.removeItem("fitTrackUserData");
+  };
+
+  // Weight log functions
+  const addWeightLogEntry = (entry: Omit<WeightLogEntry, "id">) => {
+    const newEntry = {
+      ...entry,
+      id: Date.now().toString()
+    };
+    
+    setUserData(prev => ({
+      ...prev,
+      weightLog: [...prev.weightLog, newEntry]
+    }));
+  };
+
+  const updateWeightLogEntry = (updatedEntry: WeightLogEntry) => {
+    setUserData(prev => ({
+      ...prev,
+      weightLog: prev.weightLog.map(entry => 
+        entry.id === updatedEntry.id ? updatedEntry : entry
+      )
+    }));
+  };
+
+  const deleteWeightLogEntry = (id: string) => {
+    setUserData(prev => ({
+      ...prev,
+      weightLog: prev.weightLog.filter(entry => entry.id !== id)
+    }));
   };
 
   // Function to recalculate nutrition values based on current user data
@@ -279,7 +330,15 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <UserDataContext.Provider value={{ userData, updateUserData, clearUserData, recalculateNutrition }}>
+    <UserDataContext.Provider value={{ 
+      userData, 
+      updateUserData, 
+      clearUserData, 
+      recalculateNutrition,
+      addWeightLogEntry,
+      updateWeightLogEntry,
+      deleteWeightLogEntry
+    }}>
       {children}
     </UserDataContext.Provider>
   );
