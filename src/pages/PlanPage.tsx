@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -386,17 +385,7 @@ const PlanPage = () => {
                 </div>
               </div>
               
-              <div className="mt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setWeightDialogOpen(true)}
-                  className="w-full flex items-center justify-center gap-1"
-                >
-                  <Weight className="h-4 w-4" />
-                  Log Weight
-                </Button>
-              </div>
+              {/* Removed the duplicate Log Weight button here */}
             </motion.div>
             
             <motion.div

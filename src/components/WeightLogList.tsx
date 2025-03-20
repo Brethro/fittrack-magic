@@ -18,11 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 export function WeightLogList() {
   const { userData, deleteWeightLogEntry } = useUserData();
@@ -76,7 +71,7 @@ export function WeightLogList() {
             onClick={handleAddEntry}
             className="group"
           >
-            <Plus className="mr-1 h-4 w-4 group-hover:text-primary transition-colors" />
+            <Weight className="mr-1 h-4 w-4 group-hover:text-primary transition-colors" />
             Log Weight
           </Button>
         </div>
