@@ -60,8 +60,19 @@ const PlanPage = () => {
     
     const data = [];
     
-    // Add data points (1 point per week, plus start and end)
-    for (let i = 0; i <= totalDays; i += Math.max(Math.floor(totalDays / 8), 1)) {
+    // Add data points (one per week, plus start and end)
+    const maxPoints = 8; // Maximum number of points to display
+    const interval = Math.max(Math.floor(totalDays / (maxPoints - 1)), 1);
+    
+    // Start with today
+    data.push({
+      date: format(today, "MMM d"),
+      weight: parseFloat(startWeight.toFixed(1)),
+      tooltipDate: format(today, "MMMM d, yyyy")
+    });
+    
+    // Add intermediate points
+    for (let i = interval; i < totalDays; i += interval) {
       const currentDate = addDays(today, i);
       const currentWeight = startWeight - (dailyLoss * i);
       
@@ -72,13 +83,25 @@ const PlanPage = () => {
       });
     }
     
-    // Ensure the last data point is exactly at the goal date
-    if (data[data.length - 1].date !== format(goalDate, "MMM d")) {
+    // Always add the goal date as the final point
+    // Make sure we don't have duplicate dates and the weight strictly decreases
+    const lastPoint = data[data.length - 1];
+    if (
+      format(goalDate, "MMM d") !== lastPoint.date && 
+      differenceInCalendarDays(goalDate, new Date(lastPoint.tooltipDate)) > 0
+    ) {
       data.push({
         date: format(goalDate, "MMM d"),
         weight: parseFloat(targetWeight.toFixed(1)),
         tooltipDate: format(goalDate, "MMMM d, yyyy")
       });
+    } else if (data.length > 1) {
+      // Replace the last point with the goal
+      data[data.length - 1] = {
+        date: format(goalDate, "MMM d"),
+        weight: parseFloat(targetWeight.toFixed(1)),
+        tooltipDate: format(goalDate, "MMMM d, yyyy")
+      };
     }
     
     return data;

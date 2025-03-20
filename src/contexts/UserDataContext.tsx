@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserData = {
@@ -54,7 +53,17 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [userData, setUserData] = useState<UserData>(() => {
     // Load user data from localStorage if available
     const savedData = localStorage.getItem("fitTrackUserData");
-    return savedData ? JSON.parse(savedData) : initialUserData;
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      
+      // Convert goalDate string back to Date object if it exists
+      if (parsedData.goalDate) {
+        parsedData.goalDate = new Date(parsedData.goalDate);
+      }
+      
+      return parsedData;
+    }
+    return initialUserData;
   });
 
   // Save user data to localStorage whenever it changes
@@ -73,10 +82,16 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // New function to recalculate nutrition values based on current user data
   const recalculateNutrition = () => {
-    if (!userData.age || !userData.weight || !userData.height || !userData.activityLevel || !userData.goalValue || !userData.goalDate) {
+    console.log("Recalculating nutrition with data:", userData);
+    
+    if (!userData.age || !userData.weight || !userData.height || !userData.activityLevel) {
+      console.log("Not enough data to recalculate");
       return; // Not enough data to recalculate
     }
 
+    // If we don't have goal information, we can still calculate TDEE but not deficit
+    const hasGoals = userData.goalValue !== null && userData.goalDate !== null;
+    
     // Get necessary data for calculations
     const heightInCm = userData.useMetric 
       ? userData.height as number
@@ -106,6 +121,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
     
+    console.log("Calculated BMR:", bmr);
+    
     // Apply activity multiplier
     let activityMultiplier;
     switch (userData.activityLevel) {
@@ -118,6 +135,17 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     
     const tdee = Math.round(bmr * activityMultiplier);
+    console.log("Calculated TDEE:", tdee);
+    
+    // If we don't have goals, just update TDEE and return
+    if (!hasGoals) {
+      setUserData(prev => ({
+        ...prev,
+        tdee
+      }));
+      console.log("Updated TDEE only (no goals present)");
+      return;
+    }
     
     // Determine optimal caloric deficit based on body fat percentage
     let calorieDeficitPercentage;
@@ -141,6 +169,23 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         calorieDeficitPercentage = 0.15; // 15% deficit for low body fat
       }
     }
+    
+    // Adjust deficit based on goal pace if available in userData
+    if (userData.goalPace) {
+      switch (userData.goalPace) {
+        case "aggressive": 
+          calorieDeficitPercentage += 0.05; // Increase deficit by 5%
+          break;
+        case "moderate": 
+          // Keep the calculated default
+          break;
+        case "conservative": 
+          calorieDeficitPercentage -= 0.05; // Decrease deficit by 5%
+          break;
+      }
+    }
+    
+    console.log("Calorie deficit percentage:", calorieDeficitPercentage);
     
     // Calculate daily calories with the percentage-based deficit
     const dailyCalories = Math.max(Math.round(tdee * (1 - calorieDeficitPercentage)), 1200); // Don't go below 1200 calories
@@ -179,6 +224,12 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Carbs calculation (remaining calories)
     const carbCalories = dailyCalories - proteinCalories - fatCalories;
     const carbGrams = Math.round(carbCalories / 4);
+
+    console.log("Updated nutrition values:", {
+      tdee,
+      dailyCalories,
+      macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams }
+    });
 
     // Update the calculated values
     setUserData(prev => ({
