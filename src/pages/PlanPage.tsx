@@ -68,6 +68,8 @@ const PlanPage = () => {
     }
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparisons
+    
     const goalDate = new Date(userData.goalDate);
     const totalDays = differenceInCalendarDays(goalDate, today);
     
@@ -98,8 +100,15 @@ const PlanPage = () => {
       [];
     
     // Find the most recent weight entry to use as actual starting point
-    const mostRecentEntry = sortedWeightLog.length > 0 ? 
-      sortedWeightLog[sortedWeightLog.length - 1].weight : 
+    // Filter only entries on or after today
+    const validWeightEntries = sortedWeightLog.filter(entry => {
+      const entryDate = new Date(entry.date);
+      entryDate.setHours(0, 0, 0, 0);
+      return entryDate >= today;
+    });
+    
+    const mostRecentEntry = validWeightEntries.length > 0 ? 
+      validWeightEntries[validWeightEntries.length - 1].weight : 
       startWeight;
     
     // Use most recent weight if available for more accurate projections
@@ -162,9 +171,9 @@ const PlanPage = () => {
       data[data.length - 1].projection = parseFloat(targetWeight.toFixed(1));
     }
     
-    // Add actual weight log data as separate entries
-    if (sortedWeightLog.length > 0) {
-      sortedWeightLog.forEach(entry => {
+    // Add actual weight log data as separate entries, only use entries from today or future
+    if (validWeightEntries.length > 0) {
+      validWeightEntries.forEach(entry => {
         const entryDate = new Date(entry.date);
         const dateStr = format(entryDate, "MMM d");
         
@@ -397,7 +406,6 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#10b981', r: 4 }}
                       activeDot={{ fill: '#6ee7b7', r: 6, stroke: '#10b981', strokeWidth: 2 }}
-                      connectNulls={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>

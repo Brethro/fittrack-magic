@@ -59,6 +59,15 @@ export function WeightLogDialog({ open, onOpenChange, editEntry }: WeightLogDial
       return;
     }
 
+    // Check if selected date is today or in the past (before today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+    
+    if (date < today) {
+      setError("Cannot log weight for dates before today");
+      return;
+    }
+
     const weightValue = parseFloat(parseFloat(weight).toFixed(1));
 
     if (editEntry) {
@@ -121,11 +130,17 @@ export function WeightLogDialog({ open, onOpenChange, editEntry }: WeightLogDial
                   selected={date}
                   onSelect={(date) => date && setDate(date)}
                   initialFocus
-                  disabled={(date) => date > new Date()}
+                  disabled={(date) => {
+                    // Disable dates in the past (before today)
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today || date > new Date();
+                  }}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
+            {error && <p className="text-destructive text-sm">{error}</p>}
           </div>
           
           <div className="grid gap-2">
@@ -147,7 +162,7 @@ export function WeightLogDialog({ open, onOpenChange, editEntry }: WeightLogDial
                 {userData.useMetric ? "kg" : "lbs"}
               </span>
             </div>
-            {error && <p className="text-destructive text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm mt-1">{error}</p>}
           </div>
         </div>
         
