@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { differenceInCalendarDays } from "date-fns";
 
 export type UserData = {
   age: number | null;
@@ -147,26 +148,50 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
     
-    // Determine optimal caloric deficit based on body fat percentage
-    let calorieDeficitPercentage;
+    // NEW: Calculate time until goal date to adjust deficit
+    const today = new Date();
+    const goalDate = new Date(userData.goalDate);
+    const daysUntilGoal = Math.max(differenceInCalendarDays(goalDate, today), 1); // At least 1 day
+    
+    console.log("Days until goal:", daysUntilGoal);
+    
+    // Calculate weight loss needed
+    const startWeight = userData.weight;
+    const targetWeight = userData.goalType === "weight" ? 
+      userData.goalValue : 
+      startWeight * (1 - ((userData.bodyFatPercentage! - userData.goalValue!) / 100));
+    
+    const weightToLose = startWeight - targetWeight;
+    
+    // Calculate required caloric deficit
+    // 1 kg of fat = 7700 calories, 1 lb of fat = 3500 calories
+    const caloriesPerUnit = userData.useMetric ? 7700 : 3500;
+    const totalCaloriesDeficit = weightToLose * caloriesPerUnit;
+    const dailyDeficit = totalCaloriesDeficit / daysUntilGoal;
+    
+    console.log("Weight to lose:", weightToLose);
+    console.log("Total caloric deficit needed:", totalCaloriesDeficit);
+    console.log("Daily deficit needed:", dailyDeficit);
+    
+    // Determine minimum and maximum safe deficits as percentages of TDEE
+    let minDeficitPercent = 0.1; // 10% deficit minimum
+    let maxDeficitPercent = 0.25; // 25% deficit maximum
+    
+    // Adjust based on body fat percentage
     const bodyFatPercentage = userData.bodyFatPercentage || 20; // Default if not available
     const isMale = userData.gender !== 'female';
     
     if (isMale) {
       if (bodyFatPercentage > 25) {
-        calorieDeficitPercentage = 0.25; // 25% deficit for high body fat
-      } else if (bodyFatPercentage > 15) {
-        calorieDeficitPercentage = 0.2; // 20% deficit for moderate body fat
-      } else {
-        calorieDeficitPercentage = 0.15; // 15% deficit for low body fat
+        maxDeficitPercent = 0.30; // Allow 30% deficit for high body fat
+      } else if (bodyFatPercentage < 12) {
+        maxDeficitPercent = 0.20; // Limit to 20% deficit for low body fat
       }
     } else {
       if (bodyFatPercentage > 32) {
-        calorieDeficitPercentage = 0.25; // 25% deficit for high body fat
-      } else if (bodyFatPercentage > 23) {
-        calorieDeficitPercentage = 0.2; // 20% deficit for moderate body fat
-      } else {
-        calorieDeficitPercentage = 0.15; // 15% deficit for low body fat
+        maxDeficitPercent = 0.30; // Allow 30% deficit for high body fat
+      } else if (bodyFatPercentage < 18) {
+        maxDeficitPercent = 0.20; // Limit to 20% deficit for low body fat
       }
     }
     
@@ -174,21 +199,30 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (userData.goalPace) {
       switch (userData.goalPace) {
         case "aggressive": 
-          calorieDeficitPercentage += 0.05; // Increase deficit by 5%
+          minDeficitPercent += 0.05; // Increase minimum deficit
+          maxDeficitPercent += 0.05; // Increase maximum deficit
           break;
         case "moderate": 
           // Keep the calculated default
           break;
         case "conservative": 
-          calorieDeficitPercentage -= 0.05; // Decrease deficit by 5%
+          minDeficitPercent -= 0.05; // Decrease minimum deficit
+          maxDeficitPercent -= 0.05; // Decrease maximum deficit
           break;
       }
     }
     
-    console.log("Calorie deficit percentage:", calorieDeficitPercentage);
+    // Calculate deficit percentage based on required daily deficit
+    let calculatedDeficitPercent = dailyDeficit / tdee;
+    
+    // Ensure the deficit stays within safe bounds
+    calculatedDeficitPercent = Math.max(minDeficitPercent, 
+                               Math.min(maxDeficitPercent, calculatedDeficitPercent));
+    
+    console.log("Calculated deficit percentage:", calculatedDeficitPercent);
     
     // Calculate daily calories with the percentage-based deficit
-    const dailyCalories = Math.max(Math.round(tdee * (1 - calorieDeficitPercentage)), 1200); // Don't go below 1200 calories
+    const dailyCalories = Math.max(Math.round(tdee * (1 - calculatedDeficitPercent)), 1200); // Don't go below 1200 calories
     
     // Calculate macros
     const leanBodyMass = weightInKg * (1 - (bodyFatPercentage / 100));
