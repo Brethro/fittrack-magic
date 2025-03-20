@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+type GoalPaceType = "conservative" | "moderate" | "aggressive";
+
 const GoalsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,7 +32,7 @@ const GoalsPage = () => {
     weightGoal: userData.goalType === "weight" ? userData.goalValue?.toString() || "" : "",
     bodyFatGoal: userData.goalType === "bodyFat" ? userData.goalValue?.toString() || "" : "",
     goalDate: userData.goalDate || addMonths(new Date(), 3),
-    goalPace: userData.goalPace || "moderate",
+    goalPace: userData.goalPace || "moderate" as GoalPaceType,
   });
 
   const defaultEndDate = addMonths(new Date(), 3);
@@ -53,7 +55,7 @@ const GoalsPage = () => {
     }
   };
 
-  const handlePaceChange = (pace: string) => {
+  const handlePaceChange = (pace: GoalPaceType) => {
     let newDate;
     
     switch (pace) {
@@ -264,7 +266,7 @@ const GoalsPage = () => {
       goalType: form.goalType,
       goalValue,
       goalDate: form.goalDate,
-      goalPace: form.goalPace as "conservative" | "moderate" | "aggressive",
+      goalPace: form.goalPace,
       tdee,
       dailyCalories,
       macros: {
