@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -205,6 +206,24 @@ const PlanPage = () => {
   const macroCalories = calculateMacroCalories();
   const totalCalories = userData.dailyCalories || 0;
 
+  // Calculate target weight from body fat goal if applicable
+  const calculateTargetWeightFromBodyFat = () => {
+    if (userData.goalType !== 'bodyFat' || !userData.weight || !userData.bodyFatPercentage || !userData.goalValue) {
+      return null;
+    }
+    
+    // Calculate lean body mass
+    const currentLeanMass = userData.weight * (1 - (userData.bodyFatPercentage / 100));
+    
+    // Calculate target weight based on the goal body fat percentage
+    // Formula: LBM / (1 - target_bf%)
+    const targetWeight = currentLeanMass / (1 - (userData.goalValue / 100));
+    
+    return targetWeight.toFixed(1);
+  };
+
+  const targetBodyFatWeight = calculateTargetWeightFromBodyFat();
+
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (
       <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
@@ -239,6 +258,7 @@ const PlanPage = () => {
           </h1>
           
           <section className="mb-8">
+            {/* Nutrition panel */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -381,6 +401,11 @@ const PlanPage = () => {
                       ? `${userData.goalValue} ${userData.useMetric ? "kg" : "lbs"}`
                       : `${userData.goalValue}% body fat`
                     }
+                    {targetBodyFatWeight && userData.goalType === "bodyFat" && (
+                      <span className="block text-xs text-muted-foreground mt-0.5">
+                        Est. final weight: {targetBodyFatWeight} {userData.useMetric ? "kg" : "lbs"}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
