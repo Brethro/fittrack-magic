@@ -13,6 +13,7 @@ export type UserData = {
   goalDate: Date | null;
   tdee: number | null;
   dailyCalories: number | null;
+  gender: "male" | "female" | null;
   macros: {
     protein: number | null;
     carbs: number | null;
@@ -32,6 +33,7 @@ const initialUserData: UserData = {
   goalDate: null,
   tdee: null,
   dailyCalories: null,
+  gender: null,
   macros: {
     protein: null,
     carbs: null,

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +25,19 @@ const PlanPage = () => {
     }
   }, [userData, navigate, toast]);
 
+  // Calculate weekly weight loss projection based on caloric deficit
+  const calculateWeeklyWeightLoss = () => {
+    if (!userData.tdee || !userData.dailyCalories) return null;
+    
+    const dailyDeficit = userData.tdee - userData.dailyCalories;
+    // 7700 calories per kg of body fat (or 3500 calories per pound)
+    const weeklyLoss = userData.useMetric 
+      ? (dailyDeficit * 7) / 7700 
+      : (dailyDeficit * 7) / 3500;
+    
+    return weeklyLoss.toFixed(1);
+  };
+
   // Generate chart data
   const generateChartData = () => {
     if (!userData.weight || !userData.goalValue || !userData.goalDate) {
@@ -39,8 +53,10 @@ const PlanPage = () => {
     
     const startWeight = userData.weight;
     const targetWeight = userData.goalType === "weight" ? userData.goalValue : userData.weight * 0.9; // If body fat goal, estimate 10% weight loss
-    const totalWeightLoss = startWeight - targetWeight;
-    const dailyLoss = totalWeightLoss / totalDays;
+    
+    // Use calculated weekly weight loss for more accurate projection
+    const weeklyLoss = calculateWeeklyWeightLoss();
+    const dailyLoss = weeklyLoss ? parseFloat(weeklyLoss) / 7 : (startWeight - targetWeight) / totalDays;
     
     const data = [];
     
@@ -115,6 +131,14 @@ const PlanPage = () => {
       </div>
     );
   }
+
+  // Calculate daily caloric deficit
+  const calorieDeficit = userData.tdee ? userData.tdee - userData.dailyCalories : 0;
+  const deficitPercentage = userData.tdee ? Math.round((calorieDeficit / userData.tdee) * 100) : 0;
+  const weeklyWeightLoss = calculateWeeklyWeightLoss();
+
+  const macroCalories = calculateMacroCalories();
+  const totalCalories = userData.dailyCalories || 0;
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -215,7 +239,7 @@ const PlanPage = () => {
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={chartData}
+                    data={generateChartData()}
                     margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -292,7 +316,9 @@ const PlanPage = () => {
                     </div>
                     <div>
                       <p className="font-medium">Daily Target</p>
-                      <p className="text-sm text-muted-foreground">For weight loss</p>
+                      <p className="text-sm text-muted-foreground">
+                        {deficitPercentage}% deficit ({calorieDeficit} calories)
+                      </p>
                     </div>
                   </div>
                   <p className="text-xl font-bold">{userData.dailyCalories}</p>
@@ -304,8 +330,10 @@ const PlanPage = () => {
                       <Target className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
-                      <p className="font-medium">Target Date</p>
-                      <p className="text-sm text-muted-foreground">Goal achievement</p>
+                      <p className="font-medium">Projected Loss</p>
+                      <p className="text-sm text-muted-foreground">
+                        {weeklyWeightLoss} {userData.useMetric ? "kg" : "lbs"}/week
+                      </p>
                     </div>
                   </div>
                   <p className="text-base font-medium">
