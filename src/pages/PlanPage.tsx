@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { useToast } from "@/components/ui/use-toast";
 import { useUserData } from "@/contexts/UserDataContext";
 import { ArrowUpRight, Flame, Plus, Target, Utensils } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const PlanPage = () => {
   const navigate = useNavigate();
@@ -84,6 +84,22 @@ const PlanPage = () => {
     return null;
   };
 
+  // Calculate macro calorie contributions
+  const calculateMacroCalories = () => {
+    if (!userData.macros.protein || !userData.macros.carbs || !userData.macros.fats) {
+      return { protein: 0, carbs: 0, fats: 0 };
+    }
+
+    return {
+      protein: userData.macros.protein * 4, // 4 calories per gram of protein
+      carbs: userData.macros.carbs * 4,     // 4 calories per gram of carbs
+      fats: userData.macros.fats * 9,       // 9 calories per gram of fat
+    };
+  };
+
+  const macroCalories = calculateMacroCalories();
+  const totalCalories = userData.dailyCalories || 0;
+
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (
       <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
@@ -121,29 +137,58 @@ const PlanPage = () => {
             >
               <h2 className="text-lg font-medium mb-3">Daily Nutrition</h2>
               
+              {/* Calories (full width) */}
+              <div className="glass-card rounded-lg p-3 text-center mb-3">
+                <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
+                <p className="text-lg font-bold">{userData.dailyCalories}</p>
+                <p className="text-xs text-muted-foreground">Calories</p>
+              </div>
+              
+              {/* Macros (three columns) */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="glass-card rounded-lg p-3 text-center">
-                  <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
-                  <p className="text-lg font-bold">{userData.dailyCalories}</p>
-                  <p className="text-xs text-muted-foreground">Calories</p>
-                </div>
-                
-                <div className="glass-card rounded-lg p-3 text-center">
-                  <span className="text-blue-400 text-sm font-bold block">P</span>
+                {/* Protein */}
+                <div className="glass-card rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-blue-400 text-sm font-bold">Protein</span>
+                    <span className="text-xs">{Math.round(macroCalories.protein / totalCalories * 100)}%</span>
+                  </div>
                   <p className="text-lg font-bold">{userData.macros.protein}g</p>
-                  <p className="text-xs text-muted-foreground">Protein</p>
+                  <Progress 
+                    value={Math.round(macroCalories.protein / totalCalories * 100)} 
+                    className="h-1.5 mt-1 bg-blue-950"
+                    indicatorClassName="bg-blue-400"
+                  />
+                  <p className="text-xs text-right mt-1">{macroCalories.protein} cal</p>
                 </div>
                 
-                <div className="glass-card rounded-lg p-3 text-center">
-                  <span className="text-amber-400 text-sm font-bold block">C</span>
+                {/* Carbs */}
+                <div className="glass-card rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-amber-400 text-sm font-bold">Carbs</span>
+                    <span className="text-xs">{Math.round(macroCalories.carbs / totalCalories * 100)}%</span>
+                  </div>
                   <p className="text-lg font-bold">{userData.macros.carbs}g</p>
-                  <p className="text-xs text-muted-foreground">Carbs</p>
+                  <Progress 
+                    value={Math.round(macroCalories.carbs / totalCalories * 100)} 
+                    className="h-1.5 mt-1 bg-amber-950"
+                    indicatorClassName="bg-amber-400"
+                  />
+                  <p className="text-xs text-right mt-1">{macroCalories.carbs} cal</p>
                 </div>
                 
-                <div className="glass-card rounded-lg p-3 text-center col-span-3">
-                  <span className="text-pink-400 text-sm font-bold block">F</span>
+                {/* Fats */}
+                <div className="glass-card rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-pink-400 text-sm font-bold">Fats</span>
+                    <span className="text-xs">{Math.round(macroCalories.fats / totalCalories * 100)}%</span>
+                  </div>
                   <p className="text-lg font-bold">{userData.macros.fats}g</p>
-                  <p className="text-xs text-muted-foreground">Fats</p>
+                  <Progress 
+                    value={Math.round(macroCalories.fats / totalCalories * 100)} 
+                    className="h-1.5 mt-1 bg-pink-950"
+                    indicatorClassName="bg-pink-400"
+                  />
+                  <p className="text-xs text-right mt-1">{macroCalories.fats} cal</p>
                 </div>
               </div>
             </motion.div>
