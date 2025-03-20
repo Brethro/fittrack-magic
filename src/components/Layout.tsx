@@ -2,9 +2,11 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { Home, Target, LineChart, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Layout = () => {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
@@ -15,12 +17,12 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <main className="flex-1 w-full max-w-md mx-auto relative pb-20">
+      <main className={`flex-1 w-full ${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative pb-20`}>
         <Outlet />
       </main>
       
       <nav className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="max-w-md mx-auto glass-panel rounded-t-xl py-3 px-6">
+        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto glass-panel rounded-t-xl py-3 px-6`}>
           <ul className="flex justify-between items-center">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 

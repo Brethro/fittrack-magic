@@ -13,11 +13,14 @@ import PlanPage from "./pages/PlanPage";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
+import { useIsMobile } from "./hooks/use-mobile";
+import { App as CapacitorApp } from '@capacitor/core';
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Simulate loading time
@@ -26,6 +29,23 @@ const App = () => {
     }, 800);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // Listen for hardware back button on Android
+  useEffect(() => {
+    const handleBackButton = () => {
+      window.history.back();
+    };
+
+    if (typeof (CapacitorApp as any).addListener === 'function') {
+      const backButtonListener = (CapacitorApp as any).addListener('backButton', handleBackButton);
+      
+      return () => {
+        if (backButtonListener && typeof backButtonListener.remove === 'function') {
+          backButtonListener.remove();
+        }
+      };
+    }
   }, []);
 
   if (!isLoaded) {
@@ -45,16 +65,18 @@ const App = () => {
         <Sonner />
         <UserDataProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route element={<Layout />}>
-                <Route path="/onboarding" element={<OnboardingPage />} />
-                <Route path="/goals" element={<GoalsPage />} />
-                <Route path="/plan" element={<PlanPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <div className={isMobile ? "mobile-container" : ""}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route element={<Layout />}>
+                  <Route path="/onboarding" element={<OnboardingPage />} />
+                  <Route path="/goals" element={<GoalsPage />} />
+                  <Route path="/plan" element={<PlanPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           </BrowserRouter>
         </UserDataProvider>
       </TooltipProvider>
