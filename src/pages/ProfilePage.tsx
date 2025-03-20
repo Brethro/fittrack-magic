@@ -25,7 +25,7 @@ import {
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userData, updateUserData, clearUserData } = useUserData();
+  const { userData, updateUserData, clearUserData, recalculateNutrition } = useUserData();
   
   const [form, setForm] = useState({
     age: userData.age?.toString() || "",
@@ -36,6 +36,7 @@ const ProfilePage = () => {
     bodyFatPercentage: userData.bodyFatPercentage?.toString() || "",
     activityLevel: userData.activityLevel || "sedentary",
     useMetric: userData.useMetric || false,
+    gender: userData.gender || "male",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +46,10 @@ const ProfilePage = () => {
 
   const handleRadioChange = (value: string) => {
     setForm((prev) => ({ ...prev, activityLevel: value }));
+  };
+
+  const handleGenderChange = (value: string) => {
+    setForm((prev) => ({ ...prev, gender: value as "male" | "female" }));
   };
 
   const handleUnitToggle = (checked: boolean) => {
@@ -102,13 +107,19 @@ const ProfilePage = () => {
       activityLevel: form.activityLevel,
       bodyFatPercentage: form.bodyFatPercentage ? parseFloat(form.bodyFatPercentage) : null,
       useMetric: form.useMetric,
+      gender: form.gender as "male" | "female",
     };
 
     updateUserData(formattedData);
     
+    // Recalculate nutrition plan based on updated profile data
+    setTimeout(() => {
+      recalculateNutrition();
+    }, 0);
+    
     toast({
       title: "Profile updated",
-      description: "Your information has been saved",
+      description: "Your information and nutrition plan have been updated",
     });
   };
 
@@ -162,6 +173,27 @@ const ProfilePage = () => {
                 onChange={handleChange}
                 className="mt-1"
               />
+            </div>
+
+            <div>
+              <Label className="flex items-center gap-1 mb-2">
+                Gender
+                <span className="text-destructive">*</span>
+              </Label>
+              <RadioGroup 
+                value={form.gender} 
+                onValueChange={handleGenderChange}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="male" id="gender-male" />
+                  <Label htmlFor="gender-male" className="font-normal cursor-pointer">Male</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="female" id="gender-female" />
+                  <Label htmlFor="gender-female" className="font-normal cursor-pointer">Female</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div>
