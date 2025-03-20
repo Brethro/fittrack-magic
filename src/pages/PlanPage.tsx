@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 const PlanPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userData } = useUserData();
+  const { userData, recalculateNutrition } = useUserData();
 
   useEffect(() => {
     if (!userData.goalValue || !userData.goalDate) {
@@ -22,8 +22,11 @@ const PlanPage = () => {
         variant: "destructive",
       });
       navigate("/goals");
+    } else {
+      // Ensure nutrition values are up-to-date when the plan page is loaded
+      recalculateNutrition();
     }
-  }, [userData, navigate, toast]);
+  }, [userData.goalValue, userData.goalDate, userData.goalPace, navigate, toast, recalculateNutrition]);
 
   // Calculate weekly weight loss projection based on caloric deficit
   const calculateWeeklyWeightLoss = () => {

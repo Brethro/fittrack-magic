@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserData = {
@@ -75,6 +74,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [userData]);
 
   const updateUserData = (data: Partial<UserData>) => {
+    console.log("Updating user data with:", data);
     setUserData((prev) => ({ ...prev, ...data }));
   };
 
@@ -83,7 +83,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.removeItem("fitTrackUserData");
   };
 
-  // New function to recalculate nutrition values based on current user data
+  // Function to recalculate nutrition values based on current user data
   const recalculateNutrition = () => {
     console.log("Recalculating nutrition with data:", userData);
     
@@ -92,9 +92,6 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return; // Not enough data to recalculate
     }
 
-    // If we don't have goal information, we can still calculate TDEE but not deficit
-    const hasGoals = userData.goalValue !== null && userData.goalDate !== null;
-    
     // Get necessary data for calculations
     const heightInCm = userData.useMetric 
       ? userData.height as number
@@ -141,7 +138,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("Calculated TDEE:", tdee);
     
     // If we don't have goals, just update TDEE and return
-    if (!hasGoals) {
+    if (!userData.goalType || !userData.goalValue || !userData.goalDate) {
       setUserData(prev => ({
         ...prev,
         tdee
