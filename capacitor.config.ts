@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'fittrack-magic',
   webDir: 'dist',
   server: {
-    url: 'https://a0a9f231-4d77-4e6b-9b5a-e3377d9fbd4e.lovableproject.com?forceHideBadge=true',
+    url: 'https://a0a9f231-4d77-4e6b-9b5a-e3377d9fbd4e.lovableproject.com/?forceHideBadge=true',
     cleartext: true
   },
   bundledWebRuntime: false
