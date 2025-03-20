@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,6 +61,14 @@ const PlanPage = () => {
     const weeklyLoss = calculateWeeklyWeightLoss();
     const dailyLoss = weeklyLoss ? parseFloat(weeklyLoss) / 7 : (startWeight - targetWeight) / totalDays;
     
+    console.log("Generating chart data with: ", {
+      startWeight,
+      targetWeight,
+      totalDays,
+      dailyLoss,
+      goalDate: format(goalDate, "yyyy-MM-dd")
+    });
+    
     const data = [];
     
     // Add data points (one per week, plus start and end)
@@ -73,10 +82,16 @@ const PlanPage = () => {
       tooltipDate: format(today, "MMMM d, yyyy")
     });
     
-    // Add intermediate points
+    // Calculate how much weight should be lost each interval to reach the goal exactly on the goal date
+    const weightLossPerInterval = ((startWeight - targetWeight) / Math.ceil(totalDays / interval)) * interval;
+    
+    // Add intermediate points with consistent weight loss
+    let currentWeight = startWeight;
     for (let i = interval; i < totalDays; i += interval) {
       const currentDate = addDays(today, i);
-      const currentWeight = Math.max(startWeight - (dailyLoss * i), targetWeight);
+      
+      // Ensure we don't go below target weight
+      currentWeight = Math.max(startWeight - ((i / totalDays) * (startWeight - targetWeight)), targetWeight);
       
       data.push({
         date: format(currentDate, "MMM d"),
@@ -85,38 +100,24 @@ const PlanPage = () => {
       });
     }
     
-    // Always add the goal date as the final point with exactly the target weight
-    // Make sure we don't have duplicate dates
+    // Always add the goal date as the final point
+    // But only if it's not already the last point in our data
     const lastPoint = data[data.length - 1];
-    if (
-      format(goalDate, "MMM d") !== lastPoint.date && 
-      differenceInCalendarDays(goalDate, new Date(lastPoint.tooltipDate)) > 0
-    ) {
+    if (format(goalDate, "MMM d") !== lastPoint.date) {
       data.push({
         date: format(goalDate, "MMM d"),
         weight: parseFloat(targetWeight.toFixed(1)),
         tooltipDate: format(goalDate, "MMMM d, yyyy")
       });
-    } else if (data.length > 1) {
-      // Replace the last point with the goal weight
+    } else {
+      // Make sure the last point has exactly the target weight
       data[data.length - 1] = {
-        date: format(goalDate, "MMM d"),
-        weight: parseFloat(targetWeight.toFixed(1)),
-        tooltipDate: format(goalDate, "MMMM d, yyyy")
+        ...lastPoint,
+        weight: parseFloat(targetWeight.toFixed(1))
       };
     }
     
-    // If there are dates in the chart after the goal date, ensure they don't show weight gain
-    // Find the index of the goal date in the data array
-    const goalDateIndex = data.findIndex(point => 
-      point.tooltipDate === format(goalDate, "MMMM d, yyyy")
-    );
-    
-    if (goalDateIndex !== -1 && goalDateIndex < data.length - 1) {
-      // Remove any points after the goal date to prevent showing weight gain
-      data.splice(goalDateIndex + 1);
-    }
-    
+    console.log("Generated chart data:", data);
     return data;
   };
 
