@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserData = {
@@ -10,6 +11,7 @@ export type UserData = {
   goalType: "weight" | "bodyFat" | null;
   goalValue: number | null;
   goalDate: Date | null;
+  goalPace: "conservative" | "moderate" | "aggressive" | null;
   tdee: number | null;
   dailyCalories: number | null;
   gender: "male" | "female" | null;
@@ -30,6 +32,7 @@ const initialUserData: UserData = {
   goalType: null,
   goalValue: null,
   goalDate: null,
+  goalPace: null,
   tdee: null,
   dailyCalories: null,
   gender: null,
@@ -170,7 +173,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
     
-    // Adjust deficit based on goal pace if available in userData
+    // Adjust deficit based on goal pace if available
     if (userData.goalPace) {
       switch (userData.goalPace) {
         case "aggressive": 

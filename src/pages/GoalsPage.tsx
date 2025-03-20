@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -29,7 +30,7 @@ const GoalsPage = () => {
     weightGoal: userData.goalType === "weight" ? userData.goalValue?.toString() || "" : "",
     bodyFatGoal: userData.goalType === "bodyFat" ? userData.goalValue?.toString() || "" : "",
     goalDate: userData.goalDate || addMonths(new Date(), 3),
-    goalPace: "moderate",
+    goalPace: userData.goalPace || "moderate",
   });
 
   const defaultEndDate = addMonths(new Date(), 3);
@@ -263,6 +264,7 @@ const GoalsPage = () => {
       goalType: form.goalType,
       goalValue,
       goalDate: form.goalDate,
+      goalPace: form.goalPace as "conservative" | "moderate" | "aggressive",
       tdee,
       dailyCalories,
       macros: {
