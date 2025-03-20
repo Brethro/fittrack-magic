@@ -37,15 +37,25 @@ const App = () => {
       window.history.back();
     };
 
+    let listenerCleanup: (() => void) | undefined;
+
     if (typeof CapacitorApp.addListener === 'function') {
-      const backButtonListener = CapacitorApp.addListener('backButton', handleBackButton);
+      // Store the promise in a variable
+      const listenerPromise = CapacitorApp.addListener('backButton', handleBackButton);
       
-      return () => {
-        if (backButtonListener && typeof backButtonListener.remove === 'function') {
-          backButtonListener.remove();
-        }
-      };
+      // Set up cleanup function to be called when the component unmounts
+      listenerPromise.then(listener => {
+        listenerCleanup = () => {
+          listener.remove();
+        };
+      });
     }
+
+    return () => {
+      if (listenerCleanup) {
+        listenerCleanup();
+      }
+    };
   }, []);
 
   if (!isLoaded) {
