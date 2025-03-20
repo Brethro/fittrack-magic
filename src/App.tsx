@@ -14,7 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 import { useIsMobile } from "./hooks/use-mobile";
-import { App as CapacitorApp } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 const queryClient = new QueryClient();
 
@@ -37,8 +37,8 @@ const App = () => {
       window.history.back();
     };
 
-    if (typeof (CapacitorApp as any).addListener === 'function') {
-      const backButtonListener = (CapacitorApp as any).addListener('backButton', handleBackButton);
+    if (typeof CapacitorApp.addListener === 'function') {
+      const backButtonListener = CapacitorApp.addListener('backButton', handleBackButton);
       
       return () => {
         if (backButtonListener && typeof backButtonListener.remove === 'function') {
