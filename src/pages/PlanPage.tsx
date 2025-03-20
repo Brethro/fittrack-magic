@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +43,22 @@ const PlanPage = () => {
     
     return weeklyLoss.toFixed(1);
   };
+  
+  // Calculate target weight from body fat goal if applicable
+  const calculateTargetWeightFromBodyFat = () => {
+    if (userData.goalType !== 'bodyFat' || !userData.weight || !userData.bodyFatPercentage || !userData.goalValue) {
+      return null;
+    }
+    
+    // Calculate lean body mass
+    const currentLeanMass = userData.weight * (1 - (userData.bodyFatPercentage / 100));
+    
+    // Calculate target weight based on the goal body fat percentage
+    // Formula: LBM / (1 - target_bf%)
+    const targetWeight = currentLeanMass / (1 - (userData.goalValue / 100));
+    
+    return targetWeight.toFixed(1);
+  };
 
   // Generate chart data
   const generateChartData = () => {
@@ -59,7 +74,15 @@ const PlanPage = () => {
     if (totalDays <= 0) return [];
     
     const startWeight = userData.weight;
-    const targetWeight = userData.goalType === "weight" ? userData.goalValue : userData.weight * 0.9; // If body fat goal, estimate 10% weight loss
+    
+    // Use the calculated target weight for body fat goals
+    let targetWeight;
+    if (userData.goalType === "bodyFat" && userData.bodyFatPercentage) {
+      const calculatedTarget = calculateTargetWeightFromBodyFat();
+      targetWeight = calculatedTarget ? parseFloat(calculatedTarget) : startWeight * 0.9;
+    } else {
+      targetWeight = userData.goalType === "weight" ? userData.goalValue : startWeight * 0.9;
+    }
     
     // Use calculated weekly weight loss for more accurate projection
     const weeklyLoss = calculateWeeklyWeightLoss();
@@ -205,22 +228,6 @@ const PlanPage = () => {
 
   const macroCalories = calculateMacroCalories();
   const totalCalories = userData.dailyCalories || 0;
-
-  // Calculate target weight from body fat goal if applicable
-  const calculateTargetWeightFromBodyFat = () => {
-    if (userData.goalType !== 'bodyFat' || !userData.weight || !userData.bodyFatPercentage || !userData.goalValue) {
-      return null;
-    }
-    
-    // Calculate lean body mass
-    const currentLeanMass = userData.weight * (1 - (userData.bodyFatPercentage / 100));
-    
-    // Calculate target weight based on the goal body fat percentage
-    // Formula: LBM / (1 - target_bf%)
-    const targetWeight = currentLeanMass / (1 - (userData.goalValue / 100));
-    
-    return targetWeight.toFixed(1);
-  };
 
   const targetBodyFatWeight = calculateTargetWeightFromBodyFat();
 
