@@ -137,9 +137,6 @@ const PlanPage = () => {
   const deficitPercentage = userData.tdee ? Math.round((calorieDeficit / userData.tdee) * 100) : 0;
   const weeklyWeightLoss = calculateWeeklyWeightLoss();
 
-  const macroCalories = calculateMacroCalories();
-  const totalCalories = userData.dailyCalories || 0;
-
   return (
     <div className="container px-4 py-8 mx-auto">
       <AnimatePresence>
