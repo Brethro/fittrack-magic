@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, differenceInCalendarDays, addDays, isAfter } from "date-fns";
+import { format, differenceInCalendarDays, addDays, isAfter, parseISO } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
 import { useToast } from "@/components/ui/use-toast";
 import { useUserData } from "@/contexts/UserDataContext";
@@ -84,16 +85,35 @@ const PlanPage = () => {
       targetWeight = userData.goalType === "weight" ? userData.goalValue : startWeight * 0.9;
     }
     
-    // Use calculated weekly weight loss for more accurate projection
-    const weeklyLoss = calculateWeeklyWeightLoss();
-    const dailyLoss = weeklyLoss ? parseFloat(weeklyLoss) / 7 : (startWeight - targetWeight) / totalDays;
-    
     console.log("Generating chart data with: ", {
       startWeight,
       targetWeight,
       totalDays,
-      dailyLoss,
       goalDate: format(goalDate, "yyyy-MM-dd")
+    });
+    
+    // Sort weight log by date (oldest first) for consistent charting
+    const sortedWeightLog = userData.weightLog ? 
+      [...userData.weightLog].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : 
+      [];
+    
+    // Find the most recent weight entry to use as actual starting point
+    const mostRecentEntry = sortedWeightLog.length > 0 ? 
+      sortedWeightLog[sortedWeightLog.length - 1].weight : 
+      startWeight;
+    
+    // Use most recent weight if available for more accurate projections
+    const projectionStartWeight = mostRecentEntry;
+    const remainingDays = totalDays;
+    const weightToLose = projectionStartWeight - targetWeight;
+    const dailyLoss = weightToLose / remainingDays;
+    
+    console.log("Projection calculation:", {
+      projectionStartWeight,
+      targetWeight,
+      weightToLose,
+      dailyLoss,
+      remainingDays
     });
     
     const data = [];
@@ -102,36 +122,35 @@ const PlanPage = () => {
     const maxPoints = 8; // Maximum number of points to display
     const interval = Math.max(Math.floor(totalDays / (maxPoints - 1)), 1);
     
-    // Start with today
+    // Start with today as first projection point
     data.push({
       date: format(today, "MMM d"),
-      projection: parseFloat(startWeight.toFixed(1)),
-      tooltipDate: format(today, "MMMM d, yyyy")
+      projection: parseFloat(projectionStartWeight.toFixed(1)),
+      tooltipDate: format(today, "MMMM d, yyyy"),
+      fullDate: today
     });
     
-    // Calculate how much weight should be lost each interval to reach the goal exactly on the goal date
-    const weightLossPerInterval = ((startWeight - targetWeight) / Math.ceil(totalDays / interval)) * interval;
-    
-    // Add intermediate points with consistent weight loss
-    let currentWeight = startWeight;
+    // Add intermediate projection points
     for (let i = interval; i < totalDays; i += interval) {
       const currentDate = addDays(today, i);
       
-      // Ensure we don't go below target weight
-      currentWeight = Math.max(startWeight - ((i / totalDays) * (startWeight - targetWeight)), targetWeight);
+      // Calculate weight at this point in the projection
+      const daysFromStart = i;
+      const projectedWeight = Math.max(
+        projectionStartWeight - (daysFromStart * dailyLoss), 
+        targetWeight
+      );
       
       data.push({
         date: format(currentDate, "MMM d"),
-        projection: parseFloat(currentWeight.toFixed(1)),
+        projection: parseFloat(projectedWeight.toFixed(1)),
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
         fullDate: currentDate
       });
     }
     
-    // Always add the goal date as the final point
-    // But only if it's not already the last point in our data
-    const lastPoint = data[data.length - 1];
-    if (format(goalDate, "MMM d") !== lastPoint.date) {
+    // Always add the goal date as the final projection point
+    if (data.length === 0 || format(goalDate, "MMM d") !== data[data.length - 1].date) {
       data.push({
         date: format(goalDate, "MMM d"),
         projection: parseFloat(targetWeight.toFixed(1)),
@@ -139,42 +158,29 @@ const PlanPage = () => {
         fullDate: goalDate
       });
     } else {
-      // Make sure the last point has exactly the target weight
-      data[data.length - 1] = {
-        ...lastPoint,
-        projection: parseFloat(targetWeight.toFixed(1))
-      };
+      // Update the last point's projection to exactly match the target
+      data[data.length - 1].projection = parseFloat(targetWeight.toFixed(1));
     }
     
-    // Add actual weight log data
-    if (userData.weightLog && userData.weightLog.length > 0) {
-      // Create a map of dates to weight log entries for quick lookup
-      const weightLogMap = new Map();
-      userData.weightLog.forEach(entry => {
-        const dateKey = format(entry.date, "MMM d");
-        // If there are multiple entries for the same date, use the latest one
-        if (!weightLogMap.has(dateKey) || 
-            isAfter(entry.date, weightLogMap.get(dateKey).date)) {
-          weightLogMap.set(dateKey, entry);
-        }
-      });
-      
-      // Now enhance our data array with actual weight values
-      data.forEach(point => {
-        const dateKey = point.date;
-        if (weightLogMap.has(dateKey)) {
-          point.actual = weightLogMap.get(dateKey).weight;
-        }
-      });
-      
-      // Add any weight log entries that aren't already in our data
-      weightLogMap.forEach((entry, dateKey) => {
-        if (!data.some(point => point.date === dateKey)) {
+    // Add actual weight log data as separate entries
+    if (sortedWeightLog.length > 0) {
+      sortedWeightLog.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        const dateStr = format(entryDate, "MMM d");
+        
+        // Check if we already have a data point for this date
+        const existingPoint = data.find(point => point.date === dateStr);
+        
+        if (existingPoint) {
+          // Add actual weight to the existing data point
+          existingPoint.actual = entry.weight;
+        } else {
+          // Create a new data point for this actual weight
           data.push({
-            date: dateKey,
+            date: dateStr,
             actual: entry.weight,
-            tooltipDate: format(entry.date, "MMMM d, yyyy"),
-            fullDate: entry.date
+            tooltipDate: format(entryDate, "MMMM d, yyyy"),
+            fullDate: entryDate
           });
         }
       });
@@ -182,10 +188,7 @@ const PlanPage = () => {
     
     // Sort by date
     data.sort((a, b) => {
-      if (a.fullDate && b.fullDate) {
-        return a.fullDate.getTime() - b.fullDate.getTime();
-      }
-      return a.date.localeCompare(b.date);
+      return a.fullDate.getTime() - b.fullDate.getTime();
     });
     
     console.log("Generated chart data:", data);
@@ -199,14 +202,19 @@ const PlanPage = () => {
       return (
         <div className="glass-panel p-2 text-xs">
           <p className="font-medium">{payload[0].payload.tooltipDate}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="flex items-center gap-1">
-              {entry.name === "projection" ? "Projected: " : "Actual: "}
-              <span className="font-medium" style={{ color: entry.color }}>
-                {entry.value} {userData.useMetric ? "kg" : "lbs"}
-              </span>
-            </p>
-          ))}
+          {payload.map((entry: any, index: number) => {
+            // Only show entries with values
+            if (entry.value == null) return null;
+            
+            return (
+              <p key={index} className="flex items-center gap-1">
+                {entry.name === "projection" ? "Projected: " : "Actual: "}
+                <span className="font-medium" style={{ color: entry.color }}>
+                  {entry.value} {userData.useMetric ? "kg" : "lbs"}
+                </span>
+              </p>
+            );
+          })}
         </div>
       );
     }
@@ -379,6 +387,7 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#8b5cf6', r: 4 }}
                       activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
+                      connectNulls={true}
                     />
                     <Line 
                       type="monotone" 
@@ -388,6 +397,7 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#10b981', r: 4 }}
                       activeDot={{ fill: '#6ee7b7', r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                      connectNulls={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -416,8 +426,6 @@ const PlanPage = () => {
                   </p>
                 </div>
               </div>
-              
-              {/* Removed the duplicate Log Weight button here */}
             </motion.div>
             
             <motion.div
