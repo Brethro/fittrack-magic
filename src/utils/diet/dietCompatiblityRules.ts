@@ -231,6 +231,11 @@ export const specialCaseRules: Record<DietType, (food: FoodItem) => boolean> = {
       return ketoFruits.some(fruit => food.name.toLowerCase().includes(fruit));
     }
     
+    // Fish and seafood are keto-friendly
+    if (food.primaryCategory === "fish" || food.primaryCategory === "seafood") {
+      return true;
+    }
+    
     return true;
   }
 };
