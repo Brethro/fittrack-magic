@@ -1,5 +1,12 @@
 
-// Export all food category data from a single file
+// Export empty food category data to reset the database
+import { resetFoodDatabase } from "@/utils/diet/resetFoodDatabase";
+
+// Export the empty food data
+export const foodCategoriesData = resetFoodDatabase();
+
+// Comment out the old food data processing to reset the database
+/*
 import { processRawFoodData } from "@/utils/diet/foodDataProcessing";
 import { meatsAndPoultryData } from "./meatData";
 import { fishAndSeafoodData } from "./seafoodData";
@@ -38,3 +45,4 @@ const rawFoodCategoriesData = [
 
 // Process the raw food data to add primaryCategory to each item
 export const foodCategoriesData = processRawFoodData(rawFoodCategoriesData);
+*/

@@ -1,11 +1,12 @@
 
 import { foodCategoriesData } from "@/data/diet";
 
-// Main FoodData component - now acts as a simple pass-through to the data
+// Main FoodData component - now acts as a simple pass-through to the empty data
 const FoodData = () => {
-  return null; // This component doesn't render anything
+  // This component doesn't render anything, but exposes the reset food database
+  return null;
 };
 
-// Export the food data
+// Export the empty food data
 export { foodCategoriesData };
 export default FoodData;
