@@ -1,0 +1,31 @@
+
+// Green Vegetables food data
+export const greenVegetablesData = {
+  name: "Green Vegetables",
+  items: [
+    { id: "broccoli", name: "Broccoli", protein: 2.6, carbs: 6, fats: 0.3, caloriesPerServing: 34, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "spinach", name: "Spinach", protein: 2.9, carbs: 3.6, fats: 0.4, caloriesPerServing: 23, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "kale", name: "Kale", protein: 2.9, carbs: 6.7, fats: 0.5, caloriesPerServing: 35, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "bok_choy", name: "Bok Choy", protein: 1.5, carbs: 2.2, fats: 0.2, caloriesPerServing: 13, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "collard_greens", name: "Collard Greens", protein: 2, carbs: 5.7, fats: 0.5, caloriesPerServing: 32, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "brussels_sprouts", name: "Brussels Sprouts", protein: 3.4, carbs: 9, fats: 0.3, caloriesPerServing: 43, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "asparagus", name: "Asparagus", protein: 2.2, carbs: 3.9, fats: 0.1, caloriesPerServing: 20, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "green_beans", name: "Green Beans", protein: 1.8, carbs: 7, fats: 0.1, caloriesPerServing: 31, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "arugula", name: "Arugula", protein: 2.6, carbs: 3.7, fats: 0.7, caloriesPerServing: 25, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "romaine", name: "Romaine Lettuce", protein: 1.2, carbs: 3.3, fats: 0.3, caloriesPerServing: 17, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "iceberg", name: "Iceberg Lettuce", protein: 0.9, carbs: 2.9, fats: 0.1, caloriesPerServing: 14, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "cabbage_green", name: "Green Cabbage", protein: 1.3, carbs: 5.8, fats: 0.1, caloriesPerServing: 25, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "cabbage_red", name: "Red Cabbage", protein: 1.4, carbs: 7, fats: 0.2, caloriesPerServing: 31, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "swiss_chard", name: "Swiss Chard", protein: 1.8, carbs: 3.7, fats: 0.2, caloriesPerServing: 19, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "beet_greens", name: "Beet Greens", protein: 2.2, carbs: 4.3, fats: 0.1, caloriesPerServing: 22, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "watercress", name: "Watercress", protein: 2.3, carbs: 1.3, fats: 0.1, caloriesPerServing: 11, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "mustard_greens", name: "Mustard Greens", protein: 2.7, carbs: 4.7, fats: 0.2, caloriesPerServing: 27, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "turnip_greens", name: "Turnip Greens", protein: 1.1, carbs: 3.9, fats: 0.2, caloriesPerServing: 20, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "dandelion_greens", name: "Dandelion Greens", protein: 2.7, carbs: 9, fats: 0.7, caloriesPerServing: 45, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "endive", name: "Endive", protein: 1.3, carbs: 3.4, fats: 0.2, caloriesPerServing: 17, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "escarole", name: "Escarole", protein: 1.5, carbs: 3.1, fats: 0.2, caloriesPerServing: 17, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "radicchio", name: "Radicchio", protein: 1.3, carbs: 4.5, fats: 0.2, caloriesPerServing: 23, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "broccoli_rabe", name: "Broccoli Rabe", protein: 3.2, carbs: 2.9, fats: 0.5, caloriesPerServing: 28, servingSize: "100g raw", servingSizeGrams: 100 },
+    { id: "microgreens", name: "Microgreens", protein: 3.5, carbs: 5.5, fats: 0.4, caloriesPerServing: 40, servingSize: "100g raw", servingSizeGrams: 100 },
+  ],
+};

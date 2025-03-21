@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FoodPreferences } from "@/components/diet/FoodPreferences";
 import { MealPlanDisplay } from "@/components/diet/MealPlanDisplay";
 import { EmptyStateMessage } from "@/components/diet/EmptyStateMessage";
-import { foodCategoriesData } from "@/components/diet/FoodData";
+import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 
@@ -123,4 +123,3 @@ const DietPage = () => {
 };
 
 export default DietPage;
-
