@@ -10,6 +10,7 @@ import HomePage from "./pages/HomePage";
 import OnboardingPage from "./pages/OnboardingPage";
 import GoalsPage from "./pages/GoalsPage";
 import PlanPage from "./pages/PlanPage";
+import DietPage from "./pages/DietPage";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
@@ -82,6 +83,7 @@ const App = () => {
                   <Route path="/onboarding" element={<OnboardingPage />} />
                   <Route path="/goals" element={<GoalsPage />} />
                   <Route path="/plan" element={<PlanPage />} />
+                  <Route path="/diet" element={<DietPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
