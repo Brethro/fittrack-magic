@@ -1,6 +1,5 @@
-
 import { FoodItem, DietType } from "@/types/diet";
-import { dietCompatibleCategories, specialCaseRules } from "./dietCompatiblityRules";
+import { dietCompatibleCategories, specialCaseRules } from "./dietCompatibilityRules";
 
 // Function to check if a food is compatible with a diet based on explicit categorization
 export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolean => {

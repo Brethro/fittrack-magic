@@ -8,4 +8,5 @@
 export * from "./diet/dietCompatibilityChecker";
 export * from "./diet/dietDataMigration";
 export * from "./diet/foodCategoryHelpers";
-export * from "./diet/dietCompatiblityRules";
+export * from "./diet/dietCompatibilityRules";
+
