@@ -3,6 +3,7 @@
 import { processRawFoodData } from "@/utils/diet/foodDataProcessing";
 import { meatsAndPoultryData } from "./meatData";
 import { nutsAndSeedsData } from "./nutsAndSeedsData";
+import { FoodCategory } from "@/types/diet";
 
 // Only include the two food categories with our detailed examples
 const rawFoodCategoriesData = [

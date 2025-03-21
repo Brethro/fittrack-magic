@@ -28,7 +28,7 @@ export const meatsAndPoultryData = {
       servingSize: "100g", 
       servingSizeGrams: 100,
       primaryCategory: "redMeat",
-      secondaryCategories: ["meat"],
+      secondaryCategories: ["meat"], // This is now correctly typed as FoodPrimaryCategory[]
       diets: ["paleo", "keto"]
     }
   ],
