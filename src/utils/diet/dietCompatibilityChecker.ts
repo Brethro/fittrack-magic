@@ -8,16 +8,23 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   // "All" diet includes everything
   if (diet === "all") return true;
   
-  // Special case for honey in paleo diet
-  if (diet === "paleo" && food.primaryCategory === "sweetener" && food.name.toLowerCase().includes("honey")) {
-    return true;
-  }
-  
   // Get diet compatibility rules
   const dietRules = dietCompatibleCategories[diet];
   if (!dietRules) {
     console.warn(`No diet rules found for diet: ${diet}`);
     return false;
+  }
+  
+  // Special case rules - if these return false, the food is not compatible
+  // Apply special rules first, as they're the most specific
+  const specialRule = specialCaseRules[diet];
+  if (specialRule && !specialRule(food)) {
+    return false;
+  }
+  
+  // Special case for honey in paleo diet
+  if (diet === "paleo" && food.primaryCategory === "sweetener" && food.name.toLowerCase().includes("honey")) {
+    return true;
   }
   
   // Check parent/child category relationships
@@ -69,8 +76,7 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
     }
   }
   
-  // Apply special case rules as final check
-  return isPrimaryCategoryAllowed || (specialCaseRules[diet] ? specialCaseRules[diet](food) : false);
+  return isPrimaryCategoryAllowed;
 };
 
 // Function to get all compatible diets for a food item

@@ -135,6 +135,15 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     // Check each diet for compatible foods
     dietTypes.forEach(diet => {
       const compatibleFoods = filterFoodsByDiet(allFoods, diet);
+      
+      // Add detailed debugging for each diet
+      if (diet === "japanese" || diet === "korean" || diet === "mexican" || diet === "italian") {
+        console.log(`Diet ${diet} - checking compatibility for first 5 foods:`);
+        allFoods.slice(0, 5).forEach(food => {
+          console.log(`- ${food.name} (${food.id}): ${filterFoodsByDiet([food], diet).length > 0}`);
+        });
+      }
+      
       if (compatibleFoods.length > 0) {
         console.log(`Diet ${diet} has ${compatibleFoods.length} compatible foods`);
         availableDiets.push(diet);
