@@ -45,12 +45,22 @@ export const ketoSpecialRules = (food: FoodItem): boolean => {
     return true;
   }
   
-  // Check carb content if available
-  if (food.carbs !== undefined && food.carbs > 10) {
-    return false;
+  // Check carb content if available - this is the key for keto compatibility
+  if (food.carbs !== undefined) {
+    // High-carb foods are not keto-friendly
+    // For 100g serving, anything over 10g of carbs is considered high-carb for keto
+    if (food.servingSizeGrams <= 100 && food.carbs > 10) {
+      return false;
+    }
+    
+    // For larger servings, calculate carbs per 100g
+    const carbsPer100g = (food.carbs / food.servingSizeGrams) * 100;
+    if (carbsPer100g > 10) {
+      return false;
+    }
   }
   
-  // Specific keto-friendly vegetables
+  // Specific keto-friendly vegetables (low-carb)
   if (food.primaryCategory === "vegetable") {
     const ketoVeggies = [
       "spinach", "kale", "broccoli", "cauliflower", "asparagus",
@@ -59,10 +69,18 @@ export const ketoSpecialRules = (food: FoodItem): boolean => {
     return ketoVeggies.some(veg => food.name.toLowerCase().includes(veg));
   }
   
-  // Specific keto-friendly fruits
+  // Specific keto-friendly fruits (very low-carb only)
   if (food.primaryCategory === "fruit") {
     const ketoFruits = ["avocado", "olive", "coconut", "berry", "lemon", "lime"];
     return ketoFruits.some(fruit => food.name.toLowerCase().includes(fruit));
+  }
+  
+  // Specifically exclude rice and high-carb grains
+  if (food.name.toLowerCase().includes("rice") || 
+      food.name.toLowerCase().includes("pasta") ||
+      food.name.toLowerCase().includes("bread") ||
+      food.name.toLowerCase().includes("cereal")) {
+    return false;
   }
   
   return true;
