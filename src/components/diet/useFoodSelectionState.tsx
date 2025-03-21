@@ -100,7 +100,7 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     );
   };
 
-  // NEW: Get diets that have at least one compatible food
+  // Get diets that have at least one compatible food
   const getAvailableDiets = (): DietType[] => {
     // "all" is always available
     const availableDiets: DietType[] = ["all"];
