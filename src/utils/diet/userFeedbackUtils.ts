@@ -1,5 +1,5 @@
 
-import { FoodItem, FoodCategory } from '@/types/diet';
+import { FoodItem, FoodCategory, FoodPrimaryCategory } from '@/types/diet';
 import { logErrorEvent, logCategorizationEvent } from './testingMonitoring';
 
 // Type definitions for user feedback
@@ -49,7 +49,7 @@ export const submitCategoryFeedback = (
   feedbackStore.push(feedbackEntry);
   
   // Log the event for monitoring
-  logCategorizationEvent(foodItem, suggestedCategory, 0.5); // 0.5 confidence as it's user feedback
+  logCategorizationEvent(foodItem, suggestedCategory as FoodPrimaryCategory, 0.5); // 0.5 confidence as it's user feedback
   
   return feedbackEntry;
 };
@@ -127,7 +127,7 @@ export const applyApprovedFeedback = (
           // Update the item's primary category
           const updatedItem = {
             ...item,
-            primaryCategory: feedback.suggestedCategory
+            primaryCategory: feedback.suggestedCategory as FoodPrimaryCategory
           };
           
           // Add it to the new category
@@ -135,7 +135,7 @@ export const applyApprovedFeedback = (
           foundItem = true;
           
           // Log the event
-          logCategorizationEvent(updatedItem, feedback.suggestedCategory, 1.0);
+          logCategorizationEvent(updatedItem, feedback.suggestedCategory as FoodPrimaryCategory, 1.0);
         } else {
           logErrorEvent('categorization', `Target category "${feedback.suggestedCategory}" not found`);
           // Add the item back to its original category

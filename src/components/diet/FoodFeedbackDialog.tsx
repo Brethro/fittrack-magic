@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FoodItem, FoodCategory } from "@/types/diet";
+import { FoodItem, FoodCategory, FoodPrimaryCategory } from "@/types/diet";
 import { submitCategoryFeedback } from "@/utils/diet/userFeedbackUtils";
 import { useToast } from "@/components/ui/use-toast";
 

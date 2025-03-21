@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Utensils, ChevronDown, ChevronUp, Search, MessageSquare } from "lucide-react";
-import { FoodCategory, DietType, FoodItem } from "@/types/diet";
+import { FoodCategory, DietType, FoodItem, FoodPrimaryCategory } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   Collapsible, 
@@ -102,12 +102,12 @@ export function FoodPreferences({
     if (matchedItems.length > 0) {
       // Get all categories with matching items
       const categoriesWithMatches = new Set(
-        matchedItems.map(item => item.primaryCategory)
+        matchedItems.map(item => item.primaryCategory as FoodPrimaryCategory)
       );
       
       // Open those categories
       foodCategories.forEach(category => {
-        if (categoriesWithMatches.has(category.name)) {
+        if (categoriesWithMatches.has(category.name as FoodPrimaryCategory)) {
           newOpenCategories[category.name] = true;
         }
       });
