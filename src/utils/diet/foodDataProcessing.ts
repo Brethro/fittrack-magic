@@ -1,4 +1,3 @@
-
 import { FoodCategory, FoodItem } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -8,8 +7,12 @@ import { fuzzyFindFood, clearFuzzyMatchCache, identifyPotentialMiscategorization
 export const processRawFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {
   console.log("Processing raw food data...");
   
+  // Filter out categories with empty items arrays to avoid processing empty data
+  const nonEmptyCategories = categories.filter(category => category.items && category.items.length > 0);
+  console.log(`Found ${nonEmptyCategories.length} non-empty food categories.`);
+  
   const processedCategories = categories.map(category => {
-    console.log(`Processing category: ${category.name}`);
+    console.log(`Processing category: ${category.name} with ${category.items.length} items`);
     
     const migratedItems = category.items.map(item => {
       // First ensure we have proper categorization
@@ -44,7 +47,12 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
     console.log("Potential food categorization issues detected:", potentialIssues);
   }
   
-  console.log("Food data processing complete.");
+  // Count total number of food items across all categories
+  const totalFoodItems = processedCategories.reduce(
+    (total, category) => total + category.items.length, 0
+  );
+  console.log(`Food data processing complete. Total items: ${totalFoodItems}`);
+  
   return processedCategories;
 };
 

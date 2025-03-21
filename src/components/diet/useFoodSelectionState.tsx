@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { filterFoodsByDiet } from "@/utils/diet/dietCompatibilityChecker";
@@ -14,6 +13,12 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     items: batchMigrateExistingFoodData(category.items)
   }));
   
+  // Count total foods available for debugging
+  const totalFoodCount = migratedFoodCategories.reduce(
+    (count, category) => count + category.items.length, 0
+  );
+  console.log(`Total food items available: ${totalFoodCount}`);
+  
   // Initialize selectedFoods with all foods set to true by default
   const initializeSelectedFoods = () => {
     const foods: Record<string, boolean> = {};
@@ -22,11 +27,17 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
         foods[food.id] = true; // Default to true for all foods
       });
     });
+    console.log(`Initialized selected foods object with ${Object.keys(foods).length} items`);
     return foods;
   };
 
   const [selectedFoods, setSelectedFoods] = useState<Record<string, boolean>>(initializeSelectedFoods());
   const [selectedDiet, setSelectedDiet] = useState<DietType>("all");
+  
+  // Reset selected foods when food categories change
+  useEffect(() => {
+    setSelectedFoods(initializeSelectedFoods());
+  }, [foodCategories]);
 
   // Apply diet filtering to food selection
   const applyDietFilter = (diet: DietType) => {
