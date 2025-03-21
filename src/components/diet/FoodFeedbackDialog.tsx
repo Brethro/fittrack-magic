@@ -62,6 +62,17 @@ export function FoodFeedbackDialog({
     return null;
   }
 
+  // Create a formatted nutrition summary for the food
+  const generateNutritionSummary = () => {
+    return [
+      foodItem.caloriesPerServing ? `${foodItem.caloriesPerServing} calories` : null,
+      foodItem.protein ? `${foodItem.protein}g protein` : null,
+      foodItem.carbs ? `${foodItem.carbs}g carbs` : null,
+      foodItem.fats ? `${foodItem.fats}g fats` : null,
+      foodItem.fiber ? `${foodItem.fiber}g fiber` : null
+    ].filter(Boolean).join(", ");
+  };
+
   return (
     <Dialog open={open} onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -79,6 +90,9 @@ export function FoodFeedbackDialog({
               {foodItem.name}
               <div className="text-xs text-muted-foreground mt-1">
                 Current category: {foodItem.primaryCategory || "Uncategorized"}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {generateNutritionSummary()}
               </div>
             </div>
           </div>

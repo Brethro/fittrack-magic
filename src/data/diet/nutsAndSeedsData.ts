@@ -1,9 +1,31 @@
-
 // Nuts & Seeds food data
 export const nutsAndSeedsData = {
   name: "Nuts & Seeds",
   items: [
-    { id: "almonds", name: "Almonds", protein: 21, carbs: 22, fats: 49, caloriesPerServing: 579, servingSize: "100g", servingSizeGrams: 100 },
+    { 
+      id: "almonds", 
+      name: "Almonds", 
+      protein: 21, 
+      carbs: 22, 
+      fats: 49, 
+      caloriesPerServing: 579, 
+      fiber: 12.5,
+      sugars: 4.3,
+      saturatedFat: 3.8,
+      monounsaturatedFat: 31.6,
+      polyunsaturatedFat: 12.1,
+      omega3: 0.003,
+      omega6: 12.1,
+      cholesterol: 0,
+      sodium: 1,
+      potassium: 733,
+      calcium: 269,
+      iron: 3.7,
+      magnesium: 270,
+      vitaminE: 25.6,
+      servingSize: "100g", 
+      servingSizeGrams: 100 
+    },
     { id: "walnuts", name: "Walnuts", protein: 15, carbs: 14, fats: 65, caloriesPerServing: 654, servingSize: "100g", servingSizeGrams: 100 },
     { id: "cashews", name: "Cashews", protein: 18, carbs: 30, fats: 44, caloriesPerServing: 553, servingSize: "100g", servingSizeGrams: 100 },
     { id: "pistachios", name: "Pistachios", protein: 20, carbs: 28, fats: 45, caloriesPerServing: 560, servingSize: "100g", servingSizeGrams: 100 },

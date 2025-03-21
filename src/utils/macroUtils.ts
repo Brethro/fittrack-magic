@@ -25,6 +25,16 @@ export const calculateMealTotals = (foods: any[]): {
   totalFiber?: number;
   totalSugars?: number;
   netCarbs?: number;
+  totalSaturatedFat?: number;
+  totalTransFat?: number;
+  totalCholesterol?: number;
+  totalSodium?: number;
+  totalVitaminA?: number;
+  totalVitaminC?: number;
+  totalVitaminD?: number;
+  totalCalcium?: number;
+  totalIron?: number;
+  totalPotassium?: number;
 } => {
   const result = foods.reduce((totals, food) => {
     return {
@@ -33,7 +43,17 @@ export const calculateMealTotals = (foods: any[]): {
       totalCarbs: totals.totalCarbs + food.carbs,
       totalFats: totals.totalFats + food.fats,
       totalFiber: totals.totalFiber + (food.fiber || 0),
-      totalSugars: totals.totalSugars + (food.sugars || 0)
+      totalSugars: totals.totalSugars + (food.sugars || 0),
+      totalSaturatedFat: totals.totalSaturatedFat + (food.saturatedFat || 0),
+      totalTransFat: totals.totalTransFat + (food.transFat || 0),
+      totalCholesterol: totals.totalCholesterol + (food.cholesterol || 0),
+      totalSodium: totals.totalSodium + (food.sodium || 0),
+      totalVitaminA: totals.totalVitaminA + (food.vitaminA || 0),
+      totalVitaminC: totals.totalVitaminC + (food.vitaminC || 0),
+      totalVitaminD: totals.totalVitaminD + (food.vitaminD || 0),
+      totalCalcium: totals.totalCalcium + (food.calcium || 0),
+      totalIron: totals.totalIron + (food.iron || 0),
+      totalPotassium: totals.totalPotassium + (food.potassium || 0)
     };
   }, { 
     totalCalories: 0, 
@@ -41,7 +61,17 @@ export const calculateMealTotals = (foods: any[]): {
     totalCarbs: 0, 
     totalFats: 0,
     totalFiber: 0,
-    totalSugars: 0
+    totalSugars: 0,
+    totalSaturatedFat: 0,
+    totalTransFat: 0,
+    totalCholesterol: 0,
+    totalSodium: 0,
+    totalVitaminA: 0,
+    totalVitaminC: 0,
+    totalVitaminD: 0,
+    totalCalcium: 0,
+    totalIron: 0,
+    totalPotassium: 0
   });
   
   // Calculate net carbs
@@ -54,7 +84,7 @@ export const calculateMealTotals = (foods: any[]): {
 export const recalculateFoodWithServings = (food: any, newServings: number): any => {
   const servingRatio = newServings / food.servings;
   
-  return {
+  const recalculated = {
     ...food,
     servings: newServings,
     protein: parseFloat((food.protein * servingRatio).toFixed(1)),
@@ -64,4 +94,19 @@ export const recalculateFoodWithServings = (food: any, newServings: number): any
     fiber: food.fiber ? parseFloat((food.fiber * servingRatio).toFixed(1)) : undefined,
     sugars: food.sugars ? parseFloat((food.sugars * servingRatio).toFixed(1)) : undefined
   };
+  
+  // Add detailed nutritional properties if they exist in the original food
+  if (food.saturatedFat) recalculated.saturatedFat = parseFloat((food.saturatedFat * servingRatio).toFixed(1));
+  if (food.transFat) recalculated.transFat = parseFloat((food.transFat * servingRatio).toFixed(1));
+  if (food.cholesterol) recalculated.cholesterol = Math.round(food.cholesterol * servingRatio);
+  if (food.sodium) recalculated.sodium = Math.round(food.sodium * servingRatio);
+  if (food.addedSugars) recalculated.addedSugars = parseFloat((food.addedSugars * servingRatio).toFixed(1));
+  if (food.vitaminA) recalculated.vitaminA = parseFloat((food.vitaminA * servingRatio).toFixed(1));
+  if (food.vitaminC) recalculated.vitaminC = parseFloat((food.vitaminC * servingRatio).toFixed(1));
+  if (food.vitaminD) recalculated.vitaminD = parseFloat((food.vitaminD * servingRatio).toFixed(1));
+  if (food.calcium) recalculated.calcium = Math.round(food.calcium * servingRatio);
+  if (food.iron) recalculated.iron = parseFloat((food.iron * servingRatio).toFixed(1));
+  if (food.potassium) recalculated.potassium = Math.round(food.potassium * servingRatio);
+  
+  return recalculated;
 };

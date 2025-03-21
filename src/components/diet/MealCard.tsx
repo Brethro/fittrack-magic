@@ -41,6 +41,13 @@ export function MealCard({ meal, regenerateMeal }: MealCardProps) {
               <p className="text-xs text-muted-foreground">
                 P: {food.protein}g C: {food.carbs}g F: {food.fats}g
               </p>
+              {food.fiber || food.sugars ? (
+                <p className="text-xs text-muted-foreground">
+                  {food.fiber ? `Fiber: ${food.fiber}g` : ""}
+                  {food.fiber && food.sugars ? " • " : ""}
+                  {food.sugars ? `Sugars: ${food.sugars}g` : ""}
+                </p>
+              ) : null}
             </div>
           </div>
         ))}
@@ -54,6 +61,22 @@ export function MealCard({ meal, regenerateMeal }: MealCardProps) {
         <span>Macros</span>
         <span>P: {meal.totalProtein}g C: {meal.totalCarbs}g F: {meal.totalFats}g</span>
       </div>
+      {meal.totalFiber || meal.totalSugars || meal.netCarbs ? (
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Details</span>
+          <span>
+            {meal.netCarbs !== undefined ? `Net Carbs: ${meal.netCarbs}g` : ""}
+            {meal.totalFiber ? ` • Fiber: ${meal.totalFiber}g` : ""}
+            {meal.totalSugars ? ` • Sugars: ${meal.totalSugars}g` : ""}
+          </span>
+        </div>
+      ) : null}
+      {meal.totalSodium ? (
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Sodium</span>
+          <span>{meal.totalSodium}mg</span>
+        </div>
+      ) : null}
     </div>
   );
 }
