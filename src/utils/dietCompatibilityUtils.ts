@@ -43,9 +43,16 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
       "olive", "fish", "seafood", "nuts", "seed", "vegetable", 
       "fruit", "legume", "bean", "grain", "whole grain", "yogurt"
     ];
-    return mediterraneanFoods.some(item => 
-      food.name.toLowerCase().includes(item)
-    ) || dietRules.vegetarian(food);
+    
+    // Consider all meat (except processed) as compatible with Mediterranean diet
+    const meatItems = ["beef", "chicken", "turkey", "lamb"];
+    const nonMediterraneanItems = ["processed", "bacon", "sausage"];
+    
+    const isMeat = meatItems.some(item => food.name.toLowerCase().includes(item));
+    const isProcessed = nonMediterraneanItems.some(item => food.name.toLowerCase().includes(item));
+    
+    return mediterraneanFoods.some(item => food.name.toLowerCase().includes(item)) || 
+           (isMeat && !isProcessed);
   },
 
   // Japanese: emphasizes rice, fish, vegetables, soy, seaweed
@@ -76,9 +83,12 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
       "corn", "bean", "rice", "chili", "pepper", "avocado", 
       "tomato", "lime", "cilantro", "taco", "tortilla", "salsa"
     ];
-    return mexicanFoods.some(item => 
-      food.name.toLowerCase().includes(item)
-    );
+    
+    // Include common meats used in Mexican cuisine
+    const mexicanMeats = ["beef", "chicken", "pork"];
+    
+    return mexicanFoods.some(item => food.name.toLowerCase().includes(item)) ||
+           mexicanMeats.some(item => food.name.toLowerCase().includes(item));
   },
 
   // Italian: emphasizes pasta, tomatoes, olive oil, cheese
@@ -87,14 +97,17 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
       "pasta", "tomato", "olive", "cheese", "parmesan", "basil", 
       "garlic", "pizza", "risotto", "polenta", "prosciutto"
     ];
-    return italianFoods.some(item => 
-      food.name.toLowerCase().includes(item)
-    );
+    
+    // Include common meats used in Italian cuisine
+    const italianMeats = ["beef", "chicken", "pork", "veal"];
+    
+    return italianFoods.some(item => food.name.toLowerCase().includes(item)) ||
+           italianMeats.some(item => food.name.toLowerCase().includes(item));
   },
 
   // Paleo: emphasizes meat, fish, vegetables, fruits, nuts, seeds; excludes grains, dairy, processed foods
   paleo: (food) => {
-    const paleoFoods = ["meat", "fish", "vegetable", "fruit", "nut", "seed"];
+    const paleoFoods = ["meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "vegetable", "fruit", "nut", "seed"];
     const nonPaleoFoods = ["grain", "dairy", "processed", "sugar", "legume", "bean", "pasta", "bread"];
     
     return paleoFoods.some(item => food.name.toLowerCase().includes(item)) &&
@@ -103,16 +116,30 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
 
   // Keto: emphasizes high fat, moderate protein, low carb
   keto: (food) => {
-    // Consider keto-friendly if it has high fat content or is a known keto food
-    const ketoFoods = ["avocado", "oil", "butter", "cream", "cheese", "nut", "seed", "meat", "fish"];
-    const nonKetoFoods = ["sugar", "grain", "fruit", "bread", "pasta", "rice", "potato"];
+    // Common keto friendly foods
+    const ketoFoods = [
+      "avocado", "oil", "butter", "cream", "cheese", "nut", "seed", 
+      "meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "egg", "bacon"
+    ];
+    const nonKetoFoods = ["sugar", "grain", "fruit", "bread", "pasta", "rice", "potato", "corn"];
     
-    const isHighFat = food.fats && food.fats > 10;
-    const isLowCarb = food.carbs && food.carbs < 5;
+    const isHighFat = food.fats && food.fats > 5;
+    const isLowCarb = !food.carbs || food.carbs < 10;
+    
+    // Check if it's a known keto food based on name
+    const isKetoFoodByName = ketoFoods.some(item => food.name.toLowerCase().includes(item));
+    
+    // Check if it's explicitly non-keto
+    const isNonKetoFood = nonKetoFoods.some(item => food.name.toLowerCase().includes(item));
+    
+    // All meat is keto friendly
+    const isMeat = [
+      "meat", "beef", "chicken", "pork", "lamb", "turkey", "bacon", "sausage"
+    ].some(item => food.name.toLowerCase().includes(item));
     
     return (isHighFat && isLowCarb) || 
-           (ketoFoods.some(item => food.name.toLowerCase().includes(item)) && 
-            !nonKetoFoods.some(item => food.name.toLowerCase().includes(item)));
+           (isKetoFoodByName && !isNonKetoFood) ||
+           (isMeat && !isNonKetoFood);
   }
 };
 
