@@ -85,7 +85,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-blue-400 text-sm font-bold">Protein</span>
-            <span className="text-xs">{Math.round(macroCalories.protein / totalCalories * 100)}%</span>
+            <span className="text-xs">{(macroCalories.protein / totalCalories * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.protein}g</p>
           <Progress 
@@ -100,7 +100,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-amber-400 text-sm font-bold">Carbs</span>
-            <span className="text-xs">{Math.round(macroCalories.carbs / totalCalories * 100)}%</span>
+            <span className="text-xs">{(macroCalories.carbs / totalCalories * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.carbs}g</p>
           <Progress 
@@ -115,7 +115,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-pink-400 text-sm font-bold">Fats</span>
-            <span className="text-xs">{Math.round(macroCalories.fats / totalCalories * 100)}%</span>
+            <span className="text-xs">{(macroCalories.fats / totalCalories * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.fats}g</p>
           <Progress 
