@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FoodItem } from "@/types/diet";
-import { PieChart, PieChartIcon } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 interface FoodNutritionDialogProps {
   food: FoodItem | null;
@@ -32,6 +32,13 @@ export function FoodNutritionDialog({ food, open, onClose }: FoodNutritionDialog
   const carbsPercentage = Math.round((food.carbs * 4 / totalCaloriesFromMacros) * 100);
   const fatsPercentage = Math.round((food.fats * 9 / totalCaloriesFromMacros) * 100);
 
+  // Create data for pie chart
+  const macroData = [
+    { name: "Protein", value: proteinPercentage, color: "#3b82f6" }, // blue
+    { name: "Carbs", value: carbsPercentage, color: "#f59e0b" },     // amber
+    { name: "Fats", value: fatsPercentage, color: "#ec4899" }        // pink
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -49,21 +56,48 @@ export function FoodNutritionDialog({ food, open, onClose }: FoodNutritionDialog
               <span className="text-xl font-semibold">{food.caloriesPerServing}</span>
               <span className="text-sm text-muted-foreground ml-1">calories</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-md font-medium">{food.protein}g</div>
-                <div className="text-xs text-muted-foreground">Protein</div>
-                <div className="text-xs">{proteinPercentage}%</div>
+            
+            {/* Add Pie Chart for macronutrient visualization */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex justify-center items-center h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={macroData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={25}
+                      outerRadius={40}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {macroData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div>
-                <div className="text-md font-medium">{food.carbs}g</div>
-                <div className="text-xs text-muted-foreground">Carbs</div>
-                <div className="text-xs">{carbsPercentage}%</div>
-              </div>
-              <div>
-                <div className="text-md font-medium">{food.fats}g</div>
-                <div className="text-xs text-muted-foreground">Fats</div>
-                <div className="text-xs">{fatsPercentage}%</div>
+              
+              <div className="grid grid-cols-1 gap-2 text-center">
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                  <div className="text-md font-medium">{food.protein}g</div>
+                  <div className="text-xs text-muted-foreground ml-1">Protein</div>
+                  <div className="text-xs ml-auto">{proteinPercentage}%</div>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
+                  <div className="text-md font-medium">{food.carbs}g</div>
+                  <div className="text-xs text-muted-foreground ml-1">Carbs</div>
+                  <div className="text-xs ml-auto">{carbsPercentage}%</div>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-3 h-3 rounded-full bg-pink-500 mr-2"></span>
+                  <div className="text-md font-medium">{food.fats}g</div>
+                  <div className="text-xs text-muted-foreground ml-1">Fats</div>
+                  <div className="text-xs ml-auto">{fatsPercentage}%</div>
+                </div>
               </div>
             </div>
           </div>
