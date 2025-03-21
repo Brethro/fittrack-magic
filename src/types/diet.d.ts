@@ -28,6 +28,8 @@ export type FoodItem = {
   carbs?: number;
   fats?: number;
   caloriesPerServing?: number;
+  fiber?: number;  // Added fiber content
+  sugars?: number; // Added sugars content
   servingSize: string;
   servingSizeGrams: number;
   diets?: string[]; // Diet compatibility tags
@@ -50,6 +52,8 @@ export type MealFood = {
   carbs: number;
   fats: number;
   calories: number;
+  fiber?: number;  // Added fiber content
+  sugars?: number; // Added sugars content
 };
 
 export type Meal = {
@@ -60,6 +64,9 @@ export type Meal = {
   totalCarbs: number;
   totalFats: number;
   totalCalories: number;
+  totalFiber?: number;    // Added total fiber
+  totalSugars?: number;   // Added total sugars 
+  netCarbs?: number;      // Added net carbs (carbs - fiber)
 };
 
 export type DietType = 
