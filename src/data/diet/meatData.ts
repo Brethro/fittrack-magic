@@ -1,8 +1,35 @@
-
 // Meats & Poultry food data
 export const meatsAndPoultryData = {
   name: "Meats & Poultry",
   items: [
+    { 
+      id: "beef_top_sirloin_broiled", 
+      name: "Beef Top Sirloin, Broiled", 
+      protein: 31, 
+      carbs: 0, 
+      fats: 8.2, 
+      caloriesPerServing: 206, 
+      fiber: 0,
+      sugars: 0,
+      addedSugars: 0,
+      saturatedFat: 3.3,
+      transFat: 0.3,
+      polyunsaturatedFat: 0.3,
+      monounsaturatedFat: 4.4,
+      cholesterol: 75,
+      sodium: 58,
+      potassium: 337,
+      calcium: 11,
+      iron: 2.5,
+      vitaminD: 0,
+      vitaminA: 0,
+      vitaminC: 0,
+      servingSize: "100g", 
+      servingSizeGrams: 100,
+      primaryCategory: "redMeat",
+      secondaryCategories: ["meat"],
+      diets: ["paleo", "keto"]
+    },
     { id: "chicken_breast", name: "Chicken Breast (skinless)", protein: 31, carbs: 0, fats: 3.6, caloriesPerServing: 165, servingSize: "100g cooked", servingSizeGrams: 100 },
     { id: "chicken_thigh_skinless", name: "Chicken Thigh (skinless)", protein: 26, carbs: 0, fats: 10, caloriesPerServing: 209, servingSize: "100g cooked", servingSizeGrams: 100 },
     { id: "chicken_thigh_skin", name: "Chicken Thigh (with skin)", protein: 24, carbs: 0, fats: 15.5, caloriesPerServing: 229, servingSize: "100g cooked", servingSizeGrams: 100 },
