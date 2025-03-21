@@ -1,3 +1,4 @@
+
 import { recalculateFoodWithServings } from './macroUtils';
 
 // Adjust servings to meet calorie and protein targets
@@ -5,7 +6,7 @@ export const adjustServingsForCalorieTarget = (
   mealFoods: any[],
   targetCalories: number,
   targetProtein: number,
-  tolerance: number = 0.05 // 5% tolerance
+  tolerance: number = 0.05 // Now accepts a custom tolerance parameter (default 5%)
 ): any[] => {
   if (mealFoods.length === 0) return [];
   
@@ -306,3 +307,4 @@ export const adjustServingsForCalorieTarget = (
   
   return adjustedFoods;
 };
+

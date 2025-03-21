@@ -57,9 +57,9 @@ const DietPage = () => {
     targetFats: userData.macros.fats || 67
   });
 
-  // Generate meal plan function that passes selected food items
+  // Generate meal plan function that passes selected food items and the diet type
   const handleGenerateMealPlan = () => {
-    generateMealPlanHook(getSelectedFoodItems());
+    generateMealPlanHook(getSelectedFoodItems(), selectedDiet);
     setActiveTab("plan");
   };
 
@@ -123,3 +123,4 @@ const DietPage = () => {
 };
 
 export default DietPage;
+

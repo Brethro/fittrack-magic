@@ -48,4 +48,6 @@ export type DietType =
   | "mexican"
   | "italian"
   | "paleo"
-  | "keto";
+  | "keto"
+  | "pescatarian";
+

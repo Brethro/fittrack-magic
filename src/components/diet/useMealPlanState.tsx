@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { createBalancedMeal } from "@/utils/dietUtils";
-import { Meal, FoodItem } from "@/types/diet";
+import { Meal, FoodItem, DietType } from "@/types/diet";
 
 interface UseMealPlanStateProps {
   dailyCalories: number;
@@ -23,9 +23,11 @@ export const useMealPlanState = ({
   const [freeMealCalories, setFreeMealCalories] = useState(
     dailyCalories ? Math.round(dailyCalories * 0.2) : 500
   );
+  const [activeDietType, setActiveDietType] = useState<DietType>("all");
 
-  const generateMealPlan = (selectedFoodItems: FoodItem[]) => {
+  const generateMealPlan = (selectedFoodItems: FoodItem[], dietType: DietType = "all") => {
     const selectedFoodCount = selectedFoodItems.length;
+    setActiveDietType(dietType);
     
     if (selectedFoodCount < 10) {
       toast({
@@ -64,6 +66,9 @@ export const useMealPlanState = ({
 
     const mealNames = ["Breakfast", "Lunch", "Dinner", "Snack"];
     
+    // Use stricter tolerance (0.03 = 3%) for specific diets to ensure we stay within 5% overall
+    const stricter = dietType !== "all" ? 0.03 : 0.05;
+    
     // Create balanced meals using our utility function
     const meals: Meal[] = [];
     for (let i = 0; i < numberOfMeals; i++) {
@@ -73,7 +78,8 @@ export const useMealPlanState = ({
         proteinPerMeal,
         carbsPerMeal,
         fatsPerMeal,
-        mealNames[i]
+        mealNames[i],
+        stricter
       );
       meals.push(meal);
     }
@@ -152,6 +158,9 @@ export const useMealPlanState = ({
     const targetCarbsForMeal = Math.max(0, targetCarbs - otherMealsTotals.carbs - freeMealCarbs);
     const targetFatsForMeal = Math.max(0, targetFats - otherMealsTotals.fats - freeMealFats);
     
+    // Use stricter tolerance for specific diets
+    const stricter = activeDietType !== "all" ? 0.03 : 0.05;
+    
     // Generate new meal with specific targets for this meal
     const newMeal = createBalancedMeal(
       selectedFoodItems,
@@ -159,7 +168,8 @@ export const useMealPlanState = ({
       targetProteinForMeal,
       targetCarbsForMeal,
       targetFatsForMeal,
-      mealPlan[mealIndex].name
+      mealPlan[mealIndex].name,
+      stricter
     );
     
     // Update the meal plan
@@ -181,6 +191,8 @@ export const useMealPlanState = ({
     freeMealCalories,
     setFreeMealCalories,
     generateMealPlan,
-    regenerateMeal
+    regenerateMeal,
+    activeDietType
   };
 };
+

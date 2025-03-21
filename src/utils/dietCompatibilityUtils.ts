@@ -16,6 +16,16 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
            !food.name.toLowerCase().includes("tuna");
   },
 
+  // Pescatarian: excludes meat but allows fish and seafood
+  pescatarian: (food) => {
+    const nonPescatarianItems = [
+      "meat", "chicken", "beef", "pork", "turkey", "lamb", "bacon", "sausage"
+    ];
+    return !nonPescatarianItems.some(item => 
+      food.name.toLowerCase().includes(item)
+    );
+  },
+
   // Vegan: excludes all animal products
   vegan: (food) => {
     const nonVeganItems = [
@@ -144,3 +154,4 @@ export const filterFoodsByDiet = (foods: FoodItem[], diet: DietType): FoodItem[]
   if (diet === "all") return foods;
   return foods.filter(food => isFoodCompatibleWithDiet(food, diet));
 };
+

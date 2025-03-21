@@ -48,8 +48,9 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     setSelectedFoods(filteredFoods);
     setSelectedDiet(diet);
     
+    const dietName = diet.charAt(0).toUpperCase() + diet.slice(1);
     toast({
-      title: `${diet.charAt(0).toUpperCase() + diet.slice(1)} diet selected`,
+      title: `${dietName} diet selected`,
       description: `${matchCount} compatible foods available.`,
     });
   };
@@ -79,3 +80,4 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     getDietCompatibleFoods
   };
 };
+

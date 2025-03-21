@@ -25,7 +25,8 @@ export const createBalancedMeal = (
   targetProtein: number,
   targetCarbs: number,  
   targetFats: number,
-  mealName: string
+  mealName: string,
+  tolerance: number = 0.05 // Default tolerance of 5%, can be stricter for specific diets
 ): Meal => {
   let mealFoods: any[] = [];
   
@@ -176,8 +177,8 @@ export const createBalancedMeal = (
   }
   
   // Adjust servings to get close to calorie target and protein target
-  // Using stricter tolerance of 4% instead of 5%
-  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, targetProtein, 0.04);
+  // Pass the specified tolerance instead of using a fixed value
+  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, targetProtein, tolerance);
   
   // Calculate final meal totals
   const totals = calculateMealTotals(mealFoods);
@@ -192,3 +193,4 @@ export const createBalancedMeal = (
     totalCalories: Math.round(totals.totalCalories)
   };
 };
+
