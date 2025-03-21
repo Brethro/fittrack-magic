@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Utensils, ChevronDown, ChevronUp, Search, MessageSquare } from "lucide-react";
+import { Utensils, ChevronDown, ChevronUp, Search, MessageSquare, FileText } from "lucide-react";
 import { FoodCategory, DietType, FoodItem, FoodPrimaryCategory } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/collapsible";
 import { DietSelector } from "./DietSelector";
 import { FoodFeedbackDialog } from "./FoodFeedbackDialog";
+import { FoodNutritionDialog } from "./FoodNutritionDialog";
 import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
 
 interface FoodPreferencesProps {
@@ -46,9 +47,13 @@ export function FoodPreferences({
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
   
-  // New state for feedback dialog
+  // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedFoodForFeedback, setSelectedFoodForFeedback] = useState<FoodItem | null>(null);
+  
+  // State for nutrition dialog
+  const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
+  const [selectedFoodForNutrition, setSelectedFoodForNutrition] = useState<FoodItem | null>(null);
   
   // Toggle food selection
   const toggleFoodSelection = (foodId: string) => {
@@ -83,9 +88,16 @@ export function FoodPreferences({
   };
 
   // Open feedback dialog for a specific food
-  const openFeedbackDialog = (food: FoodItem) => {
+  const openFeedbackDialog = (food: FoodItem, event: React.MouseEvent) => {
+    event.stopPropagation();
     setSelectedFoodForFeedback(food);
     setFeedbackDialogOpen(true);
+  };
+
+  // Open nutrition dialog for a specific food
+  const openNutritionDialog = (food: FoodItem) => {
+    setSelectedFoodForNutrition(food);
+    setNutritionDialogOpen(true);
   };
 
   // Expand a category if it contains matched search results
@@ -172,6 +184,7 @@ export function FoodPreferences({
         <h2 className="text-lg font-medium mb-3">Select Your Preferred Foods</h2>
         <p className="text-sm text-muted-foreground mb-4">
           Check all the foods you enjoy eating. We'll use these to create your personalized meal plan.
+          <span className="block mt-1 text-xs italic">Click on any food to see detailed nutrition information.</span>
         </p>
         
         <div className="relative mb-4">
@@ -234,34 +247,40 @@ export function FoodPreferences({
                     {filteredItems.map((food) => (
                       <div 
                         key={food.id} 
-                        className={`flex items-start space-x-2 p-2 rounded hover:bg-muted/30 ${
+                        className={`flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer ${
                           searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase()) 
                             ? "bg-muted/40" 
                             : ""
                         }`}
+                        onClick={() => openNutritionDialog(food)}
                       >
                         <Checkbox 
                           id={food.id}
                           checked={selectedFoods[food.id] !== false} 
                           onCheckedChange={() => toggleFoodSelection(food.id)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <div className="grid gap-1 flex-1">
                           <div className="flex justify-between">
                             <Label
                               htmlFor={food.id}
-                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {food.name}
+                              <FileText className="h-3 w-3 ml-1 text-muted-foreground" />
                             </Label>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 -mt-1 -mr-1"
-                              onClick={() => openFeedbackDialog(food)}
-                              title="Suggest different category"
-                            >
-                              <MessageSquare className="h-3 w-3" />
-                            </Button>
+                            <div className="flex">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-5 w-5 -mt-1 -mr-1"
+                                onClick={(e) => openFeedbackDialog(food, e)}
+                                title="Suggest different category"
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             {food.caloriesPerServing} cal | P: {food.protein}g C: {food.carbs}g F: {food.fats}g
@@ -328,6 +347,13 @@ export function FoodPreferences({
         onClose={() => setFeedbackDialogOpen(false)}
         foodItem={selectedFoodForFeedback}
         foodCategories={foodCategories}
+      />
+
+      {/* Nutrition Dialog */}
+      <FoodNutritionDialog
+        open={nutritionDialogOpen}
+        onClose={() => setNutritionDialogOpen(false)}
+        food={selectedFoodForNutrition}
       />
     </div>
   );
