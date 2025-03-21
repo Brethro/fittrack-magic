@@ -1,8 +1,17 @@
 
-import { FoodCategory } from "@/types/diet";
+import { FoodCategory, FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { migrateExistingFoodData } from "@/utils/dietCompatibilityUtils";
 
-// This component is responsible for providing food category data
-export const foodCategoriesData: FoodCategory[] = [
+// Process each food item with the migration helper to add primaryCategory
+const processRawFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {
+  return categories.map(category => ({
+    name: category.name,
+    items: category.items.map(item => migrateExistingFoodData(item as FoodItem))
+  }));
+};
+
+// Raw food category data (without explicit primary categories)
+const rawFoodCategoriesData: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[] = [
   {
     name: "Meats & Poultry",
     items: [
@@ -468,3 +477,5 @@ export const foodCategoriesData: FoodCategory[] = [
   },
 ];
 
+// Process the raw food data to add primaryCategory to each item
+export const foodCategoriesData: FoodCategory[] = processRawFoodData(rawFoodCategoriesData);
