@@ -1,4 +1,5 @@
-// Meats & Poultry food data
+
+// Meats & Poultry food data - with detailed nutrition information
 export const meatsAndPoultryData = {
   name: "Meats & Poultry",
   items: [
@@ -29,40 +30,6 @@ export const meatsAndPoultryData = {
       primaryCategory: "redMeat",
       secondaryCategories: ["meat"],
       diets: ["paleo", "keto"]
-    },
-    { id: "chicken_breast", name: "Chicken Breast (skinless)", protein: 31, carbs: 0, fats: 3.6, caloriesPerServing: 165, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "chicken_thigh_skinless", name: "Chicken Thigh (skinless)", protein: 26, carbs: 0, fats: 10, caloriesPerServing: 209, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "chicken_thigh_skin", name: "Chicken Thigh (with skin)", protein: 24, carbs: 0, fats: 15.5, caloriesPerServing: 229, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "chicken_wings", name: "Chicken Wings", protein: 30, carbs: 0, fats: 19, caloriesPerServing: 290, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "ground_turkey", name: "Ground Turkey (93% lean)", protein: 27, carbs: 0, fats: 8, caloriesPerServing: 170, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_steak", name: "Beef Steak (sirloin)", protein: 26, carbs: 0, fats: 15, caloriesPerServing: 244, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "ground_beef_lean", name: "Ground Beef (90% lean)", protein: 26, carbs: 0, fats: 10, caloriesPerServing: 196, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "ground_beef_reg", name: "Ground Beef (80% lean)", protein: 25, carbs: 0, fats: 18, caloriesPerServing: 254, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pork_chop", name: "Pork Chop (lean)", protein: 25, carbs: 0, fats: 7, caloriesPerServing: 175, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "bacon", name: "Bacon", protein: 37, carbs: 1, fats: 42, caloriesPerServing: 541, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "lamb", name: "Lamb (lean)", protein: 25, carbs: 0, fats: 16, caloriesPerServing: 258, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "veal_cutlet", name: "Veal Cutlet", protein: 29, carbs: 0, fats: 3.3, caloriesPerServing: 151, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "duck_breast", name: "Duck Breast (without skin)", protein: 23, carbs: 0, fats: 6, caloriesPerServing: 159, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "duck_leg", name: "Duck Leg", protein: 19, carbs: 0, fats: 21, caloriesPerServing: 265, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "goose", name: "Goose Meat", protein: 25, carbs: 0, fats: 12, caloriesPerServing: 209, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "rabbit", name: "Rabbit Meat", protein: 33, carbs: 0, fats: 3.5, caloriesPerServing: 173, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "venison", name: "Venison (deer)", protein: 30, carbs: 0, fats: 2.7, caloriesPerServing: 158, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "bison", name: "Bison/Buffalo Meat", protein: 28, carbs: 0, fats: 2, caloriesPerServing: 143, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "elk", name: "Elk Meat", protein: 31, carbs: 0, fats: 2, caloriesPerServing: 146, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_liver", name: "Beef Liver", protein: 27, carbs: 3.9, fats: 3.6, caloriesPerServing: 175, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "chicken_liver", name: "Chicken Liver", protein: 26, carbs: 1, fats: 6, caloriesPerServing: 172, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "ground_pork", name: "Ground Pork", protein: 21, carbs: 0, fats: 20, caloriesPerServing: 263, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pork_belly", name: "Pork Belly", protein: 9, carbs: 0, fats: 49, caloriesPerServing: 469, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pork_shoulder", name: "Pork Shoulder", protein: 22, carbs: 0, fats: 12, caloriesPerServing: 196, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pork_ribs", name: "Pork Ribs", protein: 27, carbs: 0, fats: 22, caloriesPerServing: 309, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_brisket", name: "Beef Brisket", protein: 28, carbs: 0, fats: 12, caloriesPerServing: 218, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_short_ribs", name: "Beef Short Ribs", protein: 28, carbs: 0, fats: 24, caloriesPerServing: 325, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_ribeye", name: "Beef Ribeye Steak", protein: 27, carbs: 0, fats: 14, caloriesPerServing: 291, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_t_bone", name: "T-Bone Steak", protein: 28, carbs: 0, fats: 17, caloriesPerServing: 267, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_flank", name: "Beef Flank Steak", protein: 27, carbs: 0, fats: 6, caloriesPerServing: 194, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "beef_chuck", name: "Beef Chuck", protein: 26, carbs: 0, fats: 11, caloriesPerServing: 205, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "ostrich", name: "Ostrich Meat", protein: 26, carbs: 0, fats: 3, caloriesPerServing: 142, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "quail", name: "Quail Meat", protein: 25, carbs: 0, fats: 7, caloriesPerServing: 169, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pheasant", name: "Pheasant Meat", protein: 27, carbs: 0, fats: 3.8, caloriesPerServing: 149, servingSize: "100g cooked", servingSizeGrams: 100 },
+    }
   ],
 };
