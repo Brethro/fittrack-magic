@@ -105,10 +105,16 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     // "all" is always available
     const availableDiets: DietType[] = ["all"];
     
-    // Check each diet type
+    // Get all foods in the database
     const allFoods = migratedFoodCategories.flatMap(category => 
       category.items.map(food => migrateExistingFoodData(food))
     );
+    
+    // Only consider non-empty food data
+    if (allFoods.length === 0) {
+      console.warn("No foods available to determine compatible diets");
+      return ["all"];
+    }
     
     // Get all diet types except "all"
     const dietTypes: Exclude<DietType, "all">[] = [
@@ -120,7 +126,10 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     dietTypes.forEach(diet => {
       const compatibleFoods = filterFoodsByDiet(allFoods, diet);
       if (compatibleFoods.length > 0) {
+        console.log(`Diet ${diet} has ${compatibleFoods.length} compatible foods`);
         availableDiets.push(diet);
+      } else {
+        console.log(`Diet ${diet} has no compatible foods - will not be shown`);
       }
     });
     

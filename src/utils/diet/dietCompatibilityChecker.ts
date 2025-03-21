@@ -1,3 +1,4 @@
+
 import { FoodItem, DietType } from "@/types/diet";
 import { dietCompatibleCategories, specialCaseRules } from "./dietCompatibilityRules";
 import { foodBelongsToCategory } from "./foodCategoryHierarchy";
