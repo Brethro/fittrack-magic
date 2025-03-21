@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -99,7 +98,6 @@ const PlanPage = () => {
       [...userData.weightLog].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : 
       [];
     
-    // Find the most recent weight entry to use as actual starting point
     // Filter only entries on or after today
     const validWeightEntries = sortedWeightLog.filter(entry => {
       const entryDate = new Date(entry.date);
@@ -107,6 +105,7 @@ const PlanPage = () => {
       return entryDate >= today;
     });
     
+    // Find the most recent entry to use as starting point for projection
     const mostRecentEntry = validWeightEntries.length > 0 ? 
       validWeightEntries[validWeightEntries.length - 1].weight : 
       startWeight;
@@ -125,14 +124,12 @@ const PlanPage = () => {
       remainingDays
     });
     
-    const data = [];
-    
-    // Add data points (one per week, plus start and end)
-    const maxPoints = 8; // Maximum number of points to display
-    const interval = Math.max(Math.floor(totalDays / (maxPoints - 1)), 1);
+    // Initialize separate arrays for projection and actual data
+    const projectionData = [];
+    const actualData = [];
     
     // Start with today as first projection point
-    data.push({
+    projectionData.push({
       date: format(today, "MMM d"),
       projection: parseFloat(projectionStartWeight.toFixed(1)),
       tooltipDate: format(today, "MMMM d, yyyy"),
@@ -140,6 +137,9 @@ const PlanPage = () => {
     });
     
     // Add intermediate projection points
+    const maxPoints = 8; // Maximum number of points to display
+    const interval = Math.max(Math.floor(totalDays / (maxPoints - 1)), 1);
+    
     for (let i = interval; i < totalDays; i += interval) {
       const currentDate = addDays(today, i);
       
@@ -150,7 +150,7 @@ const PlanPage = () => {
         targetWeight
       );
       
-      data.push({
+      projectionData.push({
         date: format(currentDate, "MMM d"),
         projection: parseFloat(projectedWeight.toFixed(1)),
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
@@ -159,8 +159,8 @@ const PlanPage = () => {
     }
     
     // Always add the goal date as the final projection point
-    if (data.length === 0 || format(goalDate, "MMM d") !== data[data.length - 1].date) {
-      data.push({
+    if (format(goalDate, "MMM d") !== projectionData[projectionData.length - 1].date) {
+      projectionData.push({
         date: format(goalDate, "MMM d"),
         projection: parseFloat(targetWeight.toFixed(1)),
         tooltipDate: format(goalDate, "MMMM d, yyyy"),
@@ -168,32 +168,31 @@ const PlanPage = () => {
       });
     } else {
       // Update the last point's projection to exactly match the target
-      data[data.length - 1].projection = parseFloat(targetWeight.toFixed(1));
+      projectionData[projectionData.length - 1].projection = parseFloat(targetWeight.toFixed(1));
     }
     
-    // Add actual weight log data as separate entries, only use entries from today or future
+    // Add actual weight log data as separate entries
     if (validWeightEntries.length > 0) {
       validWeightEntries.forEach(entry => {
         const entryDate = new Date(entry.date);
-        const dateStr = format(entryDate, "MMM d");
-        
-        // Check if we already have a data point for this date
-        const existingPoint = data.find(point => point.date === dateStr);
-        
-        if (existingPoint) {
-          // Add actual weight to the existing data point
-          existingPoint.actual = entry.weight;
-        } else {
-          // Create a new data point for this actual weight
-          data.push({
-            date: dateStr,
-            actual: entry.weight,
-            tooltipDate: format(entryDate, "MMMM d, yyyy"),
-            fullDate: entryDate
-          });
-        }
+        actualData.push({
+          date: format(entryDate, "MMM d"),
+          actual: entry.weight,
+          tooltipDate: format(entryDate, "MMMM d, yyyy"),
+          fullDate: entryDate
+        });
       });
     }
+    
+    // Merge the data by date for the chart
+    // Start with all projection data
+    const data = [...projectionData];
+    
+    // Now add actual data points - don't try to modify existing points
+    actualData.forEach(actualPoint => {
+      // Just add the actual point to the array
+      data.push(actualPoint);
+    });
     
     // Sort by date
     data.sort((a, b) => {
@@ -396,7 +395,7 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#8b5cf6', r: 4 }}
                       activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
-                      connectNulls={true}
+                      connectNulls={false}
                     />
                     <Line 
                       type="monotone" 
@@ -406,6 +405,7 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#10b981', r: 4 }}
                       activeDot={{ fill: '#6ee7b7', r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                      connectNulls={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
