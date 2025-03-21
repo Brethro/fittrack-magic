@@ -1,7 +1,12 @@
 
-import { Flame } from "lucide-react";
+import { Flame, InfoIcon } from "lucide-react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function NutritionPanel() {
   const { userData } = useUserData();
@@ -79,6 +84,36 @@ export function NutritionPanel() {
           />
           <p className="text-xs text-right mt-1">{macroCalories.fats} cal</p>
         </div>
+      </div>
+      
+      {/* Nutrition explanation */}
+      <div className="mt-4 text-sm text-muted-foreground p-3 glass-card rounded-lg">
+        <div className="flex items-start gap-2">
+          <InfoIcon className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+          <p>
+            Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate deficit 
+            to achieve your goal by the target date. The high protein amount ({userData.macros.protein}g) is specifically 
+            designed to preserve lean muscle mass during weight loss—approximately {userData.bodyFatPercentage ? 
+            `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '2.0-2.4g per kg'} of 
+            lean body mass. Fats are set at 25% of total calories for hormone production, with remaining calories allocated to carbs for energy.
+          </p>
+        </div>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="mt-2 text-xs flex items-center gap-1 text-primary cursor-help">
+              <InfoIcon className="w-3 h-3" /> More about these calculations
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="text-xs">
+              We use the Mifflin-St Jeor equation (or Katch-McArdle when body fat percentage is available) 
+              to calculate your BMR, then apply activity multipliers. The macro balance prioritizes muscle 
+              preservation during a caloric deficit, which research shows requires higher protein intake 
+              than maintenance.
+            </p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

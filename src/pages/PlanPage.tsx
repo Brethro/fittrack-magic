@@ -58,7 +58,7 @@ const PlanPage = () => {
             Your Plan
           </h1>
           
-          <section className="mb-8">
+          <section className="space-y-4 mb-8">
             {/* Nutrition panel */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -104,6 +104,6 @@ const PlanPage = () => {
       />
     </div>
   );
-};
+}
 
 export default PlanPage;
