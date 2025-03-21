@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
+import { filterFoodsByDiet } from "@/utils/dietCompatibilityUtils";
 
 export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
   const { toast } = useToast();
@@ -29,14 +30,16 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
       return;
     }
     
-    // Filter foods based on selected diet
+    // Filter foods based on selected diet using the utility function
     const filteredFoods: Record<string, boolean> = {};
     let matchCount = 0;
     
     foodCategories.forEach(category => {
+      const compatibleFoods = filterFoodsByDiet(category.items, diet);
+      
+      // Mark all foods as selected or not based on diet compatibility
       category.items.forEach(food => {
-        // If food has diet tags and includes the selected diet, or if it has no diet tags (consider compatible with all)
-        const isCompatible = !food.diets || food.diets.includes(diet);
+        const isCompatible = compatibleFoods.some(f => f.id === food.id);
         filteredFoods[food.id] = isCompatible;
         if (isCompatible) matchCount++;
       });
@@ -62,9 +65,9 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
   const getDietCompatibleFoods = (): FoodItem[] => {
     if (selectedDiet === "all") return foodCategories.flatMap(category => category.items);
     
-    return foodCategories
-      .flatMap(category => category.items)
-      .filter(food => !food.diets || food.diets.includes(selectedDiet));
+    return foodCategories.flatMap(category => 
+      filterFoodsByDiet(category.items, selectedDiet)
+    );
   };
 
   return {
