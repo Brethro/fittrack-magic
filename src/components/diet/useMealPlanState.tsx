@@ -110,7 +110,7 @@ export const useMealPlanState = ({
     });
   };
 
-  // Regenerate a specific meal
+  // Regenerate a specific meal - MODIFIED for better target adherence
   const regenerateMeal = (mealId: string, selectedFoodItems: FoodItem[]) => {
     if (mealId === "free-meal") return; // Don't regenerate free meals
     
@@ -118,22 +118,47 @@ export const useMealPlanState = ({
     const mealIndex = mealPlan.findIndex(meal => meal.id === mealId);
     if (mealIndex === -1) return;
     
-    // Calculate number of meals (excluding free meal)
-    const regularMeals = includeFreeMeal ? mealPlan.length - 1 : mealPlan.length;
+    // Calculate the current totals for all OTHER meals (excluding the one being regenerated)
+    const otherMeals = mealPlan.filter((_, index) => index !== mealIndex && mealPlan[index].name !== "Free Meal");
+    const otherMealsTotals = otherMeals.reduce(
+      (acc, meal) => ({
+        calories: acc.calories + meal.totalCalories,
+        protein: acc.protein + meal.totalProtein,
+        carbs: acc.carbs + meal.totalCarbs,
+        fats: acc.fats + meal.totalFats
+      }),
+      { calories: 0, protein: 0, carbs: 0, fats: 0 }
+    );
     
-    // Calculate per-meal targets
-    const caloriesPerMeal = Math.floor(dailyCalories / regularMeals);
-    const proteinPerMeal = Math.floor(targetProtein / regularMeals);
-    const carbsPerMeal = Math.floor(targetCarbs / regularMeals);
-    const fatsPerMeal = Math.floor(targetFats / regularMeals);
+    // If free meal is included, account for its nutrition
+    let freeMealCaloriesValue = 0;
+    let freeMealProtein = 0;
+    let freeMealCarbs = 0;
+    let freeMealFats = 0;
     
-    // Generate new meal
+    if (includeFreeMeal) {
+      const freeMeal = mealPlan.find(meal => meal.name === "Free Meal");
+      if (freeMeal) {
+        freeMealCaloriesValue = freeMeal.totalCalories;
+        freeMealProtein = freeMeal.totalProtein;
+        freeMealCarbs = freeMeal.totalCarbs;
+        freeMealFats = freeMeal.totalFats;
+      }
+    }
+    
+    // Calculate remaining targets for this meal specifically
+    const targetCaloriesForMeal = Math.max(0, dailyCalories - otherMealsTotals.calories - freeMealCaloriesValue);
+    const targetProteinForMeal = Math.max(0, targetProtein - otherMealsTotals.protein - freeMealProtein);
+    const targetCarbsForMeal = Math.max(0, targetCarbs - otherMealsTotals.carbs - freeMealCarbs);
+    const targetFatsForMeal = Math.max(0, targetFats - otherMealsTotals.fats - freeMealFats);
+    
+    // Generate new meal with specific targets for this meal
     const newMeal = createBalancedMeal(
       selectedFoodItems,
-      caloriesPerMeal,
-      proteinPerMeal,
-      carbsPerMeal,
-      fatsPerMeal,
+      targetCaloriesForMeal,
+      targetProteinForMeal,
+      targetCarbsForMeal,
+      targetFatsForMeal,
       mealPlan[mealIndex].name
     );
     

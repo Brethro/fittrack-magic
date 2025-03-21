@@ -45,23 +45,49 @@ export function DailyTotals({
 
   const totals = calculateTotals();
   
-  // Calculate percentage difference from target calories
+  // IMPROVED: Calculate percentage difference from target calories
   const caloriePercentDiff = ((totals.totalCalories - calorieTarget) / calorieTarget) * 100;
-  const isWithinCalorieTarget = Math.abs(caloriePercentDiff) <= 5; // Within 5% of target
-  const isUnderTarget = caloriePercentDiff < -5; // Under by more than 5%
-  const isOverTarget = caloriePercentDiff > 5; // Over by more than 5%
+  const isWithinCalorieTarget = Math.abs(caloriePercentDiff) <= 4; // Stricter 4% tolerance
+  const isUnderTarget = caloriePercentDiff < -4; // Under by more than 4%
+  const isOverTarget = caloriePercentDiff > 4; // Over by more than 4%
+  const isCriticallyOverTarget = caloriePercentDiff > 10; // Over by more than 10%
+  const isCriticallyUnderTarget = caloriePercentDiff < -10; // Under by more than 10%
   
   // Calculate protein percentage from target
   const proteinPercentDiff = ((totals.totalProtein - userMacros.protein) / userMacros.protein) * 100;
-  const isWithinProteinTarget = Math.abs(proteinPercentDiff) <= 5; // Within 5% of target
-  const isProteinUnderTarget = proteinPercentDiff < -5; // Under by more than 5%
+  const isWithinProteinTarget = Math.abs(proteinPercentDiff) <= 4; // Stricter 4% tolerance
+  const isProteinUnderTarget = proteinPercentDiff < -4; // Under by more than 4%
+  const isProteinOverTarget = proteinPercentDiff > 4; // Over by more than 4%
   const isProteinCritical = proteinPercentDiff < -10; // Under by more than 10% (critical)
   
   // Determine if there's any critical issue
-  const hasCriticalIssue = isProteinCritical || caloriePercentDiff < -10;
+  const hasCriticalIssue = isProteinCritical || isCriticallyUnderTarget || isCriticallyOverTarget;
+  
+  // Calculate how many meals are within target range
+  const getMealsWithinRange = () => {
+    if (mealPlan.length === 0) return 0;
+    
+    // Count meals within 5% of their proportional target
+    const mealsCount = mealPlan.filter(meal => meal.name !== "Free Meal").length;
+    if (mealsCount === 0) return 0;
+    
+    const targetPerMeal = calorieTarget / mealsCount;
+    
+    return mealPlan
+      .filter(meal => meal.name !== "Free Meal") // Exclude free meal
+      .filter(meal => {
+        const mealDiff = Math.abs((meal.totalCalories - targetPerMeal) / targetPerMeal);
+        return mealDiff <= 0.05; // Within 5% of target
+      })
+      .length;
+  };
+  
+  const mealsWithinTarget = getMealsWithinRange();
+  const totalRegularMeals = mealPlan.filter(meal => meal.name !== "Free Meal").length;
+  const allMealsWithinTarget = mealsWithinTarget === totalRegularMeals && totalRegularMeals > 0;
 
   return (
-    <div className={`glass-panel rounded-lg p-4 mb-4 ${!isWithinCalorieTarget || !isWithinProteinTarget ? 'border-2 border-orange-500' : ''}`}>
+    <div className={`glass-panel rounded-lg p-4 mb-4 ${hasCriticalIssue ? 'border-2 border-orange-500' : !isWithinCalorieTarget || !isWithinProteinTarget ? 'border border-yellow-500' : ''}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-medium">Daily Totals</h2>
         <Button 
@@ -77,16 +103,16 @@ export function DailyTotals({
       
       <div className="grid grid-cols-2 gap-3 mb-3">
         {/* Calories Card */}
-        <Card className={`p-3 text-center ${isUnderTarget ? 'bg-orange-500/10 border-orange-500' : isOverTarget ? 'bg-yellow-500/10 border-yellow-500' : ''}`}>
+        <Card className={`p-3 text-center ${isCriticallyUnderTarget ? 'bg-orange-500/10 border-orange-500' : isCriticallyOverTarget ? 'bg-orange-500/10 border-orange-500' : isUnderTarget ? 'bg-yellow-500/10 border-yellow-500' : isOverTarget ? 'bg-yellow-500/10 border-yellow-500' : ''}`}>
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Flame className={`w-5 h-5 ${isUnderTarget ? 'text-orange-500' : isOverTarget ? 'text-yellow-500' : 'text-orange-400'}`} />
-            <p className={`text-2xl font-bold ${isUnderTarget ? 'text-orange-500' : isOverTarget ? 'text-yellow-500' : ''}`}>{totals.totalCalories}</p>
+            <Flame className={`w-5 h-5 ${isCriticallyUnderTarget || isCriticallyOverTarget ? 'text-orange-500' : isUnderTarget || isOverTarget ? 'text-yellow-500' : 'text-orange-400'}`} />
+            <p className={`text-2xl font-bold ${isCriticallyUnderTarget || isCriticallyOverTarget ? 'text-orange-500' : isUnderTarget || isOverTarget ? 'text-yellow-500' : ''}`}>{totals.totalCalories}</p>
           </div>
           <p className="text-xs text-muted-foreground">Calories</p>
           {!isWithinCalorieTarget && (
             <div className="flex items-center justify-center gap-1 mt-1">
-              <AlertCircle className={`h-3 w-3 ${isUnderTarget ? 'text-orange-500' : 'text-yellow-500'}`} />
-              <p className={`text-xs font-medium ${isUnderTarget ? 'text-orange-500' : 'text-yellow-500'}`}>
+              <AlertCircle className={`h-3 w-3 ${isCriticallyUnderTarget || isCriticallyOverTarget ? 'text-orange-500' : 'text-yellow-500'}`} />
+              <p className={`text-xs font-medium ${isCriticallyUnderTarget || isCriticallyOverTarget ? 'text-orange-500' : 'text-yellow-500'}`}>
                 {caloriePercentDiff > 0 ? 'Over' : 'Under'} target by {Math.abs(caloriePercentDiff).toFixed(1)}%
               </p>
             </div>
@@ -94,6 +120,13 @@ export function DailyTotals({
           <p className="text-xs text-muted-foreground mt-1">
             Target: {calorieTarget} calories
           </p>
+          
+          {/* NEW: Meal distribution indicator */}
+          {!allMealsWithinTarget && totalRegularMeals > 0 && (
+            <p className="text-xs text-amber-600 mt-1">
+              {mealsWithinTarget}/{totalRegularMeals} meals within target range
+            </p>
+          )}
         </Card>
         
         {/* Macros Card */}
@@ -107,7 +140,7 @@ export function DailyTotals({
               <span className="text-xs">Protein</span>
             </div>
             <div className="text-xs font-medium">
-              <span className={`${isProteinCritical ? 'text-red-500 font-bold' : isProteinUnderTarget ? 'text-orange-500 font-bold' : !isWithinProteinTarget ? 'text-blue-600 font-bold' : 'text-blue-500'}`}>
+              <span className={`${isProteinCritical ? 'text-red-500 font-bold' : isProteinUnderTarget ? 'text-orange-500 font-bold' : isProteinOverTarget ? 'text-yellow-600 font-bold' : 'text-blue-500'}`}>
                 {totals.totalProtein}g
               </span>
               <span className="text-xs text-muted-foreground ml-1">/ {userMacros.protein}g</span>
@@ -115,11 +148,11 @@ export function DailyTotals({
           </div>
           
           {/* Protein Warning */}
-          {isProteinUnderTarget && (
+          {!isWithinProteinTarget && (
             <div className="flex items-center gap-1 mb-1 ml-3">
-              <AlertCircle className={`h-3 w-3 ${isProteinCritical ? 'text-red-500' : 'text-orange-500'}`} />
-              <p className={`text-xs font-medium ${isProteinCritical ? 'text-red-500' : 'text-orange-500'}`}>
-                Under by {Math.abs(proteinPercentDiff).toFixed(1)}%
+              <AlertCircle className={`h-3 w-3 ${isProteinCritical ? 'text-red-500' : isProteinUnderTarget ? 'text-orange-500' : 'text-yellow-600'}`} />
+              <p className={`text-xs font-medium ${isProteinCritical ? 'text-red-500' : isProteinUnderTarget ? 'text-orange-500' : 'text-yellow-600'}`}>
+                {proteinPercentDiff < 0 ? 'Under' : 'Over'} by {Math.abs(proteinPercentDiff).toFixed(1)}%
               </p>
             </div>
           )}
