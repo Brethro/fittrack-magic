@@ -40,18 +40,18 @@ export const createBalancedMeal = (
       [proteinOptions[i], proteinOptions[j]] = [proteinOptions[j], proteinOptions[i]];
     }
     
-    // Add 1-2 protein sources (now more likely to add 2 for better distribution)
-    const proteinCount = Math.random() > 0.3 ? 2 : 1; // 70% chance of 2 protein sources
+    // INCREASED: Add 2-3 protein sources to ensure we hit protein targets
+    const proteinCount = Math.random() > 0.3 ? 3 : 2; // 70% chance of 3 protein sources, 30% chance of 2
     
     for (let i = 0; i < Math.min(proteinCount, proteinOptions.length); i++) {
       const protein = proteinOptions[i];
       // Calculate servings based on protein target (divided among protein sources)
       const servings = calculateServings(
         protein, 
-        targetProtein / proteinCount, 
+        targetProtein / (Math.min(proteinCount, proteinOptions.length)), 
         'protein',
-        0.75, // Increased minimum servings for protein sources
-        2.5    // Increased maximum servings for protein sources
+        1.0, // Increased minimum servings for protein sources
+        3.0  // Increased maximum servings for protein sources
       );
       
       mealFoods.push(createFoodWithServings(protein, servings));
@@ -108,9 +108,24 @@ export const createBalancedMeal = (
   // Check initial calories and if they're too low, consider adding another food
   let initialTotal = calculateMealTotals(mealFoods);
   const isCaloriesTooLow = initialTotal.totalCalories < targetCalories * 0.85;
+  const isProteinTooLow = initialTotal.totalProtein < targetProtein * 0.85;
   
-  // If calories are too low, add an additional food source
-  if (isCaloriesTooLow) {
+  // If protein is too low, add another protein source
+  if (isProteinTooLow) {
+    const remainingProteins = proteins.filter(food => 
+      !mealFoods.some(mf => mf.id === food.id)
+    );
+    
+    if (remainingProteins.length > 0) {
+      const additionalProtein = remainingProteins[Math.floor(Math.random() * remainingProteins.length)];
+      const proteinNeeded = targetProtein - initialTotal.totalProtein;
+      const servings = calculateServings(additionalProtein, proteinNeeded, 'protein', 0.75, 1.5);
+      
+      mealFoods.push(createFoodWithServings(additionalProtein, servings));
+    }
+  }
+  // If calories are too low but protein is ok, add an additional food source
+  else if (isCaloriesTooLow) {
     // Prioritize adding foods that would contribute to our calorie goal
     const additionalFoods = foodItems.filter(food => 
       food.caloriesPerServing > 50 && // Decent calorie contribution

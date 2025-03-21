@@ -54,15 +54,21 @@ export function DailyTotals({
   // Calculate protein percentage from target
   const proteinPercentDiff = ((totals.totalProtein - userMacros.protein) / userMacros.protein) * 100;
   const isWithinProteinTarget = Math.abs(proteinPercentDiff) <= 5; // Within 5% of target
+  const isProteinUnderTarget = proteinPercentDiff < -5; // Under by more than 5%
+  const isProteinCritical = proteinPercentDiff < -10; // Under by more than 10% (critical)
+  
+  // Determine if there's any critical issue
+  const hasCriticalIssue = isProteinCritical || caloriePercentDiff < -10;
 
   return (
-    <div className={`glass-panel rounded-lg p-4 mb-4 ${!isWithinCalorieTarget ? 'border-2 border-orange-500' : ''}`}>
+    <div className={`glass-panel rounded-lg p-4 mb-4 ${!isWithinCalorieTarget || !isWithinProteinTarget ? 'border-2 border-orange-500' : ''}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-medium">Daily Totals</h2>
         <Button 
           onClick={generateMealPlan} 
           variant="outline" 
           size="sm"
+          className={hasCriticalIssue ? "bg-orange-500/20 border-orange-500 hover:bg-orange-500/30" : ""}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Regenerate All
@@ -101,12 +107,22 @@ export function DailyTotals({
               <span className="text-xs">Protein</span>
             </div>
             <div className="text-xs font-medium">
-              <span className={`${!isWithinProteinTarget ? 'text-blue-600 font-bold' : 'text-blue-500'}`}>
+              <span className={`${isProteinCritical ? 'text-red-500 font-bold' : isProteinUnderTarget ? 'text-orange-500 font-bold' : !isWithinProteinTarget ? 'text-blue-600 font-bold' : 'text-blue-500'}`}>
                 {totals.totalProtein}g
               </span>
               <span className="text-xs text-muted-foreground ml-1">/ {userMacros.protein}g</span>
             </div>
           </div>
+          
+          {/* Protein Warning */}
+          {isProteinUnderTarget && (
+            <div className="flex items-center gap-1 mb-1 ml-3">
+              <AlertCircle className={`h-3 w-3 ${isProteinCritical ? 'text-red-500' : 'text-orange-500'}`} />
+              <p className={`text-xs font-medium ${isProteinCritical ? 'text-red-500' : 'text-orange-500'}`}>
+                Under by {Math.abs(proteinPercentDiff).toFixed(1)}%
+              </p>
+            </div>
+          )}
           
           {/* Carbs */}
           <div className="flex justify-between items-center mb-1">
