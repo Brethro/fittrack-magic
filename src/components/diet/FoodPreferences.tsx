@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Utensils, ChevronDown, ChevronUp, Search } from "lucide-react";
-import { FoodCategory, DietType } from "@/types/diet";
+import { Utensils, ChevronDown, ChevronUp, Search, MessageSquare } from "lucide-react";
+import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   Collapsible, 
@@ -12,6 +13,8 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { DietSelector } from "./DietSelector";
+import { FoodFeedbackDialog } from "./FoodFeedbackDialog";
+import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -43,6 +46,11 @@ export function FoodPreferences({
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
   
+  // New state for feedback dialog
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [selectedFoodForFeedback, setSelectedFoodForFeedback] = useState<FoodItem | null>(null);
+  
+  // Toggle food selection
   const toggleFoodSelection = (foodId: string) => {
     setSelectedFoods({
       ...selectedFoods,
@@ -74,21 +82,47 @@ export function FoodPreferences({
     });
   };
 
+  // Open feedback dialog for a specific food
+  const openFeedbackDialog = (food: FoodItem) => {
+    setSelectedFoodForFeedback(food);
+    setFeedbackDialogOpen(true);
+  };
+
   // Expand a category if it contains matched search results
   useEffect(() => {
     if (!searchQuery) return;
     
+    // New: If using fuzzy search
+    const matchedItems = searchQuery.length >= 2 
+      ? fuzzyFindFood(searchQuery, foodCategories)
+      : [];
+    
     const newOpenCategories = { ...openCategories };
     
-    foodCategories.forEach(category => {
-      const hasMatch = category.items.some(food => 
-        food.name.toLowerCase().includes(searchQuery.toLowerCase())
+    if (matchedItems.length > 0) {
+      // Get all categories with matching items
+      const categoriesWithMatches = new Set(
+        matchedItems.map(item => item.primaryCategory)
       );
       
-      if (hasMatch) {
-        newOpenCategories[category.name] = true;
-      }
-    });
+      // Open those categories
+      foodCategories.forEach(category => {
+        if (categoriesWithMatches.has(category.name)) {
+          newOpenCategories[category.name] = true;
+        }
+      });
+    } else {
+      // Fallback to the old method if no fuzzy matches
+      foodCategories.forEach(category => {
+        const hasMatch = category.items.some(food => 
+          food.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        
+        if (hasMatch) {
+          newOpenCategories[category.name] = true;
+        }
+      });
+    }
     
     setOpenCategories(newOpenCategories);
   }, [searchQuery, foodCategories]);
@@ -98,6 +132,24 @@ export function FoodPreferences({
 
   // Filter food items based on search query and diet compatibility
   const getFilteredItems = (items) => {
+    // If search query is 2 or more characters, use fuzzy search
+    if (searchQuery.length >= 2) {
+      // Filter within the current category's items only
+      const matchedItemIds = new Set(
+        fuzzyFindFood(searchQuery, [{ name: "", items }]).map(item => item.id)
+      );
+      
+      // Return items that match the search
+      const searchFiltered = items.filter(food => matchedItemIds.has(food.id));
+      
+      // If "all" diet is selected, no need for additional filtering
+      if (selectedDiet === "all") return searchFiltered;
+      
+      // For specific diets, only show compatible foods
+      return searchFiltered.filter(food => !food.diets || food.diets.includes(selectedDiet));
+    }
+    
+    // Default behavior for short search queries
     const searchFiltered = !searchQuery 
       ? items 
       : items.filter(food => food.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -193,13 +245,24 @@ export function FoodPreferences({
                           checked={selectedFoods[food.id] !== false} 
                           onCheckedChange={() => toggleFoodSelection(food.id)}
                         />
-                        <div className="grid gap-1">
-                          <Label
-                            htmlFor={food.id}
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {food.name}
-                          </Label>
+                        <div className="grid gap-1 flex-1">
+                          <div className="flex justify-between">
+                            <Label
+                              htmlFor={food.id}
+                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {food.name}
+                            </Label>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 -mt-1 -mr-1"
+                              onClick={() => openFeedbackDialog(food)}
+                              title="Suggest different category"
+                            >
+                              <MessageSquare className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {food.caloriesPerServing} cal | P: {food.protein}g C: {food.carbs}g F: {food.fats}g
                           </p>
@@ -258,6 +321,14 @@ export function FoodPreferences({
           </Button>
         </div>
       </div>
+      
+      {/* Feedback Dialog */}
+      <FoodFeedbackDialog 
+        open={feedbackDialogOpen}
+        onClose={() => setFeedbackDialogOpen(false)}
+        foodItem={selectedFoodForFeedback}
+        foodCategories={foodCategories}
+      />
     </div>
   );
 }
