@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
-import { filterFoodsByDiet } from "@/utils/diet/dietCompatibilityChecker";
+import { filterFoodsByDiet, getCompatibleDiets } from "@/utils/diet/dietCompatibilityChecker";
 import { migrateExistingFoodData, batchMigrateExistingFoodData } from "@/utils/diet/dietDataMigration";
 
 export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
@@ -126,23 +126,31 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
       return ["all"];
     }
     
-    // Get all diet types except "all"
-    const dietTypes: Exclude<DietType, "all">[] = [
+    // First, collect diets from explicit diet tags
+    const dietTagsSet = new Set<string>();
+    allFoods.forEach(food => {
+      if (food.diets && Array.isArray(food.diets)) {
+        food.diets.forEach(diet => dietTagsSet.add(diet));
+      }
+    });
+    
+    // Get all standard diet types except "all"
+    const standardDietTypes: Exclude<DietType, "all">[] = [
       "mediterranean", "vegetarian", "vegan", "japanese", 
       "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
     ];
     
-    // Check each diet for compatible foods
-    dietTypes.forEach(diet => {
-      const compatibleFoods = filterFoodsByDiet(allFoods, diet);
-      
-      // Add detailed debugging for each diet
-      if (diet === "japanese" || diet === "korean" || diet === "mexican" || diet === "italian") {
-        console.log(`Diet ${diet} - checking compatibility for first 5 foods:`);
-        allFoods.slice(0, 5).forEach(food => {
-          console.log(`- ${food.name} (${food.id}): ${filterFoodsByDiet([food], diet).length > 0}`);
-        });
+    // Add diets that have at least one compatible food
+    standardDietTypes.forEach(diet => {
+      // First check if this diet is in the explicit tags
+      if (dietTagsSet.has(diet)) {
+        console.log(`Diet ${diet} is explicitly tagged in foods`);
+        availableDiets.push(diet);
+        return;
       }
+      
+      // Fallback to rule-based compatibility check
+      const compatibleFoods = filterFoodsByDiet(allFoods, diet);
       
       if (compatibleFoods.length > 0) {
         console.log(`Diet ${diet} has ${compatibleFoods.length} compatible foods`);
@@ -151,6 +159,9 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
         console.log(`Diet ${diet} has no compatible foods - will not be shown`);
       }
     });
+    
+    // Log the final list of available diets for debugging
+    console.log("Final available diets:", availableDiets);
     
     return availableDiets;
   };

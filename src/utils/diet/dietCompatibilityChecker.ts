@@ -8,6 +8,14 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   // "All" diet includes everything
   if (diet === "all") return true;
   
+  // If the food has explicit diet tags, use those first
+  if (food.diets && Array.isArray(food.diets)) {
+    // Check if the diet is explicitly included in the food's diet tags
+    if (food.diets.includes(diet)) {
+      return true;
+    }
+  }
+  
   // Get diet compatibility rules
   const dietRules = dietCompatibleCategories[diet];
   if (!dietRules) {
@@ -83,7 +91,24 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
 export const getCompatibleDiets = (food: FoodItem): DietType[] => {
   const diets: DietType[] = ["all"];
   
-  // Check each diet type except "all"
+  // If the food has explicit diet tags, use those first
+  if (food.diets && Array.isArray(food.diets)) {
+    // Add all explicitly tagged diets that are valid DietType values
+    const validDietTypes: DietType[] = [
+      "mediterranean", "vegetarian", "vegan", "japanese", 
+      "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
+    ];
+    
+    food.diets.forEach(diet => {
+      if (validDietTypes.includes(diet as DietType)) {
+        diets.push(diet as DietType);
+      }
+    });
+    
+    return diets;
+  }
+  
+  // Check each diet type except "all" using the rules-based approach
   const dietTypes: Exclude<DietType, "all">[] = [
     "mediterranean", "vegetarian", "vegan", "japanese", 
     "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
