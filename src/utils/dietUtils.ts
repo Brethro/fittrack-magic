@@ -1,4 +1,3 @@
-
 import { FoodItem, Meal } from "@/types/diet";
 
 // Calculate how many servings of a food to include in a meal
@@ -33,91 +32,159 @@ export const calculateMealTotals = (foods: any[]): {
   }, { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0 });
 };
 
-// Adjust servings to meet calorie targets
+// Adjust servings to meet calorie and protein targets
 export const adjustServingsForCalorieTarget = (
   mealFoods: any[],
   targetCalories: number,
+  targetProtein: number,
   tolerance: number = 0.05 // 5% tolerance
 ): any[] => {
   if (mealFoods.length === 0) return [];
   
   const currentTotal = mealFoods.reduce((sum, food) => sum + food.calories, 0);
-  const targetMin = targetCalories * (1 - tolerance);
-  const targetMax = targetCalories * (1 + tolerance);
+  const currentProtein = mealFoods.reduce((sum, food) => sum + food.protein, 0);
   
-  // If we're already within tolerance, return foods unchanged
-  if (currentTotal >= targetMin && currentTotal <= targetMax) {
+  const targetCaloriesMin = targetCalories * (1 - tolerance);
+  const targetCaloriesMax = targetCalories * (1 + tolerance);
+  
+  const targetProteinMin = targetProtein * (1 - tolerance);
+  const targetProteinMax = targetProtein * (1 + tolerance);
+  
+  // If we're already within tolerance for both calories and protein, return foods unchanged
+  if (currentTotal >= targetCaloriesMin && 
+      currentTotal <= targetCaloriesMax && 
+      currentProtein >= targetProteinMin &&
+      currentProtein <= targetProteinMax) {
     return mealFoods;
   }
   
   const adjustedFoods = [...mealFoods];
-  const needToIncrease = currentTotal < targetMin;
   
-  // Sort foods by those that should be adjusted first (carbs and fats are easier to adjust than protein)
+  // Sort foods - prioritize protein-rich foods for adjustment
   const sortedIndices = adjustedFoods
     .map((_, index) => index)
     .sort((a, b) => {
       const foodA = adjustedFoods[a];
       const foodB = adjustedFoods[b];
       
-      // Prioritize adjusting carbs, then fats, then protein
-      if ((foodA.carbs / foodA.calories) > (foodB.carbs / foodB.calories)) return -1;
-      if ((foodA.fats / foodA.calories) > (foodB.fats / foodB.calories)) return 0;
-      return 1;
+      // Prioritize high protein foods first, then carbs, then fats
+      const proteinRatioA = foodA.protein / foodA.calories;
+      const proteinRatioB = foodB.protein / foodB.calories;
+      
+      return proteinRatioB - proteinRatioA; // Higher protein ratio first
     });
   
-  // Adjust servings one by one until we reach the target
+  // Adjust servings until we reach the targets
   let iterations = 0;
   const maxIterations = 10; // Prevent infinite loops
   
   while (iterations < maxIterations) {
     iterations++;
-    let currentCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
     
-    // Break if we're within tolerance
-    if (currentCalories >= targetMin && currentCalories <= targetMax) {
+    const currentCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
+    const currentProtein = adjustedFoods.reduce((sum, f) => sum + f.protein, 0);
+    
+    // If we're within tolerance for both calories and protein, we're done
+    if (currentCalories >= targetCaloriesMin && 
+        currentCalories <= targetCaloriesMax && 
+        currentProtein >= targetProteinMin &&
+        currentProtein <= targetProteinMax) {
       break;
     }
     
-    for (const index of sortedIndices) {
-      const food = adjustedFoods[index];
-      const caloriesPerServing = food.calories / food.servings;
-      
-      if (needToIncrease) {
-        // Calculate exactly how much more we need
-        const caloriesNeeded = targetCalories - adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
-        const additionalServings = caloriesNeeded / caloriesPerServing;
-        
-        // Only increase if it would help (not overshoot)
-        if (additionalServings > 0.1) {
-          const newServings = food.servings + Math.min(additionalServings, 0.25); // Increase gradually
-          adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
-        }
-      } else {
-        // Calculate exactly how much less we need
-        const excessCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0) - targetCalories;
-        const servingsToReduce = excessCalories / caloriesPerServing;
-        
-        // Only decrease if it would help (not undershoot)
-        if (servingsToReduce > 0.1 && food.servings > 0.25) {
-          const newServings = Math.max(0.25, food.servings - Math.min(servingsToReduce, 0.25)); // Decrease gradually
-          adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+    // First, prioritize fixing protein since that's more important
+    if (currentProtein < targetProteinMin) {
+      // Need to increase protein
+      for (const index of sortedIndices) {
+        const food = adjustedFoods[index];
+        if (food.protein > 0) {
+          const proteinNeeded = targetProtein - currentProtein;
+          const proteinPerServing = food.protein / food.servings;
+          const additionalServings = proteinNeeded / proteinPerServing;
+          
+          if (additionalServings > 0.1) {
+            const newServings = food.servings + Math.min(additionalServings, 0.25);
+            adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+            break;
+          }
         }
       }
+    } else if (currentProtein > targetProteinMax) {
+      // Need to decrease protein
+      // Sort in reverse order for decreasing (low protein foods first)
+      const reverseSortedIndices = [...sortedIndices].reverse();
       
-      // Check if we're now within tolerance
-      const newTotal = adjustedFoods.reduce((sum, food) => sum + food.calories, 0);
-      if (newTotal >= targetMin && newTotal <= targetMax) {
-        break;
+      for (const index of reverseSortedIndices) {
+        const food = adjustedFoods[index];
+        if (food.protein > 0 && food.servings > 0.25) {
+          const excessProtein = currentProtein - targetProtein;
+          const proteinPerServing = food.protein / food.servings;
+          const servingsToReduce = excessProtein / proteinPerServing;
+          
+          if (servingsToReduce > 0.1) {
+            const newServings = Math.max(0.25, food.servings - Math.min(servingsToReduce, 0.25));
+            adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+            break;
+          }
+        }
+      }
+    } else {
+      // Protein is good, now adjust calories if needed
+      if (currentCalories < targetCaloriesMin) {
+        // Need to increase calories, preferably from carbs/fats
+        for (const index of sortedIndices.slice().reverse()) {
+          const food = adjustedFoods[index];
+          const caloriesNeeded = targetCalories - currentCalories;
+          const caloriesPerServing = food.calories / food.servings;
+          
+          if (caloriesPerServing > 0) {
+            const additionalServings = caloriesNeeded / caloriesPerServing;
+            
+            if (additionalServings > 0.1) {
+              const newServings = food.servings + Math.min(additionalServings, 0.25);
+              adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+              break;
+            }
+          }
+        }
+      } else if (currentCalories > targetCaloriesMax) {
+        // Need to decrease calories, preferably from carbs/fats
+        for (const index of sortedIndices.slice().reverse()) {
+          const food = adjustedFoods[index];
+          if (food.servings > 0.25) {
+            const excessCalories = currentCalories - targetCalories;
+            const caloriesPerServing = food.calories / food.servings;
+            
+            if (caloriesPerServing > 0) {
+              const servingsToReduce = excessCalories / caloriesPerServing;
+              
+              if (servingsToReduce > 0.1) {
+                const newServings = Math.max(0.25, food.servings - Math.min(servingsToReduce, 0.25));
+                adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+                break;
+              }
+            }
+          }
+        }
       }
     }
   }
   
-  // Final check - if we're still over the limit, make a more aggressive adjustment
-  const finalTotal = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
-  if (finalTotal > targetMax) {
-    // Calculate how much we need to reduce all foods by to get within target
-    const reductionFactor = targetMax / finalTotal;
+  // Final check - ensure we're not over the limits
+  const finalCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
+  const finalProtein = adjustedFoods.reduce((sum, f) => sum + f.protein, 0);
+  
+  // If we're still over either limit, apply a proportional reduction
+  if (finalCalories > targetCaloriesMax || finalProtein > targetProteinMax) {
+    // Calculate reduction factors
+    const calorieReductionFactor = finalCalories > targetCaloriesMax ? 
+      targetCaloriesMax / finalCalories : 1;
+    
+    const proteinReductionFactor = finalProtein > targetProteinMax ?
+      targetProteinMax / finalProtein : 1;
+    
+    // Use the smaller reduction factor to ensure both targets are met
+    const reductionFactor = Math.min(calorieReductionFactor, proteinReductionFactor);
     
     // Apply reduction to all foods
     for (let i = 0; i < adjustedFoods.length; i++) {
@@ -155,13 +222,33 @@ export const createBalancedMeal = (
 ): Meal => {
   let mealFoods: any[] = [];
   
-  // Add a protein source
+  // Start with protein sources - prioritize protein above all
   const proteins = foodItems.filter(food => (food.protein || 0) > 10);
   if (proteins.length > 0) {
-    const randomProtein = proteins[Math.floor(Math.random() * proteins.length)];
-    const servings = calculateServings(randomProtein, targetProtein, 'protein', 0.5, 1.5);
+    // Choose multiple protein sources for variety and to hit targets
+    const proteinOptions = [...proteins];
+    // Shuffle protein options for variety
+    for (let i = proteinOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [proteinOptions[i], proteinOptions[j]] = [proteinOptions[j], proteinOptions[i]];
+    }
     
-    mealFoods.push(createFoodWithServings(randomProtein, servings));
+    // Add 1-2 protein sources
+    const proteinCount = Math.random() > 0.5 ? 2 : 1;
+    
+    for (let i = 0; i < Math.min(proteinCount, proteinOptions.length); i++) {
+      const protein = proteinOptions[i];
+      // Calculate servings based on protein target (divided among protein sources)
+      const servings = calculateServings(
+        protein, 
+        targetProtein / proteinCount, 
+        'protein',
+        0.5,
+        2.0
+      );
+      
+      mealFoods.push(createFoodWithServings(protein, servings));
+    }
   }
   
   // Add a carb source
@@ -210,8 +297,8 @@ export const createBalancedMeal = (
     }
   }
   
-  // Adjust servings to get close to calorie target - apply strict tolerance
-  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, 0.05);
+  // Adjust servings to get close to calorie target and protein target with strict 5% tolerance
+  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, targetProtein, 0.05);
   
   // Calculate final meal totals
   const totals = calculateMealTotals(mealFoods);
