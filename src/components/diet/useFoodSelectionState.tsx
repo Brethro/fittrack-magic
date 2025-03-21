@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -99,12 +100,40 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     );
   };
 
+  // NEW: Get diets that have at least one compatible food
+  const getAvailableDiets = (): DietType[] => {
+    // "all" is always available
+    const availableDiets: DietType[] = ["all"];
+    
+    // Check each diet type
+    const allFoods = migratedFoodCategories.flatMap(category => 
+      category.items.map(food => migrateExistingFoodData(food))
+    );
+    
+    // Get all diet types except "all"
+    const dietTypes: Exclude<DietType, "all">[] = [
+      "mediterranean", "vegetarian", "vegan", "japanese", 
+      "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
+    ];
+    
+    // Check each diet for compatible foods
+    dietTypes.forEach(diet => {
+      const compatibleFoods = filterFoodsByDiet(allFoods, diet);
+      if (compatibleFoods.length > 0) {
+        availableDiets.push(diet);
+      }
+    });
+    
+    return availableDiets;
+  };
+
   return {
     selectedFoods,
     setSelectedFoods,
     selectedDiet,
     setSelectedDiet: applyDietFilter,
     getSelectedFoodItems,
-    getDietCompatibleFoods
+    getDietCompatibleFoods,
+    getAvailableDiets
   };
 };

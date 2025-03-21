@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +28,7 @@ interface FoodPreferencesProps {
   setIncludeFreeMeal: (include: boolean) => void;
   generateMealPlan: () => void;
   dailyCalories: number;
+  availableDiets: DietType[];
 }
 
 export function FoodPreferences({
@@ -39,6 +41,7 @@ export function FoodPreferences({
   setIncludeFreeMeal,
   generateMealPlan,
   dailyCalories,
+  availableDiets,
 }: FoodPreferencesProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -178,6 +181,7 @@ export function FoodPreferences({
       <DietSelector 
         selectedDiet={selectedDiet}
         onDietChange={setSelectedDiet}
+        availableDiets={availableDiets}
       />
       
       <div className="glass-panel rounded-lg p-4">

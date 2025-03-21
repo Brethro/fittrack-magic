@@ -23,9 +23,10 @@ const dietDescriptions: Record<DietType, string> = {
 interface DietSelectorProps {
   selectedDiet: DietType;
   onDietChange: (diet: DietType) => void;
+  availableDiets: DietType[];
 }
 
-export function DietSelector({ selectedDiet, onDietChange }: DietSelectorProps) {
+export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
@@ -49,39 +50,11 @@ export function DietSelector({ selectedDiet, onDietChange }: DietSelectorProps) 
         <ToggleGroup type="single" value={selectedDiet} onValueChange={(value) => {
           if (value) onDietChange(value as DietType);
         }} className="flex flex-wrap gap-2 justify-start">
-          <ToggleGroupItem value="all" className="rounded-full">
-            All Foods
-          </ToggleGroupItem>
-          <ToggleGroupItem value="mediterranean" className="rounded-full">
-            Mediterranean
-          </ToggleGroupItem>
-          <ToggleGroupItem value="vegetarian" className="rounded-full">
-            Vegetarian
-          </ToggleGroupItem>
-          <ToggleGroupItem value="vegan" className="rounded-full">
-            Vegan
-          </ToggleGroupItem>
-          <ToggleGroupItem value="japanese" className="rounded-full">
-            Japanese
-          </ToggleGroupItem>
-          <ToggleGroupItem value="korean" className="rounded-full">
-            Korean
-          </ToggleGroupItem>
-          <ToggleGroupItem value="mexican" className="rounded-full">
-            Mexican
-          </ToggleGroupItem>
-          <ToggleGroupItem value="italian" className="rounded-full">
-            Italian
-          </ToggleGroupItem>
-          <ToggleGroupItem value="paleo" className="rounded-full">
-            Paleo
-          </ToggleGroupItem>
-          <ToggleGroupItem value="keto" className="rounded-full">
-            Keto
-          </ToggleGroupItem>
-          <ToggleGroupItem value="pescatarian" className="rounded-full">
-            Pescatarian
-          </ToggleGroupItem>
+          {availableDiets.map((diet) => (
+            <ToggleGroupItem key={diet} value={diet} className="rounded-full">
+              {diet === "all" ? "All Foods" : diet.charAt(0).toUpperCase() + diet.slice(1)}
+            </ToggleGroupItem>
+          ))}
         </ToggleGroup>
         
         {selectedDiet !== "all" && (

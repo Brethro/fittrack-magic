@@ -41,7 +41,8 @@ const DietPage = () => {
     setSelectedFoods, 
     selectedDiet,
     setSelectedDiet,
-    getSelectedFoodItems 
+    getSelectedFoodItems,
+    getAvailableDiets 
   } = useFoodSelectionState(foodCategoriesData);
   
   const { 
@@ -56,6 +57,9 @@ const DietPage = () => {
     targetCarbs: userData.macros.carbs || 200,
     targetFats: userData.macros.fats || 67
   });
+
+  // Get available diets for current food database
+  const availableDiets = getAvailableDiets();
 
   // Generate meal plan function that passes selected food items and the diet type
   const handleGenerateMealPlan = () => {
@@ -102,6 +106,7 @@ const DietPage = () => {
                 setIncludeFreeMeal={setIncludeFreeMeal}
                 generateMealPlan={handleGenerateMealPlan}
                 dailyCalories={userData.dailyCalories || 2000}
+                availableDiets={availableDiets}
               />
             </TabsContent>
             
