@@ -74,18 +74,10 @@ export function WeightChart() {
       return !isAfter(today, entryDate);
     });
     
-    // Generate projection data - ALWAYS start from startWeight (178)
+    // Generate projection data - starts with current weight
     const projectionData = [];
     
-    // Start with today as first projection point
-    projectionData.push({
-      date: format(today, "MMM d"),
-      projection: startWeight,
-      tooltipDate: format(today, "MMMM d, yyyy"),
-      fullDate: today
-    });
-    
-    // Calculate daily weight loss needed to reach target
+    // Calculate daily weight loss needed to reach target (ensure it's a small, gradual amount)
     const weightToLose = startWeight - targetWeight;
     const dailyLoss = weightToLose / totalDays;
     
@@ -97,32 +89,22 @@ export function WeightChart() {
       remainingDays: totalDays
     });
     
-    // Add intermediate projection points
-    const maxPoints = 8; // Maximum number of points to display
-    const interval = Math.max(Math.floor(totalDays / (maxPoints - 1)), 1);
-    
-    for (let i = interval; i < totalDays; i += interval) {
-      const currentDate = addDays(today, i);
+    // Generate enough points to make a smooth line
+    // We'll generate a point for each day to ensure a smooth progression
+    for (let day = 0; day <= totalDays; day++) {
+      const currentDate = addDays(today, day);
       
-      // Calculate weight at this point in the projection
-      const daysFromStart = i;
-      const projectedWeight = startWeight - (daysFromStart * dailyLoss);
+      // Calculate weight with precise decimal values for this day
+      // This creates a smooth, gradual decline instead of sudden drops
+      const projectedWeight = startWeight - (dailyLoss * day);
       
       projectionData.push({
         date: format(currentDate, "MMM d"),
-        projection: Math.round(projectedWeight),
+        projection: projectedWeight,
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
         fullDate: currentDate
       });
     }
-    
-    // Always add the goal date as the final projection point
-    projectionData.push({
-      date: format(goalDate, "MMM d"),
-      projection: Math.round(targetWeight),
-      tooltipDate: format(goalDate, "MMMM d, yyyy"),
-      fullDate: goalDate
-    });
     
     // Generate separate data array for actual weight entries
     const actualData = [];
@@ -132,7 +114,7 @@ export function WeightChart() {
         const entryDate = new Date(entry.date);
         actualData.push({
           date: format(entryDate, "MMM d"),
-          actual: Math.round(entry.weight),
+          actual: entry.weight,
           tooltipDate: format(entryDate, "MMMM d, yyyy"),
           fullDate: entryDate
         });
@@ -161,7 +143,7 @@ export function WeightChart() {
               <p key={index} className="flex items-center gap-1">
                 {entry.name === "projection" ? "Projected: " : "Actual: "}
                 <span className="font-medium" style={{ color: entry.color }}>
-                  {entry.value} {userData.useMetric ? "kg" : "lbs"}
+                  {entry.value.toFixed(1)} {userData.useMetric ? "kg" : "lbs"}
                 </span>
               </p>
             );
@@ -200,14 +182,13 @@ export function WeightChart() {
             <XAxis 
               dataKey="date" 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
-              // Include all unique dates from both datasets
               allowDuplicatedCategory={false}
             />
             <YAxis 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
               domain={['auto', 'auto']}
               width={30}
-              tickFormatter={(value) => `${Math.round(value)}`}
+              tickCount={6}
               allowDecimals={false}
             />
             <RechartsTooltip content={<CustomTooltip />} />
