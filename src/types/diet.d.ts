@@ -21,29 +21,6 @@ export type FoodPrimaryCategory =
   | "processedFood" 
   | "other";
 
-// Food category hierarchy mapping
-export const foodCategoryHierarchy: Record<FoodPrimaryCategory, FoodPrimaryCategory | null> = {
-  meat: null,          // Parent category
-  redMeat: "meat",     // Child categories with parent reference
-  poultry: "meat",
-  fish: "meat",
-  seafood: "meat",
-  dairy: null,
-  egg: null,
-  grain: null,
-  legume: null,
-  vegetable: null,
-  fruit: null,
-  nut: null,
-  seed: null,
-  oil: null,
-  sweetener: null,
-  herb: null,
-  spice: null,
-  processedFood: null,
-  other: null
-};
-
 export type FoodItem = {
   id: string;
   name: string;
