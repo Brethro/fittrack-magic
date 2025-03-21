@@ -1,13 +1,17 @@
-
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
 
-// Define the food category hierarchy
+// Define the food category hierarchy with more detailed relationships
 export const foodCategoryHierarchy: Record<FoodPrimaryCategory, FoodPrimaryCategory | null> = {
-  meat: null,          // Parent category
-  redMeat: "meat",     // Child categories with parent reference
+  // Parent categories
+  meat: null,
+  
+  // Child categories of meat
+  redMeat: "meat",
   poultry: "meat",
   fish: "meat",
   seafood: "meat",
+  
+  // Other primary categories
   dairy: null,
   egg: null,
   grain: null,
@@ -36,11 +40,48 @@ export const isCategoryChildOf = (
   return foodCategoryHierarchy[childCategory] === parentCategory;
 };
 
+// Check if a category is a descendant of another category (direct or indirect)
+export const isCategoryDescendantOf = (
+  childCategory: FoodPrimaryCategory,
+  ancestorCategory: FoodPrimaryCategory
+): boolean => {
+  // Direct match
+  if (childCategory === ancestorCategory) return true;
+  
+  // Check immediate parent
+  if (foodCategoryHierarchy[childCategory] === ancestorCategory) return true;
+  
+  // Check ancestors recursively
+  let currentParent = foodCategoryHierarchy[childCategory];
+  while (currentParent !== null) {
+    if (currentParent === ancestorCategory) return true;
+    currentParent = foodCategoryHierarchy[currentParent];
+  }
+  
+  return false;
+};
+
 // Get all child categories of a parent category
 export const getChildCategories = (parentCategory: FoodPrimaryCategory): FoodPrimaryCategory[] => {
   return Object.entries(foodCategoryHierarchy)
     .filter(([_, parent]) => parent === parentCategory)
     .map(([child]) => child as FoodPrimaryCategory);
+};
+
+// Get all descendant categories (direct and indirect children)
+export const getDescendantCategories = (ancestorCategory: FoodPrimaryCategory): FoodPrimaryCategory[] => {
+  const descendants: FoodPrimaryCategory[] = [];
+  
+  // First get direct children
+  const directChildren = getChildCategories(ancestorCategory);
+  descendants.push(...directChildren);
+  
+  // Recursively get children of children
+  directChildren.forEach(child => {
+    descendants.push(...getDescendantCategories(child));
+  });
+  
+  return descendants;
 };
 
 // Check if a food belongs to a category, considering the hierarchy
@@ -51,13 +92,13 @@ export const foodBelongsToCategory = (
   // Direct match of primary category
   if (food.primaryCategory === category) return true;
   
-  // Check if food's primary category is a child of the given category
-  if (isCategoryChildOf(food.primaryCategory, category)) return true;
+  // Check if food's primary category is a descendant of the given category
+  if (isCategoryDescendantOf(food.primaryCategory, category)) return true;
   
-  // Check secondary categories for direct matches or child relationships
+  // Check secondary categories for direct matches or descendant relationships
   if (food.secondaryCategories) {
     return food.secondaryCategories.some(secondaryCategory => 
-      secondaryCategory === category || isCategoryChildOf(secondaryCategory, category)
+      secondaryCategory === category || isCategoryDescendantOf(secondaryCategory, category)
     );
   }
   
