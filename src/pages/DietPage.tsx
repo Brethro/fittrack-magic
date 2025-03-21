@@ -16,7 +16,6 @@ const DietPage = () => {
   const { toast } = useToast();
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
-  const [selectedFoods, setSelectedFoods] = useState<Record<string, boolean>>({});
   const [mealPlan, setMealPlan] = useState<Meal[]>([]);
   const [includeFreeMeal, setIncludeFreeMeal] = useState(false);
   const [freeMealCalories, setFreeMealCalories] = useState(
@@ -88,6 +87,19 @@ const DietPage = () => {
     },
   ];
 
+  // Initialize selectedFoods with all foods set to true by default
+  const initializeSelectedFoods = () => {
+    const foods: Record<string, boolean> = {};
+    foodCategories.forEach(category => {
+      category.items.forEach(food => {
+        foods[food.id] = true; // Default to true for all foods
+      });
+    });
+    return foods;
+  };
+
+  const [selectedFoods, setSelectedFoods] = useState<Record<string, boolean>>(initializeSelectedFoods());
+
   useEffect(() => {
     if (!userData.dailyCalories || !userData.macros.protein) {
       toast({
@@ -101,7 +113,9 @@ const DietPage = () => {
 
   // Generate a meal plan based on selected foods and user's macros
   const generateMealPlan = () => {
-    if (Object.keys(selectedFoods).filter(id => selectedFoods[id]).length < 10) {
+    const selectedFoodCount = Object.values(selectedFoods).filter(value => value).length;
+    
+    if (selectedFoodCount < 10) {
       toast({
         title: "Not enough foods selected",
         description: "Please select at least 10 different foods to create a varied meal plan",

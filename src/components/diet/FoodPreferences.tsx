@@ -35,6 +35,9 @@ export function FoodPreferences({
     });
   };
 
+  // Calculate total number of selected foods for user feedback
+  const selectedFoodCount = Object.values(selectedFoods).filter(Boolean).length;
+
   return (
     <div className="glass-panel rounded-lg p-4">
       <h2 className="text-lg font-medium mb-3">Select Your Preferred Foods</h2>
@@ -99,13 +102,25 @@ export function FoodPreferences({
         </div>
       </div>
       
-      <Button 
-        onClick={generateMealPlan}
-        className="w-full mt-6"
-      >
-        <Utensils className="mr-2 h-4 w-4" />
-        Generate Meal Plan
-      </Button>
+      <div className="mt-6">
+        <p className="text-sm mb-2">
+          <span className={selectedFoodCount < 10 ? "text-destructive font-medium" : "text-muted-foreground"}>
+            {selectedFoodCount} foods selected
+          </span>
+          {selectedFoodCount < 10 && (
+            <span className="text-xs ml-2 text-destructive">
+              (minimum 10 required)
+            </span>
+          )}
+        </p>
+        <Button 
+          onClick={generateMealPlan}
+          className="w-full"
+        >
+          <Utensils className="mr-2 h-4 w-4" />
+          Generate Meal Plan
+        </Button>
+      </div>
     </div>
   );
 }
