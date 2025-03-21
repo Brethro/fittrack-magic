@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +20,8 @@ type FoodCategory = {
     carbs?: number;
     fats?: number;
     caloriesPerServing?: number;
+    servingSize: string; // Added serving size information
+    servingSizeGrams: number; // Added serving size in grams
   }[];
 };
 
@@ -29,6 +32,8 @@ type Meal = {
     id: string;
     name: string;
     servings: number;
+    servingSizeGrams: number; // Added serving size in grams
+    servingSize: string; // Added serving size description
     protein: number;
     carbs: number;
     fats: number;
@@ -52,67 +57,67 @@ const DietPage = () => {
     userData.dailyCalories ? Math.round(userData.dailyCalories * 0.2) : 500
   );
 
-  // Sample food data - in a real app you might fetch this from an API
+  // Sample food data with serving sizes
   const foodCategories: FoodCategory[] = [
     {
       name: "Proteins",
       items: [
-        { id: "chicken_breast", name: "Chicken Breast", protein: 31, carbs: 0, fats: 3.6, caloriesPerServing: 165 },
-        { id: "salmon", name: "Salmon", protein: 25, carbs: 0, fats: 13, caloriesPerServing: 208 },
-        { id: "eggs", name: "Eggs", protein: 13, carbs: 1, fats: 11, caloriesPerServing: 155 },
-        { id: "tofu", name: "Tofu", protein: 8, carbs: 2, fats: 4, caloriesPerServing: 76 },
-        { id: "beef", name: "Lean Beef", protein: 26, carbs: 0, fats: 15, caloriesPerServing: 250 },
-        { id: "greek_yogurt", name: "Greek Yogurt", protein: 17, carbs: 6, fats: 0.7, caloriesPerServing: 100 },
-        { id: "cottage_cheese", name: "Cottage Cheese", protein: 25, carbs: 6, fats: 10, caloriesPerServing: 206 },
-        { id: "lentils", name: "Lentils", protein: 18, carbs: 40, fats: 1, caloriesPerServing: 230 },
+        { id: "chicken_breast", name: "Chicken Breast", protein: 31, carbs: 0, fats: 3.6, caloriesPerServing: 165, servingSize: "100g cooked", servingSizeGrams: 100 },
+        { id: "salmon", name: "Salmon", protein: 25, carbs: 0, fats: 13, caloriesPerServing: 208, servingSize: "100g fillet", servingSizeGrams: 100 },
+        { id: "eggs", name: "Eggs", protein: 13, carbs: 1, fats: 11, caloriesPerServing: 155, servingSize: "2 large eggs", servingSizeGrams: 100 },
+        { id: "tofu", name: "Tofu", protein: 8, carbs: 2, fats: 4, caloriesPerServing: 76, servingSize: "100g firm", servingSizeGrams: 100 },
+        { id: "beef", name: "Lean Beef", protein: 26, carbs: 0, fats: 15, caloriesPerServing: 250, servingSize: "100g cooked", servingSizeGrams: 100 },
+        { id: "greek_yogurt", name: "Greek Yogurt", protein: 17, carbs: 6, fats: 0.7, caloriesPerServing: 100, servingSize: "170g container", servingSizeGrams: 170 },
+        { id: "cottage_cheese", name: "Cottage Cheese", protein: 25, carbs: 6, fats: 10, caloriesPerServing: 206, servingSize: "226g cup", servingSizeGrams: 226 },
+        { id: "lentils", name: "Lentils", protein: 18, carbs: 40, fats: 1, caloriesPerServing: 230, servingSize: "198g cooked cup", servingSizeGrams: 198 },
       ],
     },
     {
       name: "Carbohydrates",
       items: [
-        { id: "white_rice", name: "White Rice", protein: 4, carbs: 45, fats: 0.4, caloriesPerServing: 200 },
-        { id: "brown_rice", name: "Brown Rice", protein: 5, carbs: 46, fats: 1.8, caloriesPerServing: 216 },
-        { id: "sweet_potato", name: "Sweet Potato", protein: 2, carbs: 26, fats: 0.1, caloriesPerServing: 112 },
-        { id: "quinoa", name: "Quinoa", protein: 8, carbs: 39, fats: 4, caloriesPerServing: 222 },
-        { id: "oats", name: "Oats", protein: 13, carbs: 67, fats: 7, caloriesPerServing: 389 },
-        { id: "whole_wheat_bread", name: "Whole Wheat Bread", protein: 4, carbs: 13, fats: 1, caloriesPerServing: 69 },
-        { id: "pasta", name: "Pasta", protein: 7, carbs: 43, fats: 1, caloriesPerServing: 200 },
-        { id: "potatoes", name: "Potatoes", protein: 2, carbs: 17, fats: 0.1, caloriesPerServing: 77 },
+        { id: "white_rice", name: "White Rice", protein: 4, carbs: 45, fats: 0.4, caloriesPerServing: 200, servingSize: "158g cooked cup", servingSizeGrams: 158 },
+        { id: "brown_rice", name: "Brown Rice", protein: 5, carbs: 46, fats: 1.8, caloriesPerServing: 216, servingSize: "195g cooked cup", servingSizeGrams: 195 },
+        { id: "sweet_potato", name: "Sweet Potato", protein: 2, carbs: 26, fats: 0.1, caloriesPerServing: 112, servingSize: "130g medium", servingSizeGrams: 130 },
+        { id: "quinoa", name: "Quinoa", protein: 8, carbs: 39, fats: 4, caloriesPerServing: 222, servingSize: "185g cooked cup", servingSizeGrams: 185 },
+        { id: "oats", name: "Oats", protein: 13, carbs: 67, fats: 7, caloriesPerServing: 389, servingSize: "100g dry", servingSizeGrams: 100 },
+        { id: "whole_wheat_bread", name: "Whole Wheat Bread", protein: 4, carbs: 13, fats: 1, caloriesPerServing: 69, servingSize: "28g slice", servingSizeGrams: 28 },
+        { id: "pasta", name: "Pasta", protein: 7, carbs: 43, fats: 1, caloriesPerServing: 200, servingSize: "140g cooked cup", servingSizeGrams: 140 },
+        { id: "potatoes", name: "Potatoes", protein: 2, carbs: 17, fats: 0.1, caloriesPerServing: 77, servingSize: "100g boiled", servingSizeGrams: 100 },
       ],
     },
     {
       name: "Vegetables",
       items: [
-        { id: "broccoli", name: "Broccoli", protein: 2.6, carbs: 6, fats: 0.3, caloriesPerServing: 34 },
-        { id: "spinach", name: "Spinach", protein: 2.9, carbs: 3.6, fats: 0.4, caloriesPerServing: 23 },
-        { id: "kale", name: "Kale", protein: 2.9, carbs: 6.7, fats: 0.5, caloriesPerServing: 35 },
-        { id: "bell_peppers", name: "Bell Peppers", protein: 1, carbs: 6, fats: 0.3, caloriesPerServing: 30 },
-        { id: "cucumber", name: "Cucumber", protein: 0.7, carbs: 3.6, fats: 0.1, caloriesPerServing: 16 },
-        { id: "carrots", name: "Carrots", protein: 0.9, carbs: 10, fats: 0.2, caloriesPerServing: 41 },
-        { id: "zucchini", name: "Zucchini", protein: 1.2, carbs: 3.9, fats: 0.3, caloriesPerServing: 20 },
-        { id: "tomatoes", name: "Tomatoes", protein: 0.9, carbs: 3.9, fats: 0.2, caloriesPerServing: 18 },
+        { id: "broccoli", name: "Broccoli", protein: 2.6, carbs: 6, fats: 0.3, caloriesPerServing: 34, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "spinach", name: "Spinach", protein: 2.9, carbs: 3.6, fats: 0.4, caloriesPerServing: 23, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "kale", name: "Kale", protein: 2.9, carbs: 6.7, fats: 0.5, caloriesPerServing: 35, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "bell_peppers", name: "Bell Peppers", protein: 1, carbs: 6, fats: 0.3, caloriesPerServing: 30, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "cucumber", name: "Cucumber", protein: 0.7, carbs: 3.6, fats: 0.1, caloriesPerServing: 16, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "carrots", name: "Carrots", protein: 0.9, carbs: 10, fats: 0.2, caloriesPerServing: 41, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "zucchini", name: "Zucchini", protein: 1.2, carbs: 3.9, fats: 0.3, caloriesPerServing: 20, servingSize: "100g raw", servingSizeGrams: 100 },
+        { id: "tomatoes", name: "Tomatoes", protein: 0.9, carbs: 3.9, fats: 0.2, caloriesPerServing: 18, servingSize: "100g raw", servingSizeGrams: 100 },
       ],
     },
     {
       name: "Fruits",
       items: [
-        { id: "banana", name: "Banana", protein: 1.1, carbs: 23, fats: 0.3, caloriesPerServing: 96 },
-        { id: "apple", name: "Apple", protein: 0.3, carbs: 14, fats: 0.2, caloriesPerServing: 59 },
-        { id: "berries", name: "Mixed Berries", protein: 0.7, carbs: 14, fats: 0.3, caloriesPerServing: 57 },
-        { id: "orange", name: "Orange", protein: 1.2, carbs: 12, fats: 0.2, caloriesPerServing: 62 },
-        { id: "avocado", name: "Avocado", protein: 2, carbs: 12, fats: 15, caloriesPerServing: 160 },
-        { id: "mango", name: "Mango", protein: 0.8, carbs: 15, fats: 0.3, caloriesPerServing: 60 },
+        { id: "banana", name: "Banana", protein: 1.1, carbs: 23, fats: 0.3, caloriesPerServing: 96, servingSize: "118g medium", servingSizeGrams: 118 },
+        { id: "apple", name: "Apple", protein: 0.3, carbs: 14, fats: 0.2, caloriesPerServing: 59, servingSize: "100g medium", servingSizeGrams: 100 },
+        { id: "berries", name: "Mixed Berries", protein: 0.7, carbs: 14, fats: 0.3, caloriesPerServing: 57, servingSize: "100g", servingSizeGrams: 100 },
+        { id: "orange", name: "Orange", protein: 1.2, carbs: 12, fats: 0.2, caloriesPerServing: 62, servingSize: "131g medium", servingSizeGrams: 131 },
+        { id: "avocado", name: "Avocado", protein: 2, carbs: 12, fats: 15, caloriesPerServing: 160, servingSize: "100g (1/2 medium)", servingSizeGrams: 100 },
+        { id: "mango", name: "Mango", protein: 0.8, carbs: 15, fats: 0.3, caloriesPerServing: 60, servingSize: "100g", servingSizeGrams: 100 },
       ],
     },
     {
       name: "Healthy Fats",
       items: [
-        { id: "olive_oil", name: "Olive Oil", protein: 0, carbs: 0, fats: 14, caloriesPerServing: 119 },
-        { id: "almonds", name: "Almonds", protein: 6, carbs: 6, fats: 14, caloriesPerServing: 164 },
-        { id: "walnuts", name: "Walnuts", protein: 4, carbs: 4, fats: 18, caloriesPerServing: 185 },
-        { id: "chia_seeds", name: "Chia Seeds", protein: 5, carbs: 12, fats: 9, caloriesPerServing: 137 },
-        { id: "flax_seeds", name: "Flax Seeds", protein: 5, carbs: 8, fats: 10, caloriesPerServing: 150 },
-        { id: "peanut_butter", name: "Peanut Butter", protein: 4, carbs: 3, fats: 8, caloriesPerServing: 94 },
+        { id: "olive_oil", name: "Olive Oil", protein: 0, carbs: 0, fats: 14, caloriesPerServing: 119, servingSize: "1 tbsp (14g)", servingSizeGrams: 14 },
+        { id: "almonds", name: "Almonds", protein: 6, carbs: 6, fats: 14, caloriesPerServing: 164, servingSize: "28g (1/4 cup)", servingSizeGrams: 28 },
+        { id: "walnuts", name: "Walnuts", protein: 4, carbs: 4, fats: 18, caloriesPerServing: 185, servingSize: "30g (1/4 cup)", servingSizeGrams: 30 },
+        { id: "chia_seeds", name: "Chia Seeds", protein: 5, carbs: 12, fats: 9, caloriesPerServing: 137, servingSize: "28g (2 tbsp)", servingSizeGrams: 28 },
+        { id: "flax_seeds", name: "Flax Seeds", protein: 5, carbs: 8, fats: 10, caloriesPerServing: 150, servingSize: "30g (2 tbsp)", servingSizeGrams: 30 },
+        { id: "peanut_butter", name: "Peanut Butter", protein: 4, carbs: 3, fats: 8, caloriesPerServing: 94, servingSize: "16g (1 tbsp)", servingSizeGrams: 16 },
       ],
     },
   ];
@@ -182,9 +187,8 @@ const DietPage = () => {
       "Snack",
     ];
 
-    // Simple algorithm to create meals
+    // Improved algorithm to create meals with accurate portion sizes
     for (let i = 0; i < numberOfMeals; i++) {
-      // Select between 3-5 foods for this meal
       const mealFoods = [];
       const targetCalories = caloriesPerMeal;
       let currentCalories = 0;
@@ -196,22 +200,33 @@ const DietPage = () => {
       const proteins = selectedFoodItems.filter(food => (food.protein || 0) > 10);
       if (proteins.length > 0) {
         const randomProtein = proteins[Math.floor(Math.random() * proteins.length)];
-        const servings = Math.max(1, Math.min(3, Math.floor(proteinPerMeal / (randomProtein.protein || 1))));
+        // Calculate exact servings needed to meet protein target
+        const targetProteinServings = proteinPerMeal / (randomProtein.protein || 1);
+        // Limit to reasonable amount (0.5 to 3 servings)
+        const servings = Math.max(0.5, Math.min(3, targetProteinServings));
+        
+        // Calculate exact nutrients based on servings
+        const exactProtein = (randomProtein.protein || 0) * servings;
+        const exactCarbs = (randomProtein.carbs || 0) * servings;
+        const exactFats = (randomProtein.fats || 0) * servings;
+        const exactCalories = (randomProtein.caloriesPerServing || 0) * servings;
         
         mealFoods.push({
           id: randomProtein.id,
           name: randomProtein.name,
           servings,
-          protein: (randomProtein.protein || 0) * servings,
-          carbs: (randomProtein.carbs || 0) * servings,
-          fats: (randomProtein.fats || 0) * servings,
-          calories: (randomProtein.caloriesPerServing || 0) * servings
+          servingSizeGrams: randomProtein.servingSizeGrams,
+          servingSize: randomProtein.servingSize,
+          protein: parseFloat(exactProtein.toFixed(1)),
+          carbs: parseFloat(exactCarbs.toFixed(1)),
+          fats: parseFloat(exactFats.toFixed(1)),
+          calories: Math.round(exactCalories)
         });
         
-        currentProtein += (randomProtein.protein || 0) * servings;
-        currentCarbs += (randomProtein.carbs || 0) * servings;
-        currentFats += (randomProtein.fats || 0) * servings;
-        currentCalories += (randomProtein.caloriesPerServing || 0) * servings;
+        currentProtein += exactProtein;
+        currentCarbs += exactCarbs;
+        currentFats += exactFats;
+        currentCalories += exactCalories;
       }
       
       // Then add a carb source
@@ -221,22 +236,33 @@ const DietPage = () => {
       );
       if (carbs.length > 0) {
         const randomCarb = carbs[Math.floor(Math.random() * carbs.length)];
-        const servings = Math.max(1, Math.min(2, Math.floor((carbsPerMeal - currentCarbs) / (randomCarb.carbs || 1))));
+        // Calculate servings needed to meet carb target
+        const targetCarbServings = (carbsPerMeal - currentCarbs) / (randomCarb.carbs || 1);
+        // Limit to reasonable amount (0.5 to 2.5 servings)
+        const servings = Math.max(0.5, Math.min(2.5, targetCarbServings));
+        
+        // Calculate exact nutrients
+        const exactProtein = (randomCarb.protein || 0) * servings;
+        const exactCarbs = (randomCarb.carbs || 0) * servings;
+        const exactFats = (randomCarb.fats || 0) * servings;
+        const exactCalories = (randomCarb.caloriesPerServing || 0) * servings;
         
         mealFoods.push({
           id: randomCarb.id,
           name: randomCarb.name,
           servings,
-          protein: (randomCarb.protein || 0) * servings,
-          carbs: (randomCarb.carbs || 0) * servings,
-          fats: (randomCarb.fats || 0) * servings,
-          calories: (randomCarb.caloriesPerServing || 0) * servings
+          servingSizeGrams: randomCarb.servingSizeGrams,
+          servingSize: randomCarb.servingSize,
+          protein: parseFloat(exactProtein.toFixed(1)),
+          carbs: parseFloat(exactCarbs.toFixed(1)),
+          fats: parseFloat(exactFats.toFixed(1)),
+          calories: Math.round(exactCalories)
         });
         
-        currentProtein += (randomCarb.protein || 0) * servings;
-        currentCarbs += (randomCarb.carbs || 0) * servings;
-        currentFats += (randomCarb.fats || 0) * servings;
-        currentCalories += (randomCarb.caloriesPerServing || 0) * servings;
+        currentProtein += exactProtein;
+        currentCarbs += exactCarbs;
+        currentFats += exactFats;
+        currentCalories += exactCalories;
       }
       
       // Add vegetables
@@ -253,23 +279,31 @@ const DietPage = () => {
       );
       if (veggies.length > 0) {
         const randomVeggie = veggies[Math.floor(Math.random() * veggies.length)];
-        // Generous with veggies
-        const servings = 2;
+        // Be generous with veggies (1-2 servings)
+        const servings = Math.random() > 0.5 ? 2 : 1;
+        
+        // Calculate exact nutrients
+        const exactProtein = (randomVeggie.protein || 0) * servings;
+        const exactCarbs = (randomVeggie.carbs || 0) * servings;
+        const exactFats = (randomVeggie.fats || 0) * servings;
+        const exactCalories = (randomVeggie.caloriesPerServing || 0) * servings;
         
         mealFoods.push({
           id: randomVeggie.id,
           name: randomVeggie.name,
           servings,
-          protein: (randomVeggie.protein || 0) * servings,
-          carbs: (randomVeggie.carbs || 0) * servings,
-          fats: (randomVeggie.fats || 0) * servings,
-          calories: (randomVeggie.caloriesPerServing || 0) * servings
+          servingSizeGrams: randomVeggie.servingSizeGrams,
+          servingSize: randomVeggie.servingSize,
+          protein: parseFloat(exactProtein.toFixed(1)),
+          carbs: parseFloat(exactCarbs.toFixed(1)),
+          fats: parseFloat(exactFats.toFixed(1)),
+          calories: Math.round(exactCalories)
         });
         
-        currentProtein += (randomVeggie.protein || 0) * servings;
-        currentCarbs += (randomVeggie.carbs || 0) * servings;
-        currentFats += (randomVeggie.fats || 0) * servings;
-        currentCalories += (randomVeggie.caloriesPerServing || 0) * servings;
+        currentProtein += exactProtein;
+        currentCarbs += exactCarbs;
+        currentFats += exactFats;
+        currentCalories += exactCalories;
       }
       
       // Add healthy fat if needed
@@ -280,22 +314,33 @@ const DietPage = () => {
         );
         if (fats.length > 0) {
           const randomFat = fats[Math.floor(Math.random() * fats.length)];
-          const servings = Math.max(1, Math.min(2, Math.floor((fatsPerMeal - currentFats) / (randomFat.fats || 1))));
+          // Calculate servings needed to meet fat target
+          const targetFatServings = (fatsPerMeal - currentFats) / (randomFat.fats || 1);
+          // Limit to reasonable amount (0.5 to 1.5 servings)
+          const servings = Math.max(0.5, Math.min(1.5, targetFatServings));
+          
+          // Calculate exact nutrients
+          const exactProtein = (randomFat.protein || 0) * servings;
+          const exactCarbs = (randomFat.carbs || 0) * servings;
+          const exactFats = (randomFat.fats || 0) * servings;
+          const exactCalories = (randomFat.caloriesPerServing || 0) * servings;
           
           mealFoods.push({
             id: randomFat.id,
             name: randomFat.name,
             servings,
-            protein: (randomFat.protein || 0) * servings,
-            carbs: (randomFat.carbs || 0) * servings,
-            fats: (randomFat.fats || 0) * servings,
-            calories: (randomFat.caloriesPerServing || 0) * servings
+            servingSizeGrams: randomFat.servingSizeGrams,
+            servingSize: randomFat.servingSize,
+            protein: parseFloat(exactProtein.toFixed(1)),
+            carbs: parseFloat(exactCarbs.toFixed(1)),
+            fats: parseFloat(exactFats.toFixed(1)),
+            calories: Math.round(exactCalories)
           });
           
-          currentProtein += (randomFat.protein || 0) * servings;
-          currentCarbs += (randomFat.carbs || 0) * servings;
-          currentFats += (randomFat.fats || 0) * servings;
-          currentCalories += (randomFat.caloriesPerServing || 0) * servings;
+          currentProtein += exactProtein;
+          currentCarbs += exactCarbs;
+          currentFats += exactFats;
+          currentCalories += exactCalories;
         }
       }
       
@@ -307,23 +352,33 @@ const DietPage = () => {
         if (remainingFoods.length > 0) {
           const randomFood = remainingFoods[Math.floor(Math.random() * remainingFoods.length)];
           const caloriesLeft = targetCalories - currentCalories;
-          const possibleServings = Math.floor(caloriesLeft / (randomFood.caloriesPerServing || 100));
-          const servings = Math.max(1, Math.min(2, possibleServings));
+          // Calculate servings based on calories left
+          const possibleServings = caloriesLeft / (randomFood.caloriesPerServing || 100);
+          // Limit to reasonable amount (0.5 to 1.5 servings)
+          const servings = Math.max(0.5, Math.min(1.5, possibleServings));
+          
+          // Calculate exact nutrients
+          const exactProtein = (randomFood.protein || 0) * servings;
+          const exactCarbs = (randomFood.carbs || 0) * servings;
+          const exactFats = (randomFood.fats || 0) * servings;
+          const exactCalories = (randomFood.caloriesPerServing || 0) * servings;
           
           mealFoods.push({
             id: randomFood.id,
             name: randomFood.name,
             servings,
-            protein: (randomFood.protein || 0) * servings,
-            carbs: (randomFood.carbs || 0) * servings,
-            fats: (randomFood.fats || 0) * servings,
-            calories: (randomFood.caloriesPerServing || 0) * servings
+            servingSizeGrams: randomFood.servingSizeGrams,
+            servingSize: randomFood.servingSize,
+            protein: parseFloat(exactProtein.toFixed(1)),
+            carbs: parseFloat(exactCarbs.toFixed(1)),
+            fats: parseFloat(exactFats.toFixed(1)),
+            calories: Math.round(exactCalories)
           });
           
-          currentProtein += (randomFood.protein || 0) * servings;
-          currentCarbs += (randomFood.carbs || 0) * servings;
-          currentFats += (randomFood.fats || 0) * servings;
-          currentCalories += (randomFood.caloriesPerServing || 0) * servings;
+          currentProtein += exactProtein;
+          currentCarbs += exactCarbs;
+          currentFats += exactFats;
+          currentCalories += exactCalories;
         }
       }
 
@@ -331,10 +386,10 @@ const DietPage = () => {
         id: `meal-${i + 1}`,
         name: mealNames[i],
         foods: mealFoods,
-        totalProtein: currentProtein,
-        totalCarbs: currentCarbs,
-        totalFats: currentFats,
-        totalCalories: currentCalories
+        totalProtein: parseFloat(currentProtein.toFixed(1)),
+        totalCarbs: parseFloat(currentCarbs.toFixed(1)),
+        totalFats: parseFloat(currentFats.toFixed(1)),
+        totalCalories: Math.round(currentCalories)
       });
     }
 
@@ -347,6 +402,8 @@ const DietPage = () => {
           id: "free-choice",
           name: "Your choice",
           servings: 1,
+          servingSizeGrams: 0,
+          servingSize: "Your choice",
           protein: Math.round((freeMealCalories * 0.2) / 4),
           carbs: Math.round((freeMealCalories * 0.5) / 4),
           fats: Math.round((freeMealCalories * 0.3) / 9),
@@ -473,6 +530,9 @@ const DietPage = () => {
                               <p className="text-xs text-muted-foreground">
                                 {food.caloriesPerServing} cal | P: {food.protein}g C: {food.carbs}g F: {food.fats}g
                               </p>
+                              <p className="text-xs text-muted-foreground">
+                                {food.servingSize}
+                              </p>
                             </div>
                           </div>
                         ))}
@@ -538,9 +598,9 @@ const DietPage = () => {
                       
                       <div className="glass-card rounded-lg p-3 text-center">
                         <div className="flex justify-around mb-1">
-                          <div className="text-blue-400 text-xs font-bold">P: {totals.totalProtein}g</div>
-                          <div className="text-amber-400 text-xs font-bold">C: {totals.totalCarbs}g</div>
-                          <div className="text-pink-400 text-xs font-bold">F: {totals.totalFats}g</div>
+                          <div className="text-blue-400 text-xs font-bold">P: {totals.totalProtein.toFixed(1)}g</div>
+                          <div className="text-amber-400 text-xs font-bold">C: {totals.totalCarbs.toFixed(1)}g</div>
+                          <div className="text-pink-400 text-xs font-bold">F: {totals.totalFats.toFixed(1)}g</div>
                         </div>
                         <div className="flex h-2 mb-1">
                           <div className="bg-blue-400 h-full" style={{ width: `${totals.totalProtein*4/totals.totalCalories*100}%` }}></div>
@@ -590,7 +650,9 @@ const DietPage = () => {
                               <div>
                                 <p className="text-sm font-medium">{food.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {food.servings > 1 ? `${food.servings} servings` : "1 serving"}
+                                  {food.servings === 1 
+                                    ? `${food.servingSize}`
+                                    : `${food.servings.toFixed(1)} × ${food.servingSize} (${Math.round(food.servings * food.servingSizeGrams)}g)`}
                                 </p>
                               </div>
                               <div className="text-right">
@@ -609,7 +671,7 @@ const DietPage = () => {
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Macros</span>
-                          <span>P: {meal.totalProtein}g C: {meal.totalCarbs}g F: {meal.totalFats}g</span>
+                          <span>P: {meal.totalProtein.toFixed(1)}g C: {meal.totalCarbs.toFixed(1)}g F: {meal.totalFats.toFixed(1)}g</span>
                         </div>
                       </div>
                     ))}
