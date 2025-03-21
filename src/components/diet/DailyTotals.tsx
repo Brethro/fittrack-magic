@@ -1,8 +1,8 @@
 
-import { RefreshCw, Flame } from "lucide-react";
+import { RefreshCw, Flame, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Meal } from "@/types/diet";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface DailyTotalsProps {
   mealPlan: Meal[];
@@ -67,14 +67,17 @@ export function DailyTotals({
         {/* Calories Card */}
         <Card className={`p-3 text-center ${!isWithinCalorieTarget ? 'bg-orange-500/10 border-orange-500' : ''}`}>
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Flame className="w-5 h-5 text-orange-400" />
-            <p className="text-2xl font-bold">{totals.totalCalories}</p>
+            <Flame className={`w-5 h-5 ${!isWithinCalorieTarget ? 'text-orange-500' : 'text-orange-400'}`} />
+            <p className={`text-2xl font-bold ${!isWithinCalorieTarget ? 'text-orange-500' : ''}`}>{totals.totalCalories}</p>
           </div>
           <p className="text-xs text-muted-foreground">Calories</p>
           {!isWithinCalorieTarget && (
-            <p className="text-xs text-orange-500 font-medium mt-1">
-              {caloriePercentDiff > 0 ? 'Over' : 'Under'} target by {Math.abs(caloriePercentDiff).toFixed(1)}%
-            </p>
+            <div className="flex items-center justify-center gap-1 mt-1">
+              <AlertCircle className="h-3 w-3 text-orange-500" />
+              <p className="text-xs text-orange-500 font-medium">
+                {caloriePercentDiff > 0 ? 'Over' : 'Under'} target by {Math.abs(caloriePercentDiff).toFixed(1)}%
+              </p>
+            </div>
           )}
           <p className="text-xs text-muted-foreground mt-1">
             Target: {calorieTarget} calories

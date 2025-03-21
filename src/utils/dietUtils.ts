@@ -1,3 +1,4 @@
+
 import { FoodItem, Meal } from "@/types/diet";
 
 // Calculate how many servings of a food to include in a meal
@@ -66,36 +67,63 @@ export const adjustServingsForCalorieTarget = (
     });
   
   // Adjust servings one by one until we reach the target
-  for (const index of sortedIndices) {
-    const food = adjustedFoods[index];
-    const caloriesPerServing = food.calories / food.servings;
+  let iterations = 0;
+  const maxIterations = 10; // Prevent infinite loops
+  
+  while (iterations < maxIterations) {
+    iterations++;
+    let currentCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
     
-    if (needToIncrease) {
-      // Calculate exactly how much more we need
-      const caloriesNeeded = targetCalories - adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
-      const additionalServings = caloriesNeeded / caloriesPerServing;
-      
-      // Only increase if it would help (not overshoot)
-      if (additionalServings > 0.1) {
-        const newServings = food.servings + Math.min(additionalServings, 0.5); // Increase gradually
-        adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
-      }
-    } else {
-      // Calculate exactly how much less we need
-      const excessCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0) - targetCalories;
-      const servingsToReduce = excessCalories / caloriesPerServing;
-      
-      // Only decrease if it would help (not undershoot)
-      if (servingsToReduce > 0.1 && food.servings > 0.5) {
-        const newServings = Math.max(0.5, food.servings - Math.min(servingsToReduce, 0.5)); // Decrease gradually
-        adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
-      }
+    // Break if we're within tolerance
+    if (currentCalories >= targetMin && currentCalories <= targetMax) {
+      break;
     }
     
-    // Check if we're now within tolerance
-    const newTotal = adjustedFoods.reduce((sum, food) => sum + food.calories, 0);
-    if (newTotal >= targetMin && newTotal <= targetMax) {
-      break;
+    for (const index of sortedIndices) {
+      const food = adjustedFoods[index];
+      const caloriesPerServing = food.calories / food.servings;
+      
+      if (needToIncrease) {
+        // Calculate exactly how much more we need
+        const caloriesNeeded = targetCalories - adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
+        const additionalServings = caloriesNeeded / caloriesPerServing;
+        
+        // Only increase if it would help (not overshoot)
+        if (additionalServings > 0.1) {
+          const newServings = food.servings + Math.min(additionalServings, 0.25); // Increase gradually
+          adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+        }
+      } else {
+        // Calculate exactly how much less we need
+        const excessCalories = adjustedFoods.reduce((sum, f) => sum + f.calories, 0) - targetCalories;
+        const servingsToReduce = excessCalories / caloriesPerServing;
+        
+        // Only decrease if it would help (not undershoot)
+        if (servingsToReduce > 0.1 && food.servings > 0.25) {
+          const newServings = Math.max(0.25, food.servings - Math.min(servingsToReduce, 0.25)); // Decrease gradually
+          adjustedFoods[index] = recalculateFoodWithServings(food, newServings);
+        }
+      }
+      
+      // Check if we're now within tolerance
+      const newTotal = adjustedFoods.reduce((sum, food) => sum + food.calories, 0);
+      if (newTotal >= targetMin && newTotal <= targetMax) {
+        break;
+      }
+    }
+  }
+  
+  // Final check - if we're still over the limit, make a more aggressive adjustment
+  const finalTotal = adjustedFoods.reduce((sum, f) => sum + f.calories, 0);
+  if (finalTotal > targetMax) {
+    // Calculate how much we need to reduce all foods by to get within target
+    const reductionFactor = targetMax / finalTotal;
+    
+    // Apply reduction to all foods
+    for (let i = 0; i < adjustedFoods.length; i++) {
+      const food = adjustedFoods[i];
+      const newServings = Math.max(0.25, food.servings * reductionFactor);
+      adjustedFoods[i] = recalculateFoodWithServings(food, newServings);
     }
   }
   
@@ -131,7 +159,7 @@ export const createBalancedMeal = (
   const proteins = foodItems.filter(food => (food.protein || 0) > 10);
   if (proteins.length > 0) {
     const randomProtein = proteins[Math.floor(Math.random() * proteins.length)];
-    const servings = calculateServings(randomProtein, targetProtein, 'protein', 0.5, 2);
+    const servings = calculateServings(randomProtein, targetProtein, 'protein', 0.5, 1.5);
     
     mealFoods.push(createFoodWithServings(randomProtein, servings));
   }
@@ -143,7 +171,7 @@ export const createBalancedMeal = (
   );
   if (carbs.length > 0) {
     const randomCarb = carbs[Math.floor(Math.random() * carbs.length)];
-    const servings = calculateServings(randomCarb, targetCarbs, 'carbs', 0.5, 2);
+    const servings = calculateServings(randomCarb, targetCarbs, 'carbs', 0.5, 1.5);
     
     mealFoods.push(createFoodWithServings(randomCarb, servings));
   }
@@ -162,7 +190,7 @@ export const createBalancedMeal = (
   );
   if (veggies.length > 0) {
     const randomVeggie = veggies[Math.floor(Math.random() * veggies.length)];
-    const servings = Math.random() > 0.5 ? 2 : 1;
+    const servings = Math.random() > 0.5 ? 1.5 : 1;
     
     mealFoods.push(createFoodWithServings(randomVeggie, servings));
   }
@@ -176,20 +204,20 @@ export const createBalancedMeal = (
     );
     if (fats.length > 0) {
       const randomFat = fats[Math.floor(Math.random() * fats.length)];
-      const servings = calculateServings(randomFat, targetFats - currentMacros.totalFats, 'fats', 0.5, 1.5);
+      const servings = calculateServings(randomFat, targetFats - currentMacros.totalFats, 'fats', 0.25, 1);
       
       mealFoods.push(createFoodWithServings(randomFat, servings));
     }
   }
   
-  // Adjust servings to get close to calorie target
-  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories);
+  // Adjust servings to get close to calorie target - apply strict tolerance
+  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, 0.05);
   
   // Calculate final meal totals
   const totals = calculateMealTotals(mealFoods);
   
   return {
-    id: `meal-${Date.now()}`,
+    id: `meal-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     name: mealName,
     foods: mealFoods,
     totalProtein: parseFloat(totals.totalProtein.toFixed(1)),

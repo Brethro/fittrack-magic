@@ -56,7 +56,7 @@ export function MealPlanDisplay({
       <div className="space-y-4">
         {mealPlan.map((meal) => (
           <MealCard 
-            key={meal.id} 
+            key={`${meal.id}-${meal.name}`} 
             meal={meal} 
             regenerateMeal={regenerateMeal} 
           />
