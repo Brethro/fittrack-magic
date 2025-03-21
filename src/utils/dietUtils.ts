@@ -4,3 +4,4 @@ export * from './macroUtils';
 export * from './mealAdjustUtils';
 export * from './mealGenerationUtils';
 export * from './dietCompatibilityUtils';
+export * from './diet/foodDataProcessing';

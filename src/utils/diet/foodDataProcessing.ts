@@ -1,7 +1,6 @@
 
 import { FoodCategory, FoodItem } from "@/types/diet";
-import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData } from "@/utils/diet/dietDataMigration";
-import { tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
+import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 
 // Process each food item with the migration helper to add primaryCategory and validate
 export const processRawFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {

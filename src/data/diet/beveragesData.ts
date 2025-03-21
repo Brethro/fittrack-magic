@@ -18,5 +18,10 @@ export const beveragesData = {
     { id: "juice_apple", name: "Apple Juice", protein: 0.2, carbs: 28, fats: 0.3, caloriesPerServing: 114, servingSize: "240ml", servingSizeGrams: 240 },
     { id: "juice_cranberry", name: "Cranberry Juice", protein: 0.3, carbs: 31, fats: 0.1, caloriesPerServing: 117, servingSize: "240ml", servingSizeGrams: 240 },
     { id: "matcha", name: "Matcha Tea", protein: 0.7, carbs: 0.4, fats: 0.1, caloriesPerServing: 5, servingSize: "240ml", servingSizeGrams: 240 },
+    { id: "almond_milk", name: "Almond Milk (unsweetened)", protein: 1.1, carbs: 1.2, fats: 2.5, caloriesPerServing: 30, servingSize: "240ml", servingSizeGrams: 240 },
+    { id: "oat_milk", name: "Oat Milk", protein: 3, carbs: 16, fats: 2.5, caloriesPerServing: 120, servingSize: "240ml", servingSizeGrams: 240 },
+    { id: "soy_milk", name: "Soy Milk (unsweetened)", protein: 7, carbs: 4, fats: 4, caloriesPerServing: 80, servingSize: "240ml", servingSizeGrams: 240 },
+    { id: "coconut_milk", name: "Coconut Milk Beverage", protein: 0.5, carbs: 2, fats: 4.5, caloriesPerServing: 45, servingSize: "240ml", servingSizeGrams: 240 },
+    { id: "vegetable_juice", name: "Vegetable Juice", protein: 2, carbs: 10, fats: 0, caloriesPerServing: 50, servingSize: "240ml", servingSizeGrams: 240 },
   ],
 };

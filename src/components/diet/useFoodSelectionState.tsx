@@ -2,11 +2,8 @@
 import { useState } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  filterFoodsByDiet, 
-  migrateExistingFoodData, 
-  batchMigrateExistingFoodData 
-} from "@/utils/dietCompatibilityUtils";
+import { filterFoodsByDiet } from "@/utils/diet/dietCompatibilityChecker";
+import { migrateExistingFoodData, batchMigrateExistingFoodData } from "@/utils/diet/dietDataMigration";
 
 export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
   const { toast } = useToast();
