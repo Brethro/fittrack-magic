@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -172,7 +171,7 @@ export function FoodPreferences({
     // For specific diets, only show compatible foods
     return searchFiltered.filter(food => !food.diets || food.diets.includes(selectedDiet));
   };
-
+  
   return (
     <div className="space-y-6">
       <DietSelector 
@@ -247,7 +246,7 @@ export function FoodPreferences({
                     {filteredItems.map((food) => (
                       <div 
                         key={food.id} 
-                        className={`flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer ${
+                        className={`flex items-start p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer ${
                           searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase()) 
                             ? "bg-muted/40" 
                             : ""
@@ -259,35 +258,52 @@ export function FoodPreferences({
                           checked={selectedFoods[food.id] !== false} 
                           onCheckedChange={() => toggleFoodSelection(food.id)}
                           onClick={(e) => e.stopPropagation()}
+                          className="mt-0.5"
                         />
-                        <div className="grid gap-1 flex-1">
-                          <div className="flex justify-between">
-                            <Label
-                              htmlFor={food.id}
-                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {food.name}
-                              <FileText className="h-3 w-3 ml-1 text-muted-foreground" />
-                            </Label>
-                            <div className="flex">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5 -mt-1 -mr-1"
-                                onClick={(e) => openFeedbackDialog(food, e)}
-                                title="Suggest different category"
+                        <div className="flex-1 ml-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <Label
+                                htmlFor={food.id}
+                                className="text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <MessageSquare className="h-3 w-3" />
-                              </Button>
+                                {food.name}
+                                <FileText className="h-3 w-3 ml-1 text-muted-foreground" />
+                              </Label>
+                              
+                              {/* Updated macro display */}
+                              <div className="flex items-center mt-1 space-x-3 text-xs">
+                                <span className="font-medium text-sm">{food.caloriesPerServing} cal</span>
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex items-center">
+                                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                                    <span>P: {food.protein}g</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-1"></span>
+                                    <span>C: {food.carbs}g</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <span className="w-2 h-2 rounded-full bg-pink-500 mr-1"></span>
+                                    <span>F: {food.fats}g</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {food.servingSize}
+                              </div>
                             </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 -mr-1"
+                              onClick={(e) => openFeedbackDialog(food, e)}
+                              title="Suggest different category"
+                            >
+                              <MessageSquare className="h-3 w-3" />
+                            </Button>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {food.caloriesPerServing} cal | P: {food.protein}g C: {food.carbs}g F: {food.fats}g
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {food.servingSize}
-                          </p>
                         </div>
                       </div>
                     ))}
