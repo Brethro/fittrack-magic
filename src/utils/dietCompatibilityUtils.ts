@@ -107,7 +107,7 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
 
   // Paleo: emphasizes meat, fish, vegetables, fruits, nuts, seeds; excludes grains, dairy, processed foods
   paleo: (food) => {
-    const paleoFoods = ["meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "vegetable", "fruit", "nut", "seed"];
+    const paleoFoods = ["meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "vegetable", "fruit", "nut", "seed", "venison", "veal", "game"];
     const nonPaleoFoods = ["grain", "dairy", "processed", "sugar", "legume", "bean", "pasta", "bread"];
     
     return paleoFoods.some(item => food.name.toLowerCase().includes(item)) &&
@@ -119,7 +119,7 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
     // Common keto friendly foods
     const ketoFoods = [
       "avocado", "oil", "butter", "cream", "cheese", "nut", "seed", 
-      "meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "egg", "bacon"
+      "meat", "beef", "chicken", "pork", "lamb", "fish", "seafood", "egg", "bacon", "venison", "veal", "game"
     ];
     const nonKetoFoods = ["sugar", "grain", "fruit", "bread", "pasta", "rice", "potato", "corn"];
     
@@ -132,9 +132,9 @@ const dietRules: Record<Exclude<DietType, "all">, (food: FoodItem) => boolean> =
     // Check if it's explicitly non-keto
     const isNonKetoFood = nonKetoFoods.some(item => food.name.toLowerCase().includes(item));
     
-    // All meat is keto friendly
+    // All meat is keto friendly (expanded list)
     const isMeat = [
-      "meat", "beef", "chicken", "pork", "lamb", "turkey", "bacon", "sausage"
+      "meat", "beef", "chicken", "pork", "lamb", "turkey", "bacon", "sausage", "venison", "veal", "game"
     ].some(item => food.name.toLowerCase().includes(item));
     
     return (isHighFat && isLowCarb) || 
@@ -181,4 +181,3 @@ export const filterFoodsByDiet = (foods: FoodItem[], diet: DietType): FoodItem[]
   if (diet === "all") return foods;
   return foods.filter(food => isFoodCompatibleWithDiet(food, diet));
 };
-
