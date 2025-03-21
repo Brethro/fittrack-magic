@@ -48,6 +48,12 @@ export function DailyTotals({
   // Calculate percentage difference from target calories
   const caloriePercentDiff = ((totals.totalCalories - calorieTarget) / calorieTarget) * 100;
   const isWithinCalorieTarget = Math.abs(caloriePercentDiff) <= 5; // Within 5% of target
+  const isUnderTarget = caloriePercentDiff < -5; // Under by more than 5%
+  const isOverTarget = caloriePercentDiff > 5; // Over by more than 5%
+  
+  // Calculate protein percentage from target
+  const proteinPercentDiff = ((totals.totalProtein - userMacros.protein) / userMacros.protein) * 100;
+  const isWithinProteinTarget = Math.abs(proteinPercentDiff) <= 5; // Within 5% of target
 
   return (
     <div className={`glass-panel rounded-lg p-4 mb-4 ${!isWithinCalorieTarget ? 'border-2 border-orange-500' : ''}`}>
@@ -65,16 +71,16 @@ export function DailyTotals({
       
       <div className="grid grid-cols-2 gap-3 mb-3">
         {/* Calories Card */}
-        <Card className={`p-3 text-center ${!isWithinCalorieTarget ? 'bg-orange-500/10 border-orange-500' : ''}`}>
+        <Card className={`p-3 text-center ${isUnderTarget ? 'bg-orange-500/10 border-orange-500' : isOverTarget ? 'bg-yellow-500/10 border-yellow-500' : ''}`}>
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Flame className={`w-5 h-5 ${!isWithinCalorieTarget ? 'text-orange-500' : 'text-orange-400'}`} />
-            <p className={`text-2xl font-bold ${!isWithinCalorieTarget ? 'text-orange-500' : ''}`}>{totals.totalCalories}</p>
+            <Flame className={`w-5 h-5 ${isUnderTarget ? 'text-orange-500' : isOverTarget ? 'text-yellow-500' : 'text-orange-400'}`} />
+            <p className={`text-2xl font-bold ${isUnderTarget ? 'text-orange-500' : isOverTarget ? 'text-yellow-500' : ''}`}>{totals.totalCalories}</p>
           </div>
           <p className="text-xs text-muted-foreground">Calories</p>
           {!isWithinCalorieTarget && (
             <div className="flex items-center justify-center gap-1 mt-1">
-              <AlertCircle className="h-3 w-3 text-orange-500" />
-              <p className="text-xs text-orange-500 font-medium">
+              <AlertCircle className={`h-3 w-3 ${isUnderTarget ? 'text-orange-500' : 'text-yellow-500'}`} />
+              <p className={`text-xs font-medium ${isUnderTarget ? 'text-orange-500' : 'text-yellow-500'}`}>
                 {caloriePercentDiff > 0 ? 'Over' : 'Under'} target by {Math.abs(caloriePercentDiff).toFixed(1)}%
               </p>
             </div>
@@ -95,7 +101,9 @@ export function DailyTotals({
               <span className="text-xs">Protein</span>
             </div>
             <div className="text-xs font-medium">
-              <span className="text-blue-500">{totals.totalProtein}g</span>
+              <span className={`${!isWithinProteinTarget ? 'text-blue-600 font-bold' : 'text-blue-500'}`}>
+                {totals.totalProtein}g
+              </span>
               <span className="text-xs text-muted-foreground ml-1">/ {userMacros.protein}g</span>
             </div>
           </div>

@@ -40,8 +40,8 @@ export const createBalancedMeal = (
       [proteinOptions[i], proteinOptions[j]] = [proteinOptions[j], proteinOptions[i]];
     }
     
-    // Add 1-2 protein sources
-    const proteinCount = Math.random() > 0.5 ? 2 : 1;
+    // Add 1-2 protein sources (now more likely to add 2 for better distribution)
+    const proteinCount = Math.random() > 0.3 ? 2 : 1; // 70% chance of 2 protein sources
     
     for (let i = 0; i < Math.min(proteinCount, proteinOptions.length); i++) {
       const protein = proteinOptions[i];
@@ -50,22 +50,22 @@ export const createBalancedMeal = (
         protein, 
         targetProtein / proteinCount, 
         'protein',
-        0.5,
-        2.0
+        0.75, // Increased minimum servings for protein sources
+        2.5    // Increased maximum servings for protein sources
       );
       
       mealFoods.push(createFoodWithServings(protein, servings));
     }
   }
   
-  // Add a carb source
+  // Add a carb source (higher chance for more carbs)
   const carbs = foodItems.filter(food => 
     (food.carbs || 0) > 15 && 
     !mealFoods.some(mf => mf.id === food.id)
   );
   if (carbs.length > 0) {
     const randomCarb = carbs[Math.floor(Math.random() * carbs.length)];
-    const servings = calculateServings(randomCarb, targetCarbs, 'carbs', 0.5, 1.5);
+    const servings = calculateServings(randomCarb, targetCarbs, 'carbs', 0.75, 2.0);
     
     mealFoods.push(createFoodWithServings(randomCarb, servings));
   }
@@ -84,7 +84,8 @@ export const createBalancedMeal = (
   );
   if (veggies.length > 0) {
     const randomVeggie = veggies[Math.floor(Math.random() * veggies.length)];
-    const servings = Math.random() > 0.5 ? 1.5 : 1;
+    // Increased minimum servings for veggies
+    const servings = Math.random() > 0.5 ? 1.5 : 1.25;
     
     mealFoods.push(createFoodWithServings(randomVeggie, servings));
   }
@@ -98,9 +99,29 @@ export const createBalancedMeal = (
     );
     if (fats.length > 0) {
       const randomFat = fats[Math.floor(Math.random() * fats.length)];
-      const servings = calculateServings(randomFat, targetFats - currentMacros.totalFats, 'fats', 0.25, 1);
+      const servings = calculateServings(randomFat, targetFats - currentMacros.totalFats, 'fats', 0.5, 1.5);
       
       mealFoods.push(createFoodWithServings(randomFat, servings));
+    }
+  }
+  
+  // Check initial calories and if they're too low, consider adding another food
+  let initialTotal = calculateMealTotals(mealFoods);
+  const isCaloriesTooLow = initialTotal.totalCalories < targetCalories * 0.85;
+  
+  // If calories are too low, add an additional food source
+  if (isCaloriesTooLow) {
+    // Prioritize adding foods that would contribute to our calorie goal
+    const additionalFoods = foodItems.filter(food => 
+      food.caloriesPerServing > 50 && // Decent calorie contribution
+      !mealFoods.some(mf => mf.id === food.id)
+    );
+    
+    if (additionalFoods.length > 0) {
+      const randomFood = additionalFoods[Math.floor(Math.random() * additionalFoods.length)];
+      const servings = 1.0; // Standard serving to boost calories
+      
+      mealFoods.push(createFoodWithServings(randomFood, servings));
     }
   }
   
