@@ -21,7 +21,7 @@ export const batchTagFoodsWithDiets = (foods: FoodItem[]): FoodItem[] => {
 // Enhanced migration helper for existing food data - now with hierarchical category support
 export const migrateExistingFoodData = (food: Partial<FoodItem> & { name: string; id: string; servingSizeGrams: number; servingSize: string }): FoodItem => {
   // If food already has a primary category, validate it
-  const primaryCategory = 'primaryCategory' in food && food.primaryCategory 
+  let primaryCategory = 'primaryCategory' in food && food.primaryCategory 
     ? food.primaryCategory 
     : assignDefaultCategory(food as FoodItem);
   
