@@ -7,16 +7,18 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   // "All" diet includes everything
   if (diet === "all") return true;
   
-  // Get diet compatibility rules
-  const dietRules = dietCompatibleCategories[diet];
-  
-  // Apply special case rules first for categories that always pass
-  // This is particularly important for fish/seafood in keto diet
-  if (specialCaseRules[diet](food) === true && 
-      ((diet === "keto" && (food.primaryCategory === "fish" || food.primaryCategory === "seafood")) ||
-       (diet === "paleo" && food.primaryCategory === "sweetener" && food.name.toLowerCase().includes("honey")))) {
+  // Handle special cases first - particularly for keto diet and fish/seafood
+  // These are explicit overrides that take precedence over other rules
+  if (diet === "keto" && (food.primaryCategory === "fish" || food.primaryCategory === "seafood")) {
     return true;
   }
+  
+  if (diet === "paleo" && food.primaryCategory === "sweetener" && food.name.toLowerCase().includes("honey")) {
+    return true;
+  }
+  
+  // Get diet compatibility rules
+  const dietRules = dietCompatibleCategories[diet];
   
   // Check primary category restrictions
   if (dietRules.restrictedPrimaryCategories.includes(food.primaryCategory)) {
