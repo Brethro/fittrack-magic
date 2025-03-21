@@ -47,6 +47,13 @@ export const assignDefaultCategory = (food: FoodItem): FoodPrimaryCategory => {
 export const inferSecondaryCategories = (food: FoodItem): FoodPrimaryCategory[] => {
   const name = food.name.toLowerCase();
   const secondaryCategories: FoodPrimaryCategory[] = [];
+  const primaryCategory = food.primaryCategory;
+  
+  // Add meat as a secondary category if the primary is a type of meat
+  if (primaryCategory === "redMeat" || primaryCategory === "poultry" || 
+      primaryCategory === "fish" || primaryCategory === "seafood") {
+    secondaryCategories.push("meat");
+  }
   
   // Add secondary categories based on keywords
   if (/processed|packaged|frozen|canned|microwave|instant|ready-to-eat|pre-prepared|convenience/.test(name)) {

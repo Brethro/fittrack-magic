@@ -1,18 +1,14 @@
 
 import { FoodItem, DietType } from "@/types/diet";
 import { dietCompatibleCategories, specialCaseRules } from "./dietCompatibilityRules";
+import { foodBelongsToCategory } from "./foodCategoryHierarchy";
 
-// Function to check if a food is compatible with a diet based on explicit categorization
+// Function to check if a food is compatible with a diet based on hierarchical categorization
 export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolean => {
   // "All" diet includes everything
   if (diet === "all") return true;
   
-  // Handle special cases first - particularly for keto diet and fish/seafood
-  // These are explicit overrides that take precedence over other rules
-  if (diet === "keto" && (food.primaryCategory === "fish" || food.primaryCategory === "seafood")) {
-    return true;
-  }
-  
+  // Special case for honey in paleo diet
   if (diet === "paleo" && food.primaryCategory === "sweetener" && food.name.toLowerCase().includes("honey")) {
     return true;
   }
@@ -20,20 +16,36 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   // Get diet compatibility rules
   const dietRules = dietCompatibleCategories[diet];
   
-  // Check primary category restrictions
-  if (dietRules.restrictedPrimaryCategories.includes(food.primaryCategory)) {
-    return false;
+  // Check parent/child category relationships
+  // Handle meat hierarchies more effectively
+  if (diet === "keto" && foodBelongsToCategory(food, "meat")) {
+    return true;
   }
   
-  // Check if primary category is explicitly allowed
-  const isPrimaryCategoryAllowed = dietRules.allowedPrimaryCategories.includes(food.primaryCategory);
+  if (diet === "pescatarian" && (foodBelongsToCategory(food, "fish") || foodBelongsToCategory(food, "seafood"))) {
+    return true;
+  }
+  
+  // Check restricted primary categories (direct and parent categories)
+  for (const restrictedCategory of dietRules.restrictedPrimaryCategories) {
+    if (foodBelongsToCategory(food, restrictedCategory)) {
+      return false;
+    }
+  }
+  
+  // Check if primary category is explicitly allowed (direct or parent categories)
+  const isPrimaryCategoryAllowed = dietRules.allowedPrimaryCategories.some(
+    allowedCategory => foodBelongsToCategory(food, allowedCategory)
+  );
   
   // Check secondary categories if applicable
   if (food.secondaryCategories && dietRules.secondaryCategoryRules) {
     // Check for restricted secondary categories
     if (dietRules.secondaryCategoryRules.restricted) {
       const hasRestrictedSecondary = food.secondaryCategories.some(
-        category => dietRules.secondaryCategoryRules?.restricted?.includes(category)
+        category => dietRules.secondaryCategoryRules?.restricted?.some(
+          restricted => foodBelongsToCategory(food, restricted)
+        )
       );
       if (hasRestrictedSecondary) {
         return false;
@@ -43,7 +55,9 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
     // If primary not allowed, see if any secondary categories are explicitly allowed
     if (!isPrimaryCategoryAllowed && dietRules.secondaryCategoryRules.allowed) {
       const hasAllowedSecondary = food.secondaryCategories.some(
-        category => dietRules.secondaryCategoryRules?.allowed?.includes(category)
+        category => dietRules.secondaryCategoryRules?.allowed?.some(
+          allowed => foodBelongsToCategory(food, allowed)
+        )
       );
       if (!hasAllowedSecondary) {
         return false;
@@ -51,8 +65,8 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
     }
   }
   
-  // Apply special case rules as final check for other categories
-  return isPrimaryCategoryAllowed && specialCaseRules[diet](food);
+  // Apply special case rules as final check
+  return isPrimaryCategoryAllowed || specialCaseRules[diet](food);
 };
 
 // Function to get all compatible diets for a food item

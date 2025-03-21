@@ -1,10 +1,11 @@
 
 import { FoodPrimaryCategory, FoodItem } from "@/types/diet";
+import { foodBelongsToCategory } from "../foodCategoryHierarchy";
 
 // Paleo diet rules
 export const paleoRules = {
   allowedPrimaryCategories: [
-    "redMeat", "poultry", "fish", "seafood", "egg", "vegetable", 
+    "meat", "fish", "seafood", "egg", "vegetable", 
     "fruit", "nut", "seed", "oil", "herb", "spice", "other"
   ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
@@ -26,7 +27,7 @@ export const paleoSpecialRules = (food: FoodItem): boolean => {
 // Keto diet rules
 export const ketoRules = {
   allowedPrimaryCategories: [
-    "redMeat", "poultry", "fish", "seafood", "dairy", "egg", 
+    "meat", "fish", "seafood", "dairy", "egg", 
     "nut", "seed", "oil", "herb", "spice", "other"
   ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
@@ -39,8 +40,8 @@ export const ketoRules = {
 };
 
 export const ketoSpecialRules = (food: FoodItem): boolean => {
-  // Fish and seafood are always keto-friendly
-  if (food.primaryCategory === "fish" || food.primaryCategory === "seafood") {
+  // All meat (including fish and seafood) is keto-friendly
+  if (foodBelongsToCategory(food, "meat")) {
     return true;
   }
   
