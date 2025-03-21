@@ -1,4 +1,25 @@
 
+// Food primary category for explicit categorization
+export type FoodPrimaryCategory = 
+  | "redMeat" 
+  | "poultry" 
+  | "fish" 
+  | "seafood" 
+  | "dairy" 
+  | "egg" 
+  | "grain" 
+  | "legume" 
+  | "vegetable" 
+  | "fruit" 
+  | "nut" 
+  | "seed" 
+  | "oil" 
+  | "sweetener" 
+  | "herb" 
+  | "spice" 
+  | "processedFood" 
+  | "other";
+
 export type FoodItem = {
   id: string;
   name: string;
@@ -8,7 +29,9 @@ export type FoodItem = {
   caloriesPerServing?: number;
   servingSize: string;
   servingSizeGrams: number;
-  diets?: string[]; // Add diet compatibility tags
+  diets?: string[]; // Diet compatibility tags
+  primaryCategory: FoodPrimaryCategory; // Explicit primary category
+  secondaryCategories?: FoodPrimaryCategory[]; // Optional secondary categories
 };
 
 export type FoodCategory = {
@@ -50,4 +73,3 @@ export type DietType =
   | "paleo"
   | "keto"
   | "pescatarian";
-
