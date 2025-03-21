@@ -16,7 +16,8 @@ const dietDescriptions: Record<DietType, string> = {
   mexican: "Corn, beans, rice, vegetables, and spices with meat and dairy",
   italian: "Pasta, olive oil, tomatoes, cheese, and diverse proteins",
   paleo: "Mimics hunter-gatherer diet with meats, fish, fruits, vegetables, nuts, seeds",
-  keto: "High fat, moderate protein, very low carb for ketosis"
+  keto: "High fat, moderate protein, very low carb for ketosis",
+  pescatarian: "Plant-based diet that includes fish and seafood, but excludes other meats"
 };
 
 interface DietSelectorProps {
@@ -77,6 +78,9 @@ export function DietSelector({ selectedDiet, onDietChange }: DietSelectorProps) 
           </ToggleGroupItem>
           <ToggleGroupItem value="keto" className="rounded-full">
             Keto
+          </ToggleGroupItem>
+          <ToggleGroupItem value="pescatarian" className="rounded-full">
+            Pescatarian
           </ToggleGroupItem>
         </ToggleGroup>
         
