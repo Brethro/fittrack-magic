@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, differenceInCalendarDays, addDays, isAfter, parseISO } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
@@ -132,7 +131,7 @@ export function WeightChart() {
 
   // Determine Y-axis range based on data
   const getYAxisDomain = () => {
-    if (!userData.weight || !projectionData.length) return [0, 'auto'];
+    if (!userData.weight || !projectionData.length) return [0, 100]; // Return default numeric values
     
     // Start exactly at startWeight
     const startWeight = userData.weight;
@@ -145,7 +144,7 @@ export function WeightChart() {
     // Add a small buffer below the minimum for better visualization
     const minValue = Math.floor(minTarget - 1);
     
-    // No buffer at the top - start exactly at startWeight
+    // Return [min, max] as numbers
     return [minValue, startWeight];
   };
 
