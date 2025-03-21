@@ -63,7 +63,7 @@ const PlanPage = () => {
   // Generate chart data
   const generateChartData = () => {
     if (!userData.weight || !userData.goalValue || !userData.goalDate) {
-      return [];
+      return { projectionData: [], actualData: [] };
     }
 
     const today = new Date();
@@ -73,7 +73,7 @@ const PlanPage = () => {
     const totalDays = differenceInCalendarDays(goalDate, today);
     
     // Can't generate proper data for past dates
-    if (totalDays <= 0) return [];
+    if (totalDays <= 0) return { projectionData: [], actualData: [] };
     
     const startWeight = userData.weight;
     
@@ -102,38 +102,30 @@ const PlanPage = () => {
     const validWeightEntries = sortedWeightLog.filter(entry => {
       const entryDate = new Date(entry.date);
       entryDate.setHours(0, 0, 0, 0);
-      return entryDate >= today;
+      return !isAfter(today, entryDate);
     });
     
-    // Find the most recent entry to use as starting point for projection
-    const mostRecentEntry = validWeightEntries.length > 0 ? 
-      validWeightEntries[validWeightEntries.length - 1].weight : 
-      startWeight;
-    
-    // Use most recent weight if available for more accurate projections
-    const projectionStartWeight = mostRecentEntry;
-    const remainingDays = totalDays;
-    const weightToLose = projectionStartWeight - targetWeight;
-    const dailyLoss = weightToLose / remainingDays;
-    
-    console.log("Projection calculation:", {
-      projectionStartWeight,
-      targetWeight,
-      weightToLose,
-      dailyLoss,
-      remainingDays
-    });
-    
-    // Initialize separate arrays for projection and actual data
+    // Generate projection data - ALWAYS start from startWeight (178)
     const projectionData = [];
-    const actualData = [];
     
     // Start with today as first projection point
     projectionData.push({
       date: format(today, "MMM d"),
-      projection: parseFloat(projectionStartWeight.toFixed(1)),
+      projection: startWeight,
       tooltipDate: format(today, "MMMM d, yyyy"),
       fullDate: today
+    });
+    
+    // Calculate daily weight loss needed to reach target
+    const weightToLose = startWeight - targetWeight;
+    const dailyLoss = weightToLose / totalDays;
+    
+    console.log("Projection calculation:", {
+      projectionStartWeight: startWeight,
+      targetWeight,
+      weightToLose,
+      dailyLoss,
+      remainingDays: totalDays
     });
     
     // Add intermediate projection points
@@ -145,65 +137,46 @@ const PlanPage = () => {
       
       // Calculate weight at this point in the projection
       const daysFromStart = i;
-      const projectedWeight = Math.max(
-        projectionStartWeight - (daysFromStart * dailyLoss), 
-        targetWeight
-      );
+      const projectedWeight = startWeight - (daysFromStart * dailyLoss);
       
       projectionData.push({
         date: format(currentDate, "MMM d"),
-        projection: parseFloat(projectedWeight.toFixed(1)),
+        projection: Math.round(projectedWeight),
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
         fullDate: currentDate
       });
     }
     
     // Always add the goal date as the final projection point
-    if (format(goalDate, "MMM d") !== projectionData[projectionData.length - 1].date) {
-      projectionData.push({
-        date: format(goalDate, "MMM d"),
-        projection: parseFloat(targetWeight.toFixed(1)),
-        tooltipDate: format(goalDate, "MMMM d, yyyy"),
-        fullDate: goalDate
-      });
-    } else {
-      // Update the last point's projection to exactly match the target
-      projectionData[projectionData.length - 1].projection = parseFloat(targetWeight.toFixed(1));
-    }
+    projectionData.push({
+      date: format(goalDate, "MMM d"),
+      projection: Math.round(targetWeight),
+      tooltipDate: format(goalDate, "MMMM d, yyyy"),
+      fullDate: goalDate
+    });
     
-    // Add actual weight log data as separate entries
+    // Generate separate data array for actual weight entries
+    const actualData = [];
+    
     if (validWeightEntries.length > 0) {
       validWeightEntries.forEach(entry => {
         const entryDate = new Date(entry.date);
         actualData.push({
           date: format(entryDate, "MMM d"),
-          actual: entry.weight,
+          actual: Math.round(entry.weight),
           tooltipDate: format(entryDate, "MMMM d, yyyy"),
           fullDate: entryDate
         });
       });
     }
     
-    // Merge the data by date for the chart
-    // Start with all projection data
-    const data = [...projectionData];
+    console.log("Generated projection data:", projectionData);
+    console.log("Generated actual data:", actualData);
     
-    // Now add actual data points - don't try to modify existing points
-    actualData.forEach(actualPoint => {
-      // Just add the actual point to the array
-      data.push(actualPoint);
-    });
-    
-    // Sort by date
-    data.sort((a, b) => {
-      return a.fullDate.getTime() - b.fullDate.getTime();
-    });
-    
-    console.log("Generated chart data:", data);
-    return data;
+    return { projectionData, actualData };
   };
 
-  const chartData = generateChartData();
+  const { projectionData, actualData } = generateChartData();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -372,22 +345,27 @@ const PlanPage = () => {
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={chartData}
                     margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis 
                       dataKey="date" 
                       tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                      // Include all unique dates from both datasets
+                      allowDuplicatedCategory={false}
                     />
                     <YAxis 
                       tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
                       domain={['auto', 'auto']}
                       width={30}
-                      tickFormatter={(value) => `${value}`}
+                      tickFormatter={(value) => `${Math.round(value)}`}
+                      allowDecimals={false}
                     />
                     <RechartsTooltip content={<CustomTooltip />} />
+                    
+                    {/* Projection line - completely separate dataset */}
                     <Line 
+                      data={projectionData}
                       type="monotone" 
                       dataKey="projection" 
                       name="Projection"
@@ -395,9 +373,13 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#8b5cf6', r: 4 }}
                       activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
-                      connectNulls={false}
+                      connectNulls={true}
+                      isAnimationActive={true}
                     />
+                    
+                    {/* Actual line - completely separate dataset */}
                     <Line 
+                      data={actualData}
                       type="monotone" 
                       dataKey="actual" 
                       name="Actual"
@@ -405,7 +387,8 @@ const PlanPage = () => {
                       strokeWidth={2}
                       dot={{ fill: '#10b981', r: 4 }}
                       activeDot={{ fill: '#6ee7b7', r: 6, stroke: '#10b981', strokeWidth: 2 }}
-                      connectNulls={false}
+                      connectNulls={true}
+                      isAnimationActive={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>
