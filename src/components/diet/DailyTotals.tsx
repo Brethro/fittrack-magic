@@ -2,6 +2,7 @@
 import { RefreshCw, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Meal } from "@/types/diet";
+import { Card } from "@/components/ui/card";
 
 interface DailyTotalsProps {
   mealPlan: Meal[];
@@ -63,10 +64,11 @@ export function DailyTotals({
       </div>
       
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className={`glass-card rounded-lg p-3 text-center ${!isWithinCalorieTarget ? 'bg-orange-500/10' : ''}`}>
-          <div className="flex items-center justify-center gap-1">
+        {/* Calories Card */}
+        <Card className={`p-3 text-center ${!isWithinCalorieTarget ? 'bg-orange-500/10 border-orange-500' : ''}`}>
+          <div className="flex items-center justify-center gap-1 mb-1">
             <Flame className="w-5 h-5 text-orange-400" />
-            <p className="text-lg font-bold">{totals.totalCalories}</p>
+            <p className="text-2xl font-bold">{totals.totalCalories}</p>
           </div>
           <p className="text-xs text-muted-foreground">Calories</p>
           {!isWithinCalorieTarget && (
@@ -77,39 +79,55 @@ export function DailyTotals({
           <p className="text-xs text-muted-foreground mt-1">
             Target: {calorieTarget} calories
           </p>
-        </div>
+        </Card>
         
-        <div className="glass-card rounded-lg p-3 text-center">
-          <div className="flex justify-around mb-1">
-            <div className="text-blue-400 text-xs font-bold">P: {totals.totalProtein}g</div>
-            <div className="text-amber-400 text-xs font-bold">C: {totals.totalCarbs}g</div>
-            <div className="text-pink-400 text-xs font-bold">F: {totals.totalFats}g</div>
+        {/* Macros Card */}
+        <Card className="p-3">
+          <p className="text-xs text-center font-medium mb-1">Macronutrients</p>
+          
+          {/* Protein */}
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-blue-400 rounded-full mr-1"></div>
+              <span className="text-xs">Protein</span>
+            </div>
+            <div className="text-xs font-medium">
+              <span className="text-blue-500">{totals.totalProtein}g</span>
+              <span className="text-xs text-muted-foreground ml-1">/ {userMacros.protein}g</span>
+            </div>
           </div>
-          <div className="flex h-2 mb-1">
+          
+          {/* Carbs */}
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-amber-400 rounded-full mr-1"></div>
+              <span className="text-xs">Carbs</span>
+            </div>
+            <div className="text-xs font-medium">
+              <span className="text-amber-500">{totals.totalCarbs}g</span>
+              <span className="text-xs text-muted-foreground ml-1">/ {userMacros.carbs}g</span>
+            </div>
+          </div>
+          
+          {/* Fats */}
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-pink-400 rounded-full mr-1"></div>
+              <span className="text-xs">Fats</span>
+            </div>
+            <div className="text-xs font-medium">
+              <span className="text-pink-500">{totals.totalFats}g</span>
+              <span className="text-xs text-muted-foreground ml-1">/ {userMacros.fats}g</span>
+            </div>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="flex h-2 mt-2">
             <div className="bg-blue-400 h-full" style={{ width: `${totals.totalProtein*4/totals.totalCalories*100}%` }}></div>
             <div className="bg-amber-400 h-full" style={{ width: `${totals.totalCarbs*4/totals.totalCalories*100}%` }}></div>
             <div className="bg-pink-400 h-full" style={{ width: `${totals.totalFats*9/totals.totalCalories*100}%` }}></div>
           </div>
-          <p className="text-xs text-muted-foreground">Macronutrients</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Targets: P: {userMacros.protein}g C: {userMacros.carbs}g F: {userMacros.fats}g
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-blue-400 rounded-full mr-1"></div>
-          <span>Protein</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-amber-400 rounded-full mr-1"></div>
-          <span>Carbs</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-pink-400 rounded-full mr-1"></div>
-          <span>Fats</span>
-        </div>
+        </Card>
       </div>
     </div>
   );
