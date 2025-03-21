@@ -15,6 +15,7 @@ import { DietSelector } from "./DietSelector";
 import { FoodFeedbackDialog } from "./FoodFeedbackDialog";
 import { FoodNutritionDialog } from "./FoodNutritionDialog";
 import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
+import { FoodListItem } from "./FoodListItem";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -242,70 +243,17 @@ export function FoodPreferences({
                 </div>
                 
                 <CollapsibleContent className="mt-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     {filteredItems.map((food) => (
-                      <div 
-                        key={food.id} 
-                        className={`flex items-start p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer ${
-                          searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase()) 
-                            ? "bg-muted/40" 
-                            : ""
-                        }`}
-                        onClick={() => openNutritionDialog(food)}
-                      >
-                        <Checkbox 
-                          id={food.id}
-                          checked={selectedFoods[food.id] !== false} 
-                          onCheckedChange={() => toggleFoodSelection(food.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-0.5"
-                        />
-                        <div className="flex-1 ml-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <Label
-                                htmlFor={food.id}
-                                className="text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {food.name}
-                                <FileText className="h-3 w-3 ml-1 text-muted-foreground" />
-                              </Label>
-                              
-                              {/* Updated macro display */}
-                              <div className="flex items-center mt-1 space-x-3 text-xs">
-                                <span className="font-medium text-sm">{food.caloriesPerServing} cal</span>
-                                <div className="flex items-center space-x-2">
-                                  <div className="flex items-center">
-                                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
-                                    <span>P: {food.protein}g</span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <span className="w-2 h-2 rounded-full bg-amber-500 mr-1"></span>
-                                    <span>C: {food.carbs}g</span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <span className="w-2 h-2 rounded-full bg-pink-500 mr-1"></span>
-                                    <span>F: {food.fats}g</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {food.servingSize}
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 -mr-1"
-                              onClick={(e) => openFeedbackDialog(food, e)}
-                              title="Suggest different category"
-                            >
-                              <MessageSquare className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                      <FoodListItem
+                        key={food.id}
+                        food={food}
+                        isChecked={selectedFoods[food.id] !== false}
+                        onToggleSelection={() => toggleFoodSelection(food.id)}
+                        onOpenNutritionDialog={() => openNutritionDialog(food)}
+                        onOpenFeedbackDialog={(e) => openFeedbackDialog(food, e)}
+                        isHighlighted={searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase())}
+                      />
                     ))}
                   </div>
                 </CollapsibleContent>
