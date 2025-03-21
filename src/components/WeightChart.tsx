@@ -130,6 +130,25 @@ export function WeightChart() {
   const { projectionData, actualData } = generateChartData();
   const targetBodyFatWeight = calculateTargetWeightFromBodyFat();
 
+  // Determine Y-axis range based on data
+  const getYAxisDomain = () => {
+    if (!userData.weight || !projectionData.length) return [0, 'auto'];
+    
+    // Start exactly at startWeight
+    const startWeight = userData.weight;
+    
+    // Find the minimum value that will be displayed
+    const minTarget = projectionData.length > 0 
+      ? Math.min(...projectionData.map(d => d.projection))
+      : startWeight * 0.9;
+    
+    // Add a small buffer below the minimum for better visualization
+    const minValue = Math.floor(minTarget - 1);
+    
+    // No buffer at the top - start exactly at startWeight
+    return [minValue, startWeight];
+  };
+
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
@@ -186,7 +205,7 @@ export function WeightChart() {
             />
             <YAxis 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
-              domain={['auto', 'auto']}
+              domain={getYAxisDomain()}
               width={30}
               tickCount={6}
               allowDecimals={false}
