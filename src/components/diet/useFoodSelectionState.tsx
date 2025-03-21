@@ -65,6 +65,16 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
       });
     });
     
+    // Only apply filter if at least one food is compatible with this diet
+    if (matchCount === 0) {
+      toast({
+        title: `No compatible foods found`,
+        description: `No foods in your database are compatible with the ${diet} diet.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedFoods(filteredFoods);
     setSelectedDiet(diet);
     

@@ -27,6 +27,11 @@ interface DietSelectorProps {
 }
 
 export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
+  // Debug what diets are actually available
+  React.useEffect(() => {
+    console.log("Available diets in DietSelector:", availableDiets);
+  }, [availableDiets]);
+
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">

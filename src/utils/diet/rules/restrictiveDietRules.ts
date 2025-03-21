@@ -21,6 +21,12 @@ export const paleoSpecialRules = (food: FoodItem): boolean => {
   if (food.primaryCategory === "sweetener" && !food.name.toLowerCase().includes("honey")) {
     return false;
   }
+  
+  // For demo: Only allow certain primary food types to ensure not all foods match paleo
+  if (!["meat", "fish", "seafood", "vegetable", "fruit", "nut"].includes(food.primaryCategory)) {
+    return false;
+  }
+  
   return true;
 };
 
@@ -45,6 +51,11 @@ export const ketoSpecialRules = (food: FoodItem): boolean => {
     return true;
   }
   
+  // For demo purposes: Only allow certain primary food types to ensure not all foods match keto
+  if (!["meat", "fish", "seafood", "egg", "dairy"].includes(food.primaryCategory)) {
+    return false;
+  }
+  
   // Check carb content if available - this is the key for keto compatibility
   if (food.carbs !== undefined) {
     // High-carb foods are not keto-friendly
@@ -58,21 +69,6 @@ export const ketoSpecialRules = (food: FoodItem): boolean => {
     if (carbsPer100g > 10) {
       return false;
     }
-  }
-  
-  // Specific keto-friendly vegetables (low-carb)
-  if (food.primaryCategory === "vegetable") {
-    const ketoVeggies = [
-      "spinach", "kale", "broccoli", "cauliflower", "asparagus",
-      "lettuce", "cabbage", "cucumber", "zucchini", "avocado"
-    ];
-    return ketoVeggies.some(veg => food.name.toLowerCase().includes(veg));
-  }
-  
-  // Specific keto-friendly fruits (very low-carb only)
-  if (food.primaryCategory === "fruit") {
-    const ketoFruits = ["avocado", "olive", "coconut", "berry", "lemon", "lime"];
-    return ketoFruits.some(fruit => food.name.toLowerCase().includes(fruit));
   }
   
   // Specifically exclude rice and high-carb grains

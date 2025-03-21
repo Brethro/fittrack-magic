@@ -15,6 +15,10 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   
   // Get diet compatibility rules
   const dietRules = dietCompatibleCategories[diet];
+  if (!dietRules) {
+    console.warn(`No diet rules found for diet: ${diet}`);
+    return false;
+  }
   
   // Check parent/child category relationships
   // Handle meat hierarchies more effectively
@@ -44,7 +48,7 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
     if (dietRules.secondaryCategoryRules.restricted) {
       const hasRestrictedSecondary = food.secondaryCategories.some(
         category => dietRules.secondaryCategoryRules?.restricted?.some(
-          restricted => foodBelongsToCategory(food, restricted)
+          restricted => category === restricted
         )
       );
       if (hasRestrictedSecondary) {
@@ -56,7 +60,7 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
     if (!isPrimaryCategoryAllowed && dietRules.secondaryCategoryRules.allowed) {
       const hasAllowedSecondary = food.secondaryCategories.some(
         category => dietRules.secondaryCategoryRules?.allowed?.some(
-          allowed => foodBelongsToCategory(food, allowed)
+          allowed => category === allowed
         )
       );
       if (!hasAllowedSecondary) {
@@ -66,16 +70,22 @@ export const isFoodCompatibleWithDiet = (food: FoodItem, diet: DietType): boolea
   }
   
   // Apply special case rules as final check
-  return isPrimaryCategoryAllowed || specialCaseRules[diet](food);
+  return isPrimaryCategoryAllowed || (specialCaseRules[diet] ? specialCaseRules[diet](food) : false);
 };
 
 // Function to get all compatible diets for a food item
 export const getCompatibleDiets = (food: FoodItem): DietType[] => {
   const diets: DietType[] = ["all"];
   
-  Object.keys(dietCompatibleCategories).forEach((diet) => {
-    if (isFoodCompatibleWithDiet(food, diet as DietType)) {
-      diets.push(diet as DietType);
+  // Check each diet type except "all"
+  const dietTypes: Exclude<DietType, "all">[] = [
+    "mediterranean", "vegetarian", "vegan", "japanese", 
+    "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
+  ];
+  
+  dietTypes.forEach((diet) => {
+    if (isFoodCompatibleWithDiet(food, diet)) {
+      diets.push(diet);
     }
   });
   
