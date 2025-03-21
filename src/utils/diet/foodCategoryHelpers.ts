@@ -6,9 +6,9 @@ export const assignDefaultCategory = (food: FoodItem): FoodPrimaryCategory => {
   const name = food.name.toLowerCase();
   
   // Enhanced comprehensive regex patterns for better food categorization
-  if (/beef|steak|lamb|pork|venison|bison|elk|moose|veal|goat|ribeye|sirloin|chuck|brisket|roast|jerky|ground meat|meatball|meatloaf/.test(name)) return "redMeat";
+  if (/beef|steak|lamb|pork|venison|bison|elk|moose|veal|goat|ribeye|sirloin|chuck|brisket|roast|jerky|ground meat|meatball|meatloaf|rabbit|hare|boar|game meat/.test(name)) return "redMeat";
   
-  if (/chicken|turkey|duck|goose|quail|pheasant|ostrich|emu|hen|poultry|fowl|drumstick|thigh|breast|wing|nugget|tender/.test(name)) return "poultry";
+  if (/chicken|turkey|duck|goose|quail|pheasant|ostrich|emu|hen|poultry|fowl|drumstick|thigh|breast|wing|nugget|tender|guinea fowl|partridge|squab|pigeon/.test(name)) return "poultry";
   
   if (/fish|salmon|tuna|cod|trout|tilapia|halibut|bass|mackerel|sardine|herring|anchov|eel|swordfish|snapper|haddock|grouper|catfish|flounder|pike|perch|mahi|sole|pollock|barramundi|carp|sturgeon/.test(name)) return "fish";
   
