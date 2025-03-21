@@ -1,4 +1,6 @@
 
+import { FoodPrimaryCategory } from "@/types/diet";
+
 // Meats & Poultry food data - with detailed nutrition information
 export const meatsAndPoultryData = {
   name: "Meats & Poultry",
@@ -28,7 +30,7 @@ export const meatsAndPoultryData = {
       servingSize: "100g", 
       servingSizeGrams: 100,
       primaryCategory: "redMeat",
-      secondaryCategories: ["meat"], // This is now correctly typed as FoodPrimaryCategory[]
+      secondaryCategories: ["meat" as FoodPrimaryCategory], 
       diets: ["paleo", "keto"]
     }
   ],

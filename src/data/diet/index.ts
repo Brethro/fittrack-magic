@@ -13,7 +13,3 @@ const rawFoodCategoriesData = [
 
 // Process the raw food data to add primaryCategory to each item
 export const foodCategoriesData = processRawFoodData(rawFoodCategoriesData);
-
-// The reset function is kept for future reference if needed
-// import { resetFoodDatabase } from "@/utils/diet/resetFoodDatabase";
-// export const foodCategoriesData = resetFoodDatabase();
