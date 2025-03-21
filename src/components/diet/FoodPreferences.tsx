@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Utensils, ChevronDown, ChevronUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Utensils, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { FoodCategory } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -32,8 +33,10 @@ export function FoodPreferences({
   dailyCalories,
 }: FoodPreferencesProps) {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  // Initialize all categories as collapsed
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
-    foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
+    foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
   
   const toggleFoodSelection = (foodId: string) => {
@@ -67,23 +70,66 @@ export function FoodPreferences({
     });
   };
 
+  // Expand a category if it contains matched search results
+  useEffect(() => {
+    if (!searchQuery) return;
+    
+    const newOpenCategories = { ...openCategories };
+    
+    foodCategories.forEach(category => {
+      const hasMatch = category.items.some(food => 
+        food.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      if (hasMatch) {
+        newOpenCategories[category.name] = true;
+      }
+    });
+    
+    setOpenCategories(newOpenCategories);
+  }, [searchQuery, foodCategories]);
+
   // Calculate total number of selected foods for user feedback
   const selectedFoodCount = Object.values(selectedFoods).filter(Boolean).length;
+
+  // Filter food items based on search query
+  const getFilteredItems = (items) => {
+    if (!searchQuery) return items;
+    
+    return items.filter(food => 
+      food.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
 
   return (
     <div className="glass-panel rounded-lg p-4">
       <h2 className="text-lg font-medium mb-3">Select Your Preferred Foods</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Check all the foods you enjoy eating. We'll use these to create your personalized meal plan.
-        <br />
-        <span className="text-xs italic">(All foods are selected by default for testing)</span>
       </p>
+      
+      <div className="relative mb-4">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search foods..."
+          className="pl-9"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       
       <div className="space-y-4">
         {foodCategories.map((category) => {
           const categoryFoodIds = category.items.map(food => food.id);
           const allCategorySelected = categoryFoodIds.every(id => selectedFoods[id] !== false);
           const someCategorySelected = categoryFoodIds.some(id => selectedFoods[id] !== false);
+          const filteredItems = getFilteredItems(category.items);
+          
+          // Skip rendering this category if all its items are filtered out
+          if (searchQuery && filteredItems.length === 0) {
+            return null;
+          }
           
           return (
             <Collapsible 
@@ -119,8 +165,15 @@ export function FoodPreferences({
               
               <CollapsibleContent className="mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {category.items.map((food) => (
-                    <div key={food.id} className="flex items-start space-x-2 p-2 rounded hover:bg-muted/30">
+                  {filteredItems.map((food) => (
+                    <div 
+                      key={food.id} 
+                      className={`flex items-start space-x-2 p-2 rounded hover:bg-muted/30 ${
+                        searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase()) 
+                          ? "bg-muted/40" 
+                          : ""
+                      }`}
+                    >
                       <Checkbox 
                         id={food.id}
                         checked={selectedFoods[food.id] !== false} 
