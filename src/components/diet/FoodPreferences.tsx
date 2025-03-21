@@ -40,6 +40,8 @@ export function FoodPreferences({
       <h2 className="text-lg font-medium mb-3">Select Your Preferred Foods</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Check all the foods you enjoy eating. We'll use these to create your personalized meal plan.
+        <br />
+        <span className="text-xs italic">(All foods are selected by default for testing)</span>
       </p>
       
       <div className="space-y-6">
@@ -51,7 +53,7 @@ export function FoodPreferences({
                 <div key={food.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={food.id}
-                    checked={selectedFoods[food.id] || false}
+                    checked={selectedFoods[food.id] !== false} // Default to true unless explicitly set to false
                     onCheckedChange={() => toggleFoodSelection(food.id)}
                   />
                   <div className="grid gap-1">
