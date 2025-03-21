@@ -36,7 +36,14 @@ const DietPage = () => {
   }
 
   // Use custom hooks to manage state
-  const { selectedFoods, setSelectedFoods, getSelectedFoodItems } = useFoodSelectionState(foodCategoriesData);
+  const { 
+    selectedFoods, 
+    setSelectedFoods, 
+    selectedDiet,
+    setSelectedDiet,
+    getSelectedFoodItems 
+  } = useFoodSelectionState(foodCategoriesData);
+  
   const { 
     mealPlan, 
     includeFreeMeal, 
@@ -89,6 +96,8 @@ const DietPage = () => {
                 foodCategories={foodCategoriesData}
                 selectedFoods={selectedFoods}
                 setSelectedFoods={setSelectedFoods}
+                selectedDiet={selectedDiet}
+                setSelectedDiet={setSelectedDiet}
                 includeFreeMeal={includeFreeMeal}
                 setIncludeFreeMeal={setIncludeFreeMeal}
                 generateMealPlan={handleGenerateMealPlan}

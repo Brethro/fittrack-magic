@@ -8,6 +8,7 @@ export type FoodItem = {
   caloriesPerServing?: number;
   servingSize: string;
   servingSizeGrams: number;
+  diets?: string[]; // Add diet compatibility tags
 };
 
 export type FoodCategory = {
@@ -36,3 +37,15 @@ export type Meal = {
   totalFats: number;
   totalCalories: number;
 };
+
+export type DietType = 
+  | "all"
+  | "mediterranean"
+  | "vegetarian"
+  | "vegan"
+  | "japanese"
+  | "korean"
+  | "mexican"
+  | "italian"
+  | "paleo"
+  | "keto";
