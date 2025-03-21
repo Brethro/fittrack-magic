@@ -8,42 +8,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Utensils, Flame, RefreshCw, PlusCircle } from "lucide-react";
-
-// Type definitions for food preferences
-type FoodCategory = {
-  name: string;
-  items: {
-    id: string;
-    name: string;
-    protein?: number;
-    carbs?: number;
-    fats?: number;
-    caloriesPerServing?: number;
-    servingSize: string; // Added serving size information
-    servingSizeGrams: number; // Added serving size in grams
-  }[];
-};
-
-type Meal = {
-  id: string;
-  name: string;
-  foods: {
-    id: string;
-    name: string;
-    servings: number;
-    servingSizeGrams: number; // Added serving size in grams
-    servingSize: string; // Added serving size description
-    protein: number;
-    carbs: number;
-    fats: number;
-    calories: number;
-  }[];
-  totalProtein: number;
-  totalCarbs: number;
-  totalFats: number;
-  totalCalories: number;
-};
+import { Utensils, Flame, RefreshCw } from "lucide-react";
+import { FoodCategory, Meal } from "@/types/diet";
+import { createBalancedMeal } from "@/utils/dietUtils";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -144,6 +111,7 @@ const DietPage = () => {
       return;
     }
 
+    // Get user's daily targets
     const dailyCalories = userData.dailyCalories || 2000;
     const targetProtein = userData.macros.protein || 150;
     const targetCarbs = userData.macros.carbs || 200;
@@ -156,6 +124,7 @@ const DietPage = () => {
     let availableFats = targetFats;
 
     if (includeFreeMeal) {
+      // Limit free meal to at most 20% of daily calories
       const freeMealCals = Math.min(freeMealCalories, dailyCalories * 0.2);
       availableCalories -= freeMealCals;
       
@@ -170,231 +139,34 @@ const DietPage = () => {
       .flatMap(category => category.items)
       .filter(food => selectedFoods[food.id]);
 
-    // Distribute into 3 or 4 meals
+    // Distribute into 3 or 4 meals based on calorie amount
     const numberOfMeals = availableCalories > 1800 ? 4 : 3;
-    const meals: Meal[] = [];
-
-    // Calculate calories and macros per meal
+    
+    // Calculate macros per meal (distribute evenly)
     const caloriesPerMeal = Math.floor(availableCalories / numberOfMeals);
     const proteinPerMeal = Math.floor(availableProtein / numberOfMeals);
     const carbsPerMeal = Math.floor(availableCarbs / numberOfMeals);
     const fatsPerMeal = Math.floor(availableFats / numberOfMeals);
 
-    const mealNames = [
-      "Breakfast",
-      "Lunch",
-      "Dinner",
-      "Snack",
-    ];
-
-    // Improved algorithm to create meals with accurate portion sizes
+    const mealNames = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    
+    // Create balanced meals using our utility function
+    const meals: Meal[] = [];
     for (let i = 0; i < numberOfMeals; i++) {
-      const mealFoods = [];
-      const targetCalories = caloriesPerMeal;
-      let currentCalories = 0;
-      let currentProtein = 0;
-      let currentCarbs = 0;
-      let currentFats = 0;
-      
-      // Prioritize a protein source first
-      const proteins = selectedFoodItems.filter(food => (food.protein || 0) > 10);
-      if (proteins.length > 0) {
-        const randomProtein = proteins[Math.floor(Math.random() * proteins.length)];
-        // Calculate exact servings needed to meet protein target
-        const targetProteinServings = proteinPerMeal / (randomProtein.protein || 1);
-        // Limit to reasonable amount (0.5 to 3 servings)
-        const servings = Math.max(0.5, Math.min(3, targetProteinServings));
-        
-        // Calculate exact nutrients based on servings
-        const exactProtein = (randomProtein.protein || 0) * servings;
-        const exactCarbs = (randomProtein.carbs || 0) * servings;
-        const exactFats = (randomProtein.fats || 0) * servings;
-        const exactCalories = (randomProtein.caloriesPerServing || 0) * servings;
-        
-        mealFoods.push({
-          id: randomProtein.id,
-          name: randomProtein.name,
-          servings,
-          servingSizeGrams: randomProtein.servingSizeGrams,
-          servingSize: randomProtein.servingSize,
-          protein: parseFloat(exactProtein.toFixed(1)),
-          carbs: parseFloat(exactCarbs.toFixed(1)),
-          fats: parseFloat(exactFats.toFixed(1)),
-          calories: Math.round(exactCalories)
-        });
-        
-        currentProtein += exactProtein;
-        currentCarbs += exactCarbs;
-        currentFats += exactFats;
-        currentCalories += exactCalories;
-      }
-      
-      // Then add a carb source
-      const carbs = selectedFoodItems.filter(food => 
-        (food.carbs || 0) > 15 && 
-        !mealFoods.some(mf => mf.id === food.id)
+      const meal = createBalancedMeal(
+        selectedFoodItems,
+        caloriesPerMeal,
+        proteinPerMeal,
+        carbsPerMeal,
+        fatsPerMeal,
+        mealNames[i]
       );
-      if (carbs.length > 0) {
-        const randomCarb = carbs[Math.floor(Math.random() * carbs.length)];
-        // Calculate servings needed to meet carb target
-        const targetCarbServings = (carbsPerMeal - currentCarbs) / (randomCarb.carbs || 1);
-        // Limit to reasonable amount (0.5 to 2.5 servings)
-        const servings = Math.max(0.5, Math.min(2.5, targetCarbServings));
-        
-        // Calculate exact nutrients
-        const exactProtein = (randomCarb.protein || 0) * servings;
-        const exactCarbs = (randomCarb.carbs || 0) * servings;
-        const exactFats = (randomCarb.fats || 0) * servings;
-        const exactCalories = (randomCarb.caloriesPerServing || 0) * servings;
-        
-        mealFoods.push({
-          id: randomCarb.id,
-          name: randomCarb.name,
-          servings,
-          servingSizeGrams: randomCarb.servingSizeGrams,
-          servingSize: randomCarb.servingSize,
-          protein: parseFloat(exactProtein.toFixed(1)),
-          carbs: parseFloat(exactCarbs.toFixed(1)),
-          fats: parseFloat(exactFats.toFixed(1)),
-          calories: Math.round(exactCalories)
-        });
-        
-        currentProtein += exactProtein;
-        currentCarbs += exactCarbs;
-        currentFats += exactFats;
-        currentCalories += exactCalories;
-      }
-      
-      // Add vegetables
-      const veggies = selectedFoodItems.filter(food => 
-        food.id.includes("broccoli") || 
-        food.id.includes("spinach") || 
-        food.id.includes("kale") || 
-        food.id.includes("bell_peppers") || 
-        food.id.includes("cucumber") || 
-        food.id.includes("carrots") || 
-        food.id.includes("zucchini") || 
-        food.id.includes("tomatoes") &&
-        !mealFoods.some(mf => mf.id === food.id)
-      );
-      if (veggies.length > 0) {
-        const randomVeggie = veggies[Math.floor(Math.random() * veggies.length)];
-        // Be generous with veggies (1-2 servings)
-        const servings = Math.random() > 0.5 ? 2 : 1;
-        
-        // Calculate exact nutrients
-        const exactProtein = (randomVeggie.protein || 0) * servings;
-        const exactCarbs = (randomVeggie.carbs || 0) * servings;
-        const exactFats = (randomVeggie.fats || 0) * servings;
-        const exactCalories = (randomVeggie.caloriesPerServing || 0) * servings;
-        
-        mealFoods.push({
-          id: randomVeggie.id,
-          name: randomVeggie.name,
-          servings,
-          servingSizeGrams: randomVeggie.servingSizeGrams,
-          servingSize: randomVeggie.servingSize,
-          protein: parseFloat(exactProtein.toFixed(1)),
-          carbs: parseFloat(exactCarbs.toFixed(1)),
-          fats: parseFloat(exactFats.toFixed(1)),
-          calories: Math.round(exactCalories)
-        });
-        
-        currentProtein += exactProtein;
-        currentCarbs += exactCarbs;
-        currentFats += exactFats;
-        currentCalories += exactCalories;
-      }
-      
-      // Add healthy fat if needed
-      if (currentFats < fatsPerMeal * 0.7) {
-        const fats = selectedFoodItems.filter(food => 
-          (food.fats || 0) > 5 && 
-          !mealFoods.some(mf => mf.id === food.id)
-        );
-        if (fats.length > 0) {
-          const randomFat = fats[Math.floor(Math.random() * fats.length)];
-          // Calculate servings needed to meet fat target
-          const targetFatServings = (fatsPerMeal - currentFats) / (randomFat.fats || 1);
-          // Limit to reasonable amount (0.5 to 1.5 servings)
-          const servings = Math.max(0.5, Math.min(1.5, targetFatServings));
-          
-          // Calculate exact nutrients
-          const exactProtein = (randomFat.protein || 0) * servings;
-          const exactCarbs = (randomFat.carbs || 0) * servings;
-          const exactFats = (randomFat.fats || 0) * servings;
-          const exactCalories = (randomFat.caloriesPerServing || 0) * servings;
-          
-          mealFoods.push({
-            id: randomFat.id,
-            name: randomFat.name,
-            servings,
-            servingSizeGrams: randomFat.servingSizeGrams,
-            servingSize: randomFat.servingSize,
-            protein: parseFloat(exactProtein.toFixed(1)),
-            carbs: parseFloat(exactCarbs.toFixed(1)),
-            fats: parseFloat(exactFats.toFixed(1)),
-            calories: Math.round(exactCalories)
-          });
-          
-          currentProtein += exactProtein;
-          currentCarbs += exactCarbs;
-          currentFats += exactFats;
-          currentCalories += exactCalories;
-        }
-      }
-      
-      // Add one more random item if there's room
-      if (currentCalories < targetCalories * 0.8) {
-        const remainingFoods = selectedFoodItems.filter(food => 
-          !mealFoods.some(mf => mf.id === food.id)
-        );
-        if (remainingFoods.length > 0) {
-          const randomFood = remainingFoods[Math.floor(Math.random() * remainingFoods.length)];
-          const caloriesLeft = targetCalories - currentCalories;
-          // Calculate servings based on calories left
-          const possibleServings = caloriesLeft / (randomFood.caloriesPerServing || 100);
-          // Limit to reasonable amount (0.5 to 1.5 servings)
-          const servings = Math.max(0.5, Math.min(1.5, possibleServings));
-          
-          // Calculate exact nutrients
-          const exactProtein = (randomFood.protein || 0) * servings;
-          const exactCarbs = (randomFood.carbs || 0) * servings;
-          const exactFats = (randomFood.fats || 0) * servings;
-          const exactCalories = (randomFood.caloriesPerServing || 0) * servings;
-          
-          mealFoods.push({
-            id: randomFood.id,
-            name: randomFood.name,
-            servings,
-            servingSizeGrams: randomFood.servingSizeGrams,
-            servingSize: randomFood.servingSize,
-            protein: parseFloat(exactProtein.toFixed(1)),
-            carbs: parseFloat(exactCarbs.toFixed(1)),
-            fats: parseFloat(exactFats.toFixed(1)),
-            calories: Math.round(exactCalories)
-          });
-          
-          currentProtein += exactProtein;
-          currentCarbs += exactCarbs;
-          currentFats += exactFats;
-          currentCalories += exactCalories;
-        }
-      }
-
-      meals.push({
-        id: `meal-${i + 1}`,
-        name: mealNames[i],
-        foods: mealFoods,
-        totalProtein: parseFloat(currentProtein.toFixed(1)),
-        totalCarbs: parseFloat(currentCarbs.toFixed(1)),
-        totalFats: parseFloat(currentFats.toFixed(1)),
-        totalCalories: Math.round(currentCalories)
-      });
+      meals.push(meal);
     }
 
     // If free meal is included, add it
     if (includeFreeMeal) {
+      const freeMealCals = Math.min(freeMealCalories, dailyCalories * 0.2);
       meals.push({
         id: "free-meal",
         name: "Free Meal",
@@ -404,15 +176,15 @@ const DietPage = () => {
           servings: 1,
           servingSizeGrams: 0,
           servingSize: "Your choice",
-          protein: Math.round((freeMealCalories * 0.2) / 4),
-          carbs: Math.round((freeMealCalories * 0.5) / 4),
-          fats: Math.round((freeMealCalories * 0.3) / 9),
-          calories: freeMealCalories
+          protein: Math.round((freeMealCals * 0.2) / 4),
+          carbs: Math.round((freeMealCals * 0.5) / 4),
+          fats: Math.round((freeMealCals * 0.3) / 9),
+          calories: freeMealCals
         }],
-        totalProtein: Math.round((freeMealCalories * 0.2) / 4),
-        totalCarbs: Math.round((freeMealCalories * 0.5) / 4),
-        totalFats: Math.round((freeMealCalories * 0.3) / 9),
-        totalCalories: freeMealCalories
+        totalProtein: Math.round((freeMealCals * 0.2) / 4),
+        totalCarbs: Math.round((freeMealCals * 0.5) / 4),
+        totalFats: Math.round((freeMealCals * 0.3) / 9),
+        totalCalories: freeMealCals
       });
     }
 
@@ -427,8 +199,46 @@ const DietPage = () => {
 
   // Regenerate a specific meal
   const regenerateMeal = (mealId: string) => {
-    // Keep the implementation simple for now
-    generateMealPlan();
+    if (mealId === "free-meal") return; // Don't regenerate free meals
+    
+    // Find the meal to regenerate
+    const mealIndex = mealPlan.findIndex(meal => meal.id === mealId);
+    if (mealIndex === -1) return;
+    
+    // Get user's daily targets
+    const dailyCalories = userData.dailyCalories || 2000;
+    const targetProtein = userData.macros.protein || 150;
+    const targetCarbs = userData.macros.carbs || 200;
+    const targetFats = userData.macros.fats || 67;
+    
+    // Calculate number of meals (excluding free meal)
+    const regularMeals = includeFreeMeal ? mealPlan.length - 1 : mealPlan.length;
+    
+    // Calculate per-meal targets
+    const caloriesPerMeal = Math.floor(dailyCalories / regularMeals);
+    const proteinPerMeal = Math.floor(targetProtein / regularMeals);
+    const carbsPerMeal = Math.floor(targetCarbs / regularMeals);
+    const fatsPerMeal = Math.floor(targetFats / regularMeals);
+    
+    // Create a pool of available foods
+    const selectedFoodItems = foodCategories
+      .flatMap(category => category.items)
+      .filter(food => selectedFoods[food.id]);
+    
+    // Generate new meal
+    const newMeal = createBalancedMeal(
+      selectedFoodItems,
+      caloriesPerMeal,
+      proteinPerMeal,
+      carbsPerMeal,
+      fatsPerMeal,
+      mealPlan[mealIndex].name
+    );
+    
+    // Update the meal plan
+    const updatedMealPlan = [...mealPlan];
+    updatedMealPlan[mealIndex] = newMeal;
+    setMealPlan(updatedMealPlan);
     
     toast({
       title: "Meal regenerated",
@@ -457,7 +267,12 @@ const DietPage = () => {
       totalFats += meal.totalFats;
     });
 
-    return { totalCalories, totalProtein, totalCarbs, totalFats };
+    return { 
+      totalCalories, 
+      totalProtein: parseFloat(totalProtein.toFixed(1)), 
+      totalCarbs: parseFloat(totalCarbs.toFixed(1)), 
+      totalFats: parseFloat(totalFats.toFixed(1)) 
+    };
   };
 
   if (!userData.dailyCalories || !userData.macros.protein) {
@@ -477,6 +292,10 @@ const DietPage = () => {
   }
 
   const totals = calculateTotals();
+  // Calculate percentage difference from target calories
+  const calorieTarget = userData.dailyCalories || 2000;
+  const caloriePercentDiff = ((totals.totalCalories - calorieTarget) / calorieTarget) * 100;
+  const isWithinCalorieTarget = Math.abs(caloriePercentDiff) <= 5; // Within 5% of target
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -576,7 +395,7 @@ const DietPage = () => {
             <TabsContent value="plan" className="space-y-4">
               {mealPlan.length > 0 ? (
                 <>
-                  <div className="glass-panel rounded-lg p-4 mb-4">
+                  <div className={`glass-panel rounded-lg p-4 mb-4 ${!isWithinCalorieTarget ? 'border-2 border-orange-500' : ''}`}>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-medium">Daily Totals</h2>
                       <Button 
@@ -590,17 +409,27 @@ const DietPage = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div className="glass-card rounded-lg p-3 text-center">
-                        <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
-                        <p className="text-lg font-bold">{totals.totalCalories}</p>
+                      <div className={`glass-card rounded-lg p-3 text-center ${!isWithinCalorieTarget ? 'bg-orange-500/10' : ''}`}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Flame className="w-5 h-5 text-orange-400" />
+                          <p className="text-lg font-bold">{totals.totalCalories}</p>
+                        </div>
                         <p className="text-xs text-muted-foreground">Calories</p>
+                        {!isWithinCalorieTarget && (
+                          <p className="text-xs text-orange-500 font-medium mt-1">
+                            {caloriePercentDiff > 0 ? 'Over' : 'Under'} target by {Math.abs(caloriePercentDiff).toFixed(1)}%
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Target: {calorieTarget} calories
+                        </p>
                       </div>
                       
                       <div className="glass-card rounded-lg p-3 text-center">
                         <div className="flex justify-around mb-1">
-                          <div className="text-blue-400 text-xs font-bold">P: {totals.totalProtein.toFixed(1)}g</div>
-                          <div className="text-amber-400 text-xs font-bold">C: {totals.totalCarbs.toFixed(1)}g</div>
-                          <div className="text-pink-400 text-xs font-bold">F: {totals.totalFats.toFixed(1)}g</div>
+                          <div className="text-blue-400 text-xs font-bold">P: {totals.totalProtein}g</div>
+                          <div className="text-amber-400 text-xs font-bold">C: {totals.totalCarbs}g</div>
+                          <div className="text-pink-400 text-xs font-bold">F: {totals.totalFats}g</div>
                         </div>
                         <div className="flex h-2 mb-1">
                           <div className="bg-blue-400 h-full" style={{ width: `${totals.totalProtein*4/totals.totalCalories*100}%` }}></div>
@@ -608,6 +437,9 @@ const DietPage = () => {
                           <div className="bg-pink-400 h-full" style={{ width: `${totals.totalFats*9/totals.totalCalories*100}%` }}></div>
                         </div>
                         <p className="text-xs text-muted-foreground">Macronutrients</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Targets: P: {userData.macros.protein}g C: {userData.macros.carbs}g F: {userData.macros.fats}g
+                        </p>
                       </div>
                     </div>
                     
@@ -671,7 +503,7 @@ const DietPage = () => {
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Macros</span>
-                          <span>P: {meal.totalProtein.toFixed(1)}g C: {meal.totalCarbs.toFixed(1)}g F: {meal.totalFats.toFixed(1)}g</span>
+                          <span>P: {meal.totalProtein}g C: {meal.totalCarbs}g F: {meal.totalFats}g</span>
                         </div>
                       </div>
                     ))}
