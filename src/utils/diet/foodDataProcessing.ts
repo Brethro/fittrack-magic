@@ -1,3 +1,4 @@
+
 import { FoodCategory, FoodItem } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -11,8 +12,25 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
   const nonEmptyCategories = categories.filter(category => category.items && category.items.length > 0);
   console.log(`Found ${nonEmptyCategories.length} non-empty food categories.`);
   
+  // Return empty categories with proper structure
+  if (nonEmptyCategories.length === 0) {
+    console.log("No food items found in any category. Returning empty categories.");
+    return categories.map(category => ({
+      name: category.name,
+      items: []
+    }));
+  }
+  
   const processedCategories = categories.map(category => {
     console.log(`Processing category: ${category.name} with ${category.items.length} items`);
+    
+    // If category is empty, return it as is
+    if (!category.items || category.items.length === 0) {
+      return {
+        name: category.name,
+        items: []
+      };
+    }
     
     const migratedItems = category.items.map(item => {
       // First ensure we have proper categorization

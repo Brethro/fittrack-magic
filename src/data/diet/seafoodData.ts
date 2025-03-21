@@ -1,38 +1,6 @@
 
-// Fish & Seafood food data
+// Fish & Seafood food data - with empty items array
 export const fishAndSeafoodData = {
   name: "Fish & Seafood",
-  items: [
-    { id: "salmon", name: "Salmon (Atlantic)", protein: 25, carbs: 0, fats: 13, caloriesPerServing: 208, servingSize: "100g fillet", servingSizeGrams: 100 },
-    { id: "salmon_smoked", name: "Smoked Salmon", protein: 24, carbs: 0, fats: 11, caloriesPerServing: 190, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "tuna", name: "Tuna (fresh)", protein: 30, carbs: 0, fats: 1, caloriesPerServing: 130, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "tuna_canned", name: "Tuna (canned in water)", protein: 26, carbs: 0, fats: 1, caloriesPerServing: 116, servingSize: "100g drained", servingSizeGrams: 100 },
-    { id: "cod", name: "Cod", protein: 23, carbs: 0, fats: 1, caloriesPerServing: 105, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "tilapia", name: "Tilapia", protein: 26, carbs: 0, fats: 3, caloriesPerServing: 128, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "sardines", name: "Sardines (canned)", protein: 25, carbs: 0, fats: 11, caloriesPerServing: 208, servingSize: "100g drained", servingSizeGrams: 100 },
-    { id: "shrimp", name: "Shrimp", protein: 24, carbs: 0, fats: 1, caloriesPerServing: 99, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "crab", name: "Crab", protein: 19, carbs: 0, fats: 1, caloriesPerServing: 97, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "haddock", name: "Haddock", protein: 20, carbs: 0, fats: 1, caloriesPerServing: 90, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "halibut", name: "Halibut", protein: 26, carbs: 0, fats: 2, caloriesPerServing: 119, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "sea_bass", name: "Sea Bass", protein: 24, carbs: 0, fats: 2, caloriesPerServing: 115, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "trout", name: "Trout", protein: 21, carbs: 0, fats: 8, caloriesPerServing: 162, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "mackerel", name: "Mackerel", protein: 20, carbs: 0, fats: 14, caloriesPerServing: 206, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "herring", name: "Herring", protein: 18, carbs: 0, fats: 14, caloriesPerServing: 203, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "anchovies", name: "Anchovies", protein: 29, carbs: 0, fats: 10, caloriesPerServing: 210, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "lobster", name: "Lobster", protein: 22, carbs: 1, fats: 0.5, caloriesPerServing: 98, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "scallops", name: "Scallops", protein: 21, carbs: 3, fats: 0.7, caloriesPerServing: 105, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "mussels", name: "Mussels", protein: 20, carbs: 5, fats: 2, caloriesPerServing: 129, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "clams", name: "Clams", protein: 17, carbs: 3, fats: 0.8, caloriesPerServing: 99, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "oysters", name: "Oysters", protein: 9, carbs: 5, fats: 2, caloriesPerServing: 80, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "squid", name: "Squid/Calamari", protein: 16, carbs: 3, fats: 1.2, caloriesPerServing: 92, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "octopus", name: "Octopus", protein: 25, carbs: 2, fats: 1, caloriesPerServing: 119, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "eel", name: "Eel", protein: 19, carbs: 0, fats: 18, caloriesPerServing: 236, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "swordfish", name: "Swordfish", protein: 25, carbs: 0, fats: 4, caloriesPerServing: 144, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "salmon_king", name: "King Salmon", protein: 26, carbs: 0, fats: 15, caloriesPerServing: 231, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "salmon_sockeye", name: "Sockeye Salmon", protein: 27, carbs: 0, fats: 11, caloriesPerServing: 200, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "salmon_coho", name: "Coho Salmon", protein: 24, carbs: 0, fats: 8, caloriesPerServing: 178, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "tuna_yellowfin", name: "Yellowfin Tuna", protein: 30, carbs: 0, fats: 1, caloriesPerServing: 130, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "tuna_albacore", name: "Albacore Tuna", protein: 29, carbs: 0, fats: 6, caloriesPerServing: 166, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "tuna_skipjack", name: "Skipjack Tuna", protein: 28, carbs: 0, fats: 1, caloriesPerServing: 132, servingSize: "100g cooked", servingSizeGrams: 100 },
-  ],
+  items: [], // Removed all items
 };

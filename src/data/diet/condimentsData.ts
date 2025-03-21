@@ -1,32 +1,6 @@
 
-// Condiments & Sauces food data
+// Condiments & Sauces food data - with empty items array
 export const condimentsAndSaucesData = {
   name: "Condiments & Sauces",
-  items: [
-    { id: "ketchup", name: "Ketchup", protein: 1, carbs: 6, fats: 0.1, caloriesPerServing: 29, servingSize: "17g (1 tbsp)", servingSizeGrams: 17 },
-    { id: "mustard", name: "Mustard (yellow)", protein: 1, carbs: 1, fats: 0.5, caloriesPerServing: 10, servingSize: "10g (1 tbsp)", servingSizeGrams: 10 },
-    { id: "mayo", name: "Mayonnaise", protein: 0.1, carbs: 0.4, fats: 11, caloriesPerServing: 94, servingSize: "13g (1 tbsp)", servingSizeGrams: 13 },
-    { id: "hummus", name: "Hummus", protein: 2, carbs: 4, fats: 2, caloriesPerServing: 27, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "salsa", name: "Salsa", protein: 0.4, carbs: 3, fats: 0.1, caloriesPerServing: 14, servingSize: "30g (2 tbsp)", servingSizeGrams: 30 },
-    { id: "guacamole", name: "Guacamole", protein: 1, carbs: 5, fats: 7, caloriesPerServing: 77, servingSize: "50g (2 tbsp)", servingSizeGrams: 50 },
-    { id: "soy_sauce", name: "Soy Sauce", protein: 1.3, carbs: 1.3, fats: 0, caloriesPerServing: 8, servingSize: "15ml (1 tbsp)", servingSizeGrams: 15 },
-    { id: "hot_sauce", name: "Hot Sauce", protein: 0.3, carbs: 0.7, fats: 0, caloriesPerServing: 5, servingSize: "15ml (1 tbsp)", servingSizeGrams: 15 },
-    { id: "bbq_sauce", name: "BBQ Sauce", protein: 0.2, carbs: 10, fats: 0.1, caloriesPerServing: 40, servingSize: "17g (1 tbsp)", servingSizeGrams: 17 },
-    { id: "ranch", name: "Ranch Dressing", protein: 0.2, carbs: 1.5, fats: 7.7, caloriesPerServing: 73, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "italian_dressing", name: "Italian Dressing", protein: 0.1, carbs: 2, fats: 7, caloriesPerServing: 70, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "pesto", name: "Pesto", protein: 1.5, carbs: 1, fats: 8, caloriesPerServing: 81, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "dijon", name: "Dijon Mustard", protein: 1, carbs: 0.9, fats: 0.5, caloriesPerServing: 10, servingSize: "10g (1 tbsp)", servingSizeGrams: 10 },
-    { id: "honey_mustard", name: "Honey Mustard", protein: 0.5, carbs: 3, fats: 3, caloriesPerServing: 41, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "tzatziki", name: "Tzatziki", protein: 0.6, carbs: 1.5, fats: 2, caloriesPerServing: 27, servingSize: "30g (2 tbsp)", servingSizeGrams: 30 },
-    { id: "marinara", name: "Marinara Sauce", protein: 1, carbs: 5, fats: 2, caloriesPerServing: 40, servingSize: "60g (1/4 cup)", servingSizeGrams: 60 },
-    { id: "teriyaki", name: "Teriyaki Sauce", protein: 1, carbs: 8, fats: 0, caloriesPerServing: 36, servingSize: "17g (1 tbsp)", servingSizeGrams: 17 },
-    { id: "worcestershire", name: "Worcestershire Sauce", protein: 0, carbs: 3, fats: 0, caloriesPerServing: 12, servingSize: "17g (1 tbsp)", servingSizeGrams: 17 },
-    { id: "vinegar_balsamic", name: "Balsamic Vinegar", protein: 0.5, carbs: 6, fats: 0, caloriesPerServing: 28, servingSize: "16g (1 tbsp)", servingSizeGrams: 16 },
-    { id: "vinegar_apple", name: "Apple Cider Vinegar", protein: 0, carbs: 0.1, fats: 0, caloriesPerServing: 3, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-    { id: "coconut_aminos", name: "Coconut Aminos", protein: 0, carbs: 3, fats: 0, caloriesPerServing: 15, servingSize: "15ml (1 tbsp)", servingSizeGrams: 15 },
-    { id: "aioli", name: "Aioli", protein: 0.2, carbs: 0.5, fats: 12, caloriesPerServing: 100, servingSize: "14g (1 tbsp)", servingSizeGrams: 14 },
-    { id: "tapenade", name: "Olive Tapenade", protein: 0.5, carbs: 2, fats: 10, caloriesPerServing: 100, servingSize: "20g (1 tbsp)", servingSizeGrams: 20 },
-    { id: "kewpie", name: "Kewpie Mayo", protein: 0.2, carbs: 0.5, fats: 11, caloriesPerServing: 98, servingSize: "13g (1 tbsp)", servingSizeGrams: 13 },
-    { id: "chimichurri", name: "Chimichurri", protein: 0.2, carbs: 1, fats: 7, caloriesPerServing: 67, servingSize: "15g (1 tbsp)", servingSizeGrams: 15 },
-  ],
+  items: [], // Removed all items
 };

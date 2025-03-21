@@ -1,37 +1,6 @@
 
-// Plant Proteins food data
+// Plant Proteins food data - with empty items array
 export const plantProteinsData = {
   name: "Plant Proteins",
-  items: [
-    { id: "tofu_firm", name: "Tofu (firm)", protein: 8, carbs: 2, fats: 4, caloriesPerServing: 76, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "tofu_extra_firm", name: "Tofu (extra firm)", protein: 10, carbs: 2, fats: 5, caloriesPerServing: 86, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "tempeh", name: "Tempeh", protein: 19, carbs: 9, fats: 11, caloriesPerServing: 196, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "seitan", name: "Seitan", protein: 25, carbs: 4, fats: 1, caloriesPerServing: 130, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "black_beans", name: "Black Beans", protein: 8, carbs: 23, fats: 0.5, caloriesPerServing: 127, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "chickpeas", name: "Chickpeas", protein: 9, carbs: 27, fats: 2.5, caloriesPerServing: 164, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "lentils", name: "Lentils", protein: 18, carbs: 40, fats: 1, caloriesPerServing: 230, servingSize: "198g cooked cup", servingSizeGrams: 198 },
-    { id: "edamame", name: "Edamame", protein: 11, carbs: 10, fats: 5, caloriesPerServing: 122, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "protein_powder", name: "Protein Powder (whey)", protein: 24, carbs: 3, fats: 1, caloriesPerServing: 120, servingSize: "30g scoop", servingSizeGrams: 30 },
-    { id: "protein_powder_plant", name: "Protein Powder (plant-based)", protein: 21, carbs: 5, fats: 2, caloriesPerServing: 120, servingSize: "30g scoop", servingSizeGrams: 30 },
-    { id: "tofu_silken", name: "Tofu (silken)", protein: 5, carbs: 2, fats: 3, caloriesPerServing: 55, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "tofu_soft", name: "Tofu (soft)", protein: 7, carbs: 2, fats: 4, caloriesPerServing: 68, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "miso", name: "Miso Paste", protein: 12, carbs: 18, fats: 6, caloriesPerServing: 174, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "natto", name: "Natto", protein: 19, carbs: 12, fats: 10, caloriesPerServing: 212, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "kidney_beans", name: "Kidney Beans", protein: 9, carbs: 22, fats: 0.5, caloriesPerServing: 127, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "pinto_beans", name: "Pinto Beans", protein: 9, carbs: 22, fats: 1, caloriesPerServing: 143, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "navy_beans", name: "Navy Beans", protein: 8, carbs: 24, fats: 0.6, caloriesPerServing: 140, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "red_lentils", name: "Red Lentils", protein: 9, carbs: 20, fats: 0.4, caloriesPerServing: 116, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "green_lentils", name: "Green Lentils", protein: 9, carbs: 20, fats: 0.4, caloriesPerServing: 116, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "french_lentils", name: "French Lentils", protein: 9, carbs: 20, fats: 0.4, caloriesPerServing: 116, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "soybeans", name: "Soybeans", protein: 18, carbs: 8, fats: 9, caloriesPerServing: 173, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "peas", name: "Green Peas", protein: 5, carbs: 14, fats: 0.4, caloriesPerServing: 81, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "split_peas", name: "Split Peas", protein: 8, carbs: 21, fats: 0.4, caloriesPerServing: 118, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "lupini_beans", name: "Lupini Beans", protein: 16, carbs: 10, fats: 3, caloriesPerServing: 119, servingSize: "100g", servingSizeGrams: 100 },
-    { id: "fava_beans", name: "Fava Beans", protein: 8, carbs: 16, fats: 0.7, caloriesPerServing: 110, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "lima_beans", name: "Lima Beans", protein: 8, carbs: 21, fats: 0.4, caloriesPerServing: 115, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "adzuki_beans", name: "Adzuki Beans", protein: 7, carbs: 25, fats: 0.2, caloriesPerServing: 128, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "mung_beans", name: "Mung Beans", protein: 7, carbs: 16, fats: 0.4, caloriesPerServing: 105, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "black_eyed_peas", name: "Black-eyed Peas", protein: 5, carbs: 16, fats: 0.6, caloriesPerServing: 116, servingSize: "100g cooked", servingSizeGrams: 100 },
-    { id: "tofu_fried", name: "Fried Tofu", protein: 19, carbs: 10, fats: 25, caloriesPerServing: 271, servingSize: "100g", servingSizeGrams: 100 },
-  ],
+  items: [], // Removed all items
 };

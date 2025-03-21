@@ -1,36 +1,5 @@
-// Other Vegetables food data
+// Other Vegetables food data - with empty items array
 export const otherVegetablesData = {
   name: "Other Vegetables",
-  items: [
-    { id: "bell_peppers", name: "Bell Peppers", protein: 1, carbs: 6, fats: 0.3, caloriesPerServing: 30, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "cucumber", name: "Cucumber", protein: 0.7, carbs: 3.6, fats: 0.1, caloriesPerServing: 16, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "carrots", name: "Carrots", protein: 0.9, carbs: 10, fats: 0.2, caloriesPerServing: 41, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "zucchini", name: "Zucchini", protein: 1.2, carbs: 3.9, fats: 0.3, caloriesPerServing: 20, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "tomatoes", name: "Tomatoes", protein: 0.9, carbs: 3.9, fats: 0.2, caloriesPerServing: 18, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "mushrooms", name: "Mushrooms", protein: 3, carbs: 3, fats: 0.3, caloriesPerServing: 22, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "onions", name: "Onions", protein: 1.1, carbs: 9.3, fats: 0.1, caloriesPerServing: 40, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "cauliflower", name: "Cauliflower", protein: 1.9, carbs: 5, fats: 0.3, caloriesPerServing: 25, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "eggplant", name: "Eggplant", protein: 1, carbs: 6, fats: 0.2, caloriesPerServing: 25, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "celery", name: "Celery", protein: 0.7, carbs: 3.4, fats: 0.2, caloriesPerServing: 16, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "radishes", name: "Radishes", protein: 0.7, carbs: 3.4, fats: 0.1, caloriesPerServing: 16, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "artichokes", name: "Artichokes", protein: 3.3, carbs: 10.5, fats: 0.2, caloriesPerServing: 47, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "fennel", name: "Fennel", protein: 1.2, carbs: 7.3, fats: 0.2, caloriesPerServing: 31, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "leeks", name: "Leeks", protein: 1.5, carbs: 14, fats: 0.3, caloriesPerServing: 61, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "kohlrabi", name: "Kohlrabi", protein: 1.7, carbs: 6.2, fats: 0.1, caloriesPerServing: 27, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "okra", name: "Okra", protein: 1.9, carbs: 7.5, fats: 0.2, caloriesPerServing: 33, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "pumpkin", name: "Pumpkin", protein: 1, carbs: 7, fats: 0.1, caloriesPerServing: 26, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "snow_peas", name: "Snow Peas", protein: 2.8, carbs: 7.5, fats: 0.2, caloriesPerServing: 42, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "snap_peas", name: "Snap Peas", protein: 2.8, carbs: 7.5, fats: 0.2, caloriesPerServing: 42, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "garlic", name: "Garlic", protein: 6.4, carbs: 33, fats: 0.5, caloriesPerServing: 149, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "shallots", name: "Shallots", protein: 2.5, carbs: 17, fats: 0.1, caloriesPerServing: 72, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "scallions", name: "Scallions/Green Onions", protein: 1.8, carbs: 7, fats: 0.2, caloriesPerServing: 32, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "chives", name: "Chives", protein: 3.3, carbs: 4.4, fats: 0.7, caloriesPerServing: 30, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "rhubarb", name: "Rhubarb", protein: 0.9, carbs: 5.5, fats: 0.2, caloriesPerServing: 21, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "mushrooms_shiitake", name: "Shiitake Mushrooms", protein: 2.2, carbs: 6.8, fats: 0.3, caloriesPerServing: 34, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "mushrooms_portobello", name: "Portobello Mushrooms", protein: 3.3, carbs: 4.3, fats: 0.4, caloriesPerServing: 29, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "mushrooms_oyster", name: "Oyster Mushrooms", protein: 3.3, carbs: 6.5, fats: 0.4, caloriesPerServing: 35, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "cherry_tomatoes", name: "Cherry Tomatoes", protein: 0.9, carbs: 3.9, fats: 0.2, caloriesPerServing: 18, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "roma_tomatoes", name: "Roma Tomatoes", protein: 0.9, carbs: 3.9, fats: 0.2, caloriesPerServing: 18, servingSize: "100g raw", servingSizeGrams: 100 },
-    { id: "squash_yellow", name: "Yellow Squash", protein: 1.2, carbs: 3.4, fats: 0.2, caloriesPerServing: 19, servingSize: "100g raw", servingSizeGrams: 100 },
-  ],
+  items: [], // Removed all items
 };
