@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { createBalancedMeal } from "@/utils/dietUtils";
@@ -195,4 +194,3 @@ export const useMealPlanState = ({
     activeDietType
   };
 };
-

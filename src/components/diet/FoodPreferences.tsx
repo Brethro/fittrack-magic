@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Utensils, ChevronDown, ChevronUp, Search, MessageSquare, FileText } from "lucide-react";
-import { FoodCategory, DietType, FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { Utensils, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   Collapsible, 
@@ -241,7 +241,7 @@ export function FoodPreferences({
   };
   
   // Show a message if there are no food categories to display
-  if (foodCategories.length === 0) {
+  if (foodCategories.length === 0 || foodCategories.every(category => category.items.length === 0)) {
     return (
       <div className="space-y-6">
         <DietSelector 
@@ -251,11 +251,32 @@ export function FoodPreferences({
         />
         
         <div className="glass-panel rounded-lg p-6 text-center">
-          <h2 className="text-lg font-medium mb-3">No Food Categories Available</h2>
+          <h2 className="text-lg font-medium mb-3">No Foods Available Yet</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            There are currently no food categories available to display.
-            Please check back later or contact support.
+            Your food database is currently empty. Please add foods to get started with your meal plan.
           </p>
+          
+          <div className="mt-6 border-t pt-4">
+            <h3 className="font-medium mb-2">Free Meal Option</h3>
+            <div className="flex items-start space-x-2 mb-3">
+              <Checkbox 
+                id="free-meal"
+                checked={includeFreeMeal}
+                onCheckedChange={() => setIncludeFreeMeal(!includeFreeMeal)}
+              />
+              <div>
+                <Label
+                  htmlFor="free-meal"
+                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Include a free meal
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Reserve up to {Math.round(dailyCalories * 0.2)} calories (20% of your daily total) for a meal of your choice.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
