@@ -17,6 +17,7 @@ import { FoodFeedbackDialog } from "./FoodFeedbackDialog";
 import { FoodNutritionDialog } from "./FoodNutritionDialog";
 import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
 import { FoodListItem } from "./FoodListItem";
+import { foodBelongsToCategory } from "@/utils/diet/foodCategoryHierarchy";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -30,6 +31,21 @@ interface FoodPreferencesProps {
   dailyCalories: number;
   availableDiets: DietType[];
 }
+
+// Group food items by their primary category
+const groupFoodItemsByCategory = (items: FoodItem[]): Record<string, FoodItem[]> => {
+  const groupedItems: Record<string, FoodItem[]> = {};
+  
+  items.forEach(item => {
+    const category = item.primaryCategory;
+    if (!groupedItems[category]) {
+      groupedItems[category] = [];
+    }
+    groupedItems[category].push(item);
+  });
+  
+  return groupedItems;
+};
 
 export function FoodPreferences({
   foodCategories,
@@ -45,10 +61,12 @@ export function FoodPreferences({
 }: FoodPreferencesProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // Initialize all categories as collapsed
+  // Initialize all categories and subcategories as collapsed
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
+  // Track open subcategories
+  const [openSubcategories, setOpenSubcategories] = useState<Record<string, boolean>>({});
   
   // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -66,9 +84,9 @@ export function FoodPreferences({
     });
   };
 
-  // Toggle all foods in a category
-  const toggleAllInCategory = (category: string, foodIds: string[]) => {
-    // Check if all foods in category are currently selected
+  // Toggle all foods in a category or subcategory
+  const toggleAllInGroup = (foodIds: string[]) => {
+    // Check if all foods are currently selected
     const allSelected = foodIds.every(id => selectedFoods[id] !== false);
     
     // If all are selected, deselect all; otherwise select all
@@ -82,11 +100,19 @@ export function FoodPreferences({
     setSelectedFoods(newSelectedFoods);
   };
 
-  // Toggle the open/close state of a category
+  // Toggle the open/close state of a main category
   const toggleCategory = (category: string) => {
     setOpenCategories({
       ...openCategories,
       [category]: !openCategories[category],
+    });
+  };
+
+  // Toggle the open/close state of a subcategory
+  const toggleSubcategory = (subcategory: string) => {
+    setOpenSubcategories({
+      ...openSubcategories,
+      [subcategory]: !openSubcategories[subcategory],
     });
   };
 
@@ -103,31 +129,50 @@ export function FoodPreferences({
     setNutritionDialogOpen(true);
   };
 
-  // Expand a category if it contains matched search results
+  // Expand categories/subcategories if they contain matched search results
   useEffect(() => {
     if (!searchQuery) return;
     
-    // New: If using fuzzy search
+    // If using fuzzy search with 2+ characters
     const matchedItems = searchQuery.length >= 2 
       ? fuzzyFindFood(searchQuery, foodCategories)
       : [];
     
     const newOpenCategories = { ...openCategories };
+    const newOpenSubcategories = { ...openSubcategories };
     
     if (matchedItems.length > 0) {
-      // Get all categories with matching items
-      const categoriesWithMatches = new Set(
-        matchedItems.map(item => item.primaryCategory as FoodPrimaryCategory)
-      );
+      // Create sets of categories and subcategories with matches
+      const categoriesWithMatches = new Set<string>();
+      const subcategoriesWithMatches = new Set<string>();
       
-      // Open those categories
-      foodCategories.forEach(category => {
-        if (categoriesWithMatches.has(category.name as FoodPrimaryCategory)) {
-          newOpenCategories[category.name] = true;
+      matchedItems.forEach(item => {
+        // Find which main category contains this item
+        const mainCategory = foodCategories.find(cat => 
+          cat.items.some(food => food.id === item.id)
+        )?.name || "";
+        
+        if (mainCategory) {
+          categoriesWithMatches.add(mainCategory);
+        }
+        
+        // Add the item's primary category as a subcategory with matches
+        if (item.primaryCategory) {
+          subcategoriesWithMatches.add(item.primaryCategory);
         }
       });
+      
+      // Open those categories
+      categoriesWithMatches.forEach(category => {
+        newOpenCategories[category] = true;
+      });
+      
+      // Open those subcategories
+      subcategoriesWithMatches.forEach(subcategory => {
+        newOpenSubcategories[subcategory] = true;
+      });
     } else {
-      // Fallback to the old method if no fuzzy matches
+      // Fallback to simpler text-based search
       foodCategories.forEach(category => {
         const hasMatch = category.items.some(food => 
           food.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -135,21 +180,33 @@ export function FoodPreferences({
         
         if (hasMatch) {
           newOpenCategories[category.name] = true;
+          
+          // Also check subcategories
+          const groupedItems = groupFoodItemsByCategory(category.items);
+          Object.entries(groupedItems).forEach(([subcat, items]) => {
+            const hasSubMatch = items.some(food => 
+              food.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            if (hasSubMatch) {
+              newOpenSubcategories[subcat] = true;
+            }
+          });
         }
       });
     }
     
     setOpenCategories(newOpenCategories);
+    setOpenSubcategories(newOpenSubcategories);
   }, [searchQuery, foodCategories]);
 
   // Calculate total number of selected foods for user feedback
   const selectedFoodCount = Object.values(selectedFoods).filter(Boolean).length;
 
   // Filter food items based on search query and diet compatibility
-  const getFilteredItems = (items) => {
+  const getFilteredItems = (items: FoodItem[]) => {
     // If search query is 2 or more characters, use fuzzy search
     if (searchQuery.length >= 2) {
-      // Filter within the current category's items only
+      // Filter within the current items only
       const matchedItemIds = new Set(
         fuzzyFindFood(searchQuery, [{ name: "", items }]).map(item => item.id)
       );
@@ -161,7 +218,10 @@ export function FoodPreferences({
       if (selectedDiet === "all") return searchFiltered;
       
       // For specific diets, only show compatible foods
-      return searchFiltered.filter(food => !food.diets || food.diets.includes(selectedDiet));
+      return searchFiltered.filter(food => 
+        food.diets?.includes(selectedDiet) || 
+        foodBelongsToCategory(food, selectedDiet as any)
+      );
     }
     
     // Default behavior for short search queries
@@ -173,7 +233,10 @@ export function FoodPreferences({
     if (selectedDiet === "all") return searchFiltered;
     
     // For specific diets, only show compatible foods
-    return searchFiltered.filter(food => !food.diets || food.diets.includes(selectedDiet));
+    return searchFiltered.filter(food => 
+      food.diets?.includes(selectedDiet) || 
+      foodBelongsToCategory(food, selectedDiet as any)
+    );
   };
   
   return (
@@ -204,13 +267,19 @@ export function FoodPreferences({
         
         <div className="space-y-4">
           {foodCategories.map((category) => {
-            const categoryFoodIds = category.items.map(food => food.id);
-            const allCategorySelected = categoryFoodIds.every(id => selectedFoods[id] !== false);
-            const someCategorySelected = categoryFoodIds.some(id => selectedFoods[id] !== false);
-            const filteredItems = getFilteredItems(category.items);
+            const allCategoryFoodIds = category.items.map(food => food.id);
+            const allCategorySelected = allCategoryFoodIds.every(id => selectedFoods[id] !== false);
+            const someCategorySelected = allCategoryFoodIds.some(id => selectedFoods[id] !== false);
+            
+            // Group items by their primary category (subcategories)
+            const groupedItems = groupFoodItemsByCategory(category.items);
             
             // Skip rendering this category if all its items are filtered out
-            if (filteredItems.length === 0) {
+            const hasFilteredItems = Object.values(groupedItems).some(subItems => 
+              getFilteredItems(subItems).length > 0
+            );
+            
+            if (!hasFilteredItems && searchQuery) {
               return null;
             }
             
@@ -227,7 +296,7 @@ export function FoodPreferences({
                       id={`category-${category.name}`}
                       checked={allCategorySelected}
                       className={someCategorySelected && !allCategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-                      onCheckedChange={() => toggleAllInCategory(category.name, categoryFoodIds)}
+                      onCheckedChange={() => toggleAllInGroup(allCategoryFoodIds)}
                     />
                     <Label
                       htmlFor={`category-${category.name}`}
@@ -246,20 +315,70 @@ export function FoodPreferences({
                   </CollapsibleTrigger>
                 </div>
                 
-                <CollapsibleContent className="mt-2">
-                  <div className="grid grid-cols-1 gap-2">
-                    {filteredItems.map((food) => (
-                      <FoodListItem
-                        key={food.id}
-                        food={food}
-                        isChecked={selectedFoods[food.id] !== false}
-                        onToggleSelection={() => toggleFoodSelection(food.id)}
-                        onOpenNutritionDialog={() => openNutritionDialog(food)}
-                        onOpenFeedbackDialog={(e) => openFeedbackDialog(food, e)}
-                        isHighlighted={searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase())}
-                      />
-                    ))}
-                  </div>
+                <CollapsibleContent className="mt-2 space-y-3">
+                  {/* Render each subcategory */}
+                  {Object.entries(groupedItems).map(([subcategoryName, subcategoryItems]) => {
+                    const filteredSubItems = getFilteredItems(subcategoryItems);
+                    
+                    // Skip rendering empty subcategories
+                    if (filteredSubItems.length === 0) {
+                      return null;
+                    }
+                    
+                    const subcategoryFoodIds = subcategoryItems.map(food => food.id);
+                    const allSubcategorySelected = subcategoryFoodIds.every(id => selectedFoods[id] !== false);
+                    const someSubcategorySelected = subcategoryFoodIds.some(id => selectedFoods[id] !== false);
+                    
+                    return (
+                      <Collapsible 
+                        key={`${category.name}-${subcategoryName}`}
+                        open={openSubcategories[subcategoryName]} 
+                        onOpenChange={() => toggleSubcategory(subcategoryName)}
+                        className="border rounded-md px-3 py-2 ml-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`subcategory-${subcategoryName}`}
+                              checked={allSubcategorySelected}
+                              className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
+                              onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
+                            />
+                            <Label
+                              htmlFor={`subcategory-${subcategoryName}`}
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {subcategoryName}
+                            </Label>
+                          </div>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              {openSubcategories[subcategoryName] ? 
+                                <ChevronUp className="h-3.5 w-3.5" /> : 
+                                <ChevronDown className="h-3.5 w-3.5" />}
+                              <span className="sr-only">Toggle {subcategoryName}</span>
+                            </Button>
+                          </CollapsibleTrigger>
+                        </div>
+                        
+                        <CollapsibleContent className="mt-2">
+                          <div className="grid grid-cols-1 gap-2">
+                            {filteredSubItems.map((food) => (
+                              <FoodListItem
+                                key={food.id}
+                                food={food}
+                                isChecked={selectedFoods[food.id] !== false}
+                                onToggleSelection={() => toggleFoodSelection(food.id)}
+                                onOpenNutritionDialog={() => openNutritionDialog(food)}
+                                onOpenFeedbackDialog={(e) => openFeedbackDialog(food, e)}
+                                isHighlighted={searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase())}
+                              />
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
                 </CollapsibleContent>
               </Collapsible>
             );
