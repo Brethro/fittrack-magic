@@ -385,9 +385,13 @@ export const AdminDietTools = () => {
                 <div>
                   <Label className="text-xs font-medium">Primary Category*</Label>
                   <Select
-                    name="primaryCategory"
                     value={newFood.primaryCategory as string}
-                    onValueChange={(value) => setNewFood(prev => ({ ...prev, primaryCategory: value }))}
+                    onValueChange={(value) => {
+                      setNewFood(prev => ({ 
+                        ...prev, 
+                        primaryCategory: value as FoodPrimaryCategory 
+                      }));
+                    }}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a category" />
