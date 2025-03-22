@@ -125,3 +125,82 @@ export const removeFoodItem = (foodId: string): {
     };
   }
 };
+
+// Batch import foods from JSON
+export const importFoodsFromJson = (
+  jsonData: string | object
+): {
+  success: boolean;
+  message: string;
+  addedCount: number;
+  updatedCount: number;
+  failedCount: number;
+  dietTypes: string[];
+} => {
+  try {
+    // Parse the JSON if it's a string
+    const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+    
+    // Validate the data structure
+    if (!Array.isArray(data)) {
+      return {
+        success: false,
+        message: "Import data must be an array of food items",
+        addedCount: 0,
+        updatedCount: 0,
+        failedCount: 0,
+        dietTypes: getAvailableDietTypes()
+      };
+    }
+    
+    let addedCount = 0;
+    let updatedCount = 0;
+    let failedCount = 0;
+    
+    // Process each food item in the array
+    for (const item of data) {
+      // Validate the food item has the minimum required fields
+      if (!item.id || !item.name || !item.primaryCategory) {
+        console.error("Invalid food item:", item);
+        failedCount++;
+        continue;
+      }
+      
+      // Try to add the food item
+      const result = addFoodItem(item as FoodItem);
+      
+      if (result.success) {
+        if (result.message.includes("Updated food")) {
+          updatedCount++;
+        } else {
+          addedCount++;
+        }
+      } else {
+        console.error("Failed to add food item:", result.message, item);
+        failedCount++;
+      }
+    }
+    
+    // Reparse all diet types after the batch import
+    const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
+    
+    return {
+      success: addedCount > 0 || updatedCount > 0,
+      message: `Imported ${addedCount} new foods, updated ${updatedCount} existing foods, ${failedCount} failed`,
+      addedCount,
+      updatedCount,
+      failedCount,
+      dietTypes: updatedDietTypes
+    };
+  } catch (error) {
+    console.error("Error importing foods from JSON:", error);
+    return {
+      success: false,
+      message: `Error importing foods: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      addedCount: 0,
+      updatedCount: 0,
+      failedCount: 0,
+      dietTypes: getAvailableDietTypes()
+    };
+  }
+};

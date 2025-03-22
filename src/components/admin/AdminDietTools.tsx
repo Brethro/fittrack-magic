@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Database, AlertCircle, Plus, Trash } from "lucide-react";
+import { RefreshCw, Database, AlertCircle, Plus, Trash, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { foodCategoriesData } from "@/data/diet";
 import { reparseFoodDatabaseForDietTypes } from "@/utils/diet/foodDataProcessing";
 import { addFoodItem, initializeFoodCategories, getCurrentFoodCategories } from "@/utils/diet/foodManagement";
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Import all food data modules directly to ensure we parse everything
 import { meatsAndPoultryData } from "@/data/diet/meatData";
@@ -271,7 +273,7 @@ export const AdminDietTools = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Basic information */}
                 <div>
-                  <label className="text-xs font-medium">ID* (unique identifier)</label>
+                  <Label className="text-xs font-medium">ID* (unique identifier)</Label>
                   <Input 
                     name="id"
                     value={newFood.id}
@@ -282,7 +284,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Name*</label>
+                  <Label className="text-xs font-medium">Name*</Label>
                   <Input 
                     name="name"
                     value={newFood.name}
@@ -293,12 +295,12 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Primary Category*</label>
+                  <Label className="text-xs font-medium">Primary Category*</Label>
                   <select
                     name="primaryCategory"
                     value={newFood.primaryCategory}
                     onChange={handleFoodInputChange as any}
-                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    className="w-full h-10 px-3 py-2 bg-background border border-input rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     {PRIMARY_CATEGORIES.map(category => (
                       <option key={category} value={category}>{category}</option>
@@ -307,7 +309,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Serving Size</label>
+                  <Label className="text-xs font-medium">Serving Size</Label>
                   <Input 
                     name="servingSize"
                     value={newFood.servingSize}
@@ -318,7 +320,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Serving Size (grams)</label>
+                  <Label className="text-xs font-medium">Serving Size (grams)</Label>
                   <Input 
                     name="servingSizeGrams"
                     type="number"
@@ -330,7 +332,7 @@ export const AdminDietTools = () => {
                 
                 {/* Macronutrients */}
                 <div>
-                  <label className="text-xs font-medium">Protein (g)</label>
+                  <Label className="text-xs font-medium">Protein (g)</Label>
                   <Input 
                     name="protein"
                     type="number"
@@ -341,7 +343,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Carbs (g)</label>
+                  <Label className="text-xs font-medium">Carbs (g)</Label>
                   <Input 
                     name="carbs"
                     type="number"
@@ -352,7 +354,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Fats (g)</label>
+                  <Label className="text-xs font-medium">Fats (g)</Label>
                   <Input 
                     name="fats"
                     type="number"
@@ -363,7 +365,7 @@ export const AdminDietTools = () => {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium">Calories Per Serving</label>
+                  <Label className="text-xs font-medium">Calories Per Serving</Label>
                   <Input 
                     name="caloriesPerServing"
                     type="number"
@@ -375,7 +377,7 @@ export const AdminDietTools = () => {
                 
                 {/* Diet Types */}
                 <div className="md:col-span-2">
-                  <label className="text-xs font-medium">Diet Types</label>
+                  <Label className="text-xs font-medium">Diet Types</Label>
                   <div className="flex items-center gap-2 mb-2">
                     <Input 
                       value={dietInput}
