@@ -1,3 +1,4 @@
+
 // Fish & Seafood food data
 export const fishAndSeafoodData = {
   name: "Fish & Seafood",
@@ -921,4 +922,62 @@ export const fishAndSeafoodData = {
       "vitaminD": 0,
       "calcium": 30,
       "iron": 1.2,
-      "potassium
+      "potassium": 280,
+      "vitaminA": 40,
+      "vitaminC": 0,
+      "primaryCategory": "shellfish",
+      "primaryCategoryDisplayName": "Shellfish",
+      "secondaryCategories": ["seafood"],
+      "diets": [
+        "paleo",
+        "keto",
+        "mediterranean",
+        "low-carb",
+        "high-protein",
+        "carnivore",
+        "whole30",
+        "atkins",
+        "zone"
+      ]
+    },
+    {
+      "id": "king_crab_meat_cooked",
+      "name": "King Crab Meat, Cooked",
+      "servingSize": "100g",
+      "servingSizeGrams": 100,
+      "calories": 97,
+      "totalFat": 1.5,
+      "saturatedFat": 0.4,
+      "transFat": 0,
+      "polyunsaturatedFat": 0.3,
+      "monounsaturatedFat": 0.5,
+      "cholesterol": 75,
+      "sodium": 350,
+      "totalCarbohydrates": 0,
+      "dietaryFiber": 0,
+      "totalSugars": 0,
+      "addedSugars": 0,
+      "protein": 21,
+      "vitaminD": 0,
+      "calcium": 70,
+      "iron": 0.8,
+      "potassium": 330,
+      "vitaminA": 0,
+      "vitaminC": 0,
+      "primaryCategory": "shellfish",
+      "primaryCategoryDisplayName": "Shellfish",
+      "secondaryCategories": ["seafood"],
+      "diets": [
+        "paleo",
+        "keto",
+        "mediterranean",
+        "low-carb",
+        "high-protein",
+        "carnivore",
+        "whole30",
+        "atkins",
+        "zone"
+      ]
+    }
+  ]
+};
