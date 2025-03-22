@@ -921,4 +921,4 @@ export const fishAndSeafoodData = {
       "vitaminD": 0,
       "calcium": 30,
       "iron": 1.2,
-      "potassium": 2
+      "potassium
