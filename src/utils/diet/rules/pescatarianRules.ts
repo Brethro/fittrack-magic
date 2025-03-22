@@ -12,5 +12,10 @@ export const pescatarianRules = {
 };
 
 export const pescatarianSpecialRules = (food: FoodItem): boolean => {
-  return true; // Standard rules cover this
+  // Special check for meat-based items that might have ambiguous categories
+  if (food.secondaryCategories?.includes("meat")) {
+    // Allow only seafood and fish with meat as secondary category
+    return food.primaryCategory === "fish" || food.primaryCategory === "seafood";
+  }
+  return true; // Standard rules cover other cases
 };

@@ -1,4 +1,3 @@
-
 import { FoodPrimaryCategory, FoodItem } from "@/types/diet";
 
 // Meats & Poultry food data
@@ -33,8 +32,7 @@ export const meatsAndPoultryData = {
       diets: [
         "paleo",
         "keto",
-        "mediterranean",
-        "pescatarian"
+        "mediterranean"
       ]
     },
     {
