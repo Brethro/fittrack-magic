@@ -153,7 +153,8 @@ export const removeFoodItem = (foodId: string): {
 
 // Batch import foods from JSON
 export const importFoodsFromJson = (
-  jsonData: string | object
+  jsonData: string | object,
+  categoryMappings: Record<string, string> = {}
 ): {
   success: boolean;
   message: string;
@@ -222,6 +223,7 @@ export const importFoodsFromJson = (
     
     // Log the valid categories for debugging
     console.log("Valid categories:", validCategoryNames);
+    console.log("Category mappings:", categoryMappings);
     
     // Process each food item in the array
     for (const item of foodItems) {
@@ -252,6 +254,20 @@ export const importFoodsFromJson = (
         }
       }
       
+      // Check user-provided category mappings
+      if (!categoryFound) {
+        const lcPrimaryCategory = primaryCategory.toLowerCase();
+        
+        // First check exact match in user-provided mappings
+        if (categoryMappings[lcPrimaryCategory]) {
+          primaryCategory = categoryMappings[lcPrimaryCategory];
+          categoryFound = validCategoryNames.includes(primaryCategory.toLowerCase());
+          if (categoryFound) {
+            console.log(`Using user-provided mapping for '${item.primaryCategory}' to '${primaryCategory}'`);
+          }
+        }
+      }
+      
       // If we didn't find a valid category, we'll automatically map specific categories
       if (!categoryFound) {
         // Map from known non-standard categories to valid ones
@@ -268,8 +284,26 @@ export const importFoodsFromJson = (
         const lcPrimaryCategory = primaryCategory.toLowerCase();
         if (categoryMapping[lcPrimaryCategory]) {
           primaryCategory = categoryMapping[lcPrimaryCategory];
-          categoryFound = true;
-          console.log(`Mapped non-standard category '${item.primaryCategory}' to '${primaryCategory}'`);
+          categoryFound = validCategoryNames.includes(primaryCategory.toLowerCase());
+          if (categoryFound) {
+            console.log(`Mapped non-standard category '${item.primaryCategory}' to '${primaryCategory}'`);
+          }
+        }
+      }
+      
+      // Try to match by similar name if still not found
+      if (!categoryFound) {
+        // For each valid category, check if it contains part of our primary category or vice versa
+        for (const validCategory of currentFoodCategories) {
+          const validCatName = validCategory.name.toLowerCase();
+          const primaryCatName = primaryCategory.toLowerCase();
+          
+          if (validCatName.includes(primaryCatName) || primaryCatName.includes(validCatName)) {
+            primaryCategory = validCategory.name;
+            categoryFound = true;
+            console.log(`Using fuzzy match from '${item.primaryCategory}' to '${primaryCategory}'`);
+            break;
+          }
         }
       }
       

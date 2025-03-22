@@ -6,6 +6,7 @@ import { Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { importFoodsFromJson } from "@/utils/diet/foodManagement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CategoryManager } from "./CategoryManager";
 
 type JsonImportProps = {
   setLastParseResults: (results: string[]) => void;
@@ -16,6 +17,11 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
   const [jsonData, setJsonData] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [categoryMappings, setCategoryMappings] = useState<Record<string, string>>({});
+
+  const handleCategoryMappingUpdate = (mappings: Record<string, string>) => {
+    setCategoryMappings(mappings);
+  };
 
   const handleJsonImport = () => {
     if (!jsonData.trim()) {
@@ -31,8 +37,8 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
     setImportError(null);
     
     try {
-      // Use the importFoodsFromJson function
-      const result = importFoodsFromJson(jsonData);
+      // Use the importFoodsFromJson function with category mappings
+      const result = importFoodsFromJson(jsonData, categoryMappings);
       
       if (result.success) {
         // Update the last parse results
@@ -43,8 +49,10 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
           description: result.message,
         });
         
-        // Reset the JSON data
-        setJsonData("");
+        // Reset the JSON data only if successful
+        if (result.failedCount === 0) {
+          setJsonData("");
+        }
       } else {
         // Store the detailed error message
         setImportError(result.message);
@@ -104,6 +112,9 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
         <Upload className="mr-2 h-4 w-4" />
         {isImporting ? "Importing..." : "Import Foods from JSON"}
       </Button>
+      
+      {/* Add the CategoryManager component */}
+      <CategoryManager onCategoryMappingUpdate={handleCategoryMappingUpdate} />
     </div>
   );
 };
