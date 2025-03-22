@@ -1,3 +1,4 @@
+
 import { FoodItem, FoodCategory } from "@/types/diet";
 import { reparseFoodDatabaseForDietTypes, getAvailableDietTypes } from "./foodDataProcessing";
 
@@ -39,10 +40,33 @@ export const addFoodItem = (newFood: FoodItem): {
     );
 
     if (categoryIndex === -1) {
-      // If category doesn't exist, we could create it, but that's probably an error
+      // If the exact category doesn't exist, try to find a matching category from secondaryCategories
+      if (newFood.secondaryCategories && newFood.secondaryCategories.length > 0) {
+        for (const secondaryCategory of newFood.secondaryCategories) {
+          const secondaryCategoryIndex = currentFoodCategories.findIndex(
+            category => category.name.toLowerCase() === secondaryCategory.toLowerCase()
+          );
+          
+          if (secondaryCategoryIndex !== -1) {
+            // We found a valid category in secondaryCategories, use it
+            console.log(`Category '${newFood.primaryCategory}' not found. Using secondary category '${secondaryCategory}' instead.`);
+            
+            // Create a copy of the food with the updated primaryCategory
+            const updatedFood = {
+              ...newFood,
+              primaryCategory: secondaryCategory
+            };
+            
+            // Now add the food with the updated category
+            return addFoodItem(updatedFood);
+          }
+        }
+      }
+      
+      // If we reach here, neither primary nor secondary categories match existing ones
       return {
         success: false,
-        message: `Category '${newFood.primaryCategory}' not found. Available categories: ${currentFoodCategories.map(c => c.name).join(', ')}`,
+        message: `Category '${newFood.primaryCategory}' not found and no valid secondary categories. Available categories: ${currentFoodCategories.map(c => c.name).join(', ')}`,
         dietTypes: getAvailableDietTypes()
       };
     }
@@ -193,6 +217,9 @@ export const importFoodsFromJson = (
     let failedCount = 0;
     let failedItems: Array<{item: any, reason: string}> = [];
     
+    // Get a list of valid category names for quick reference
+    const validCategoryNames = currentFoodCategories.map(cat => cat.name.toLowerCase());
+    
     // Process each food item in the array
     for (const item of foodItems) {
       // Validate the food item has the minimum required fields
@@ -206,11 +233,57 @@ export const importFoodsFromJson = (
         continue;
       }
       
+      // Check if the primary category exists
+      let primaryCategory = item.primaryCategory;
+      let categoryFound = validCategoryNames.includes(primaryCategory.toLowerCase());
+      
+      // If primary category doesn't exist, try to use a secondary category
+      if (!categoryFound && item.secondaryCategories && item.secondaryCategories.length > 0) {
+        for (const secCat of item.secondaryCategories) {
+          if (validCategoryNames.includes(secCat.toLowerCase())) {
+            primaryCategory = secCat;
+            categoryFound = true;
+            console.log(`Using secondary category '${secCat}' for item '${item.name}' because primary category '${item.primaryCategory}' wasn't found`);
+            break;
+          }
+        }
+      }
+      
+      // If we didn't find a valid category, we'll automatically map specific categories
+      if (!categoryFound) {
+        // Map from known non-standard categories to valid ones
+        const categoryMapping: Record<string, string> = {
+          'shellfish': 'seafood',
+          'mollusks': 'seafood',
+          'mushrooms': 'vegetable',
+          'game': 'meat',
+          'offal': 'meat'
+          // Add more mappings as needed
+        };
+        
+        if (categoryMapping[primaryCategory.toLowerCase()]) {
+          primaryCategory = categoryMapping[primaryCategory.toLowerCase()];
+          categoryFound = true;
+          console.log(`Mapped non-standard category '${item.primaryCategory}' to '${primaryCategory}'`);
+        }
+      }
+      
+      // If we still don't have a valid category, report the failure
+      if (!categoryFound) {
+        console.error(`Category '${primaryCategory}' not found for item '${item.name}'`);
+        failedCount++;
+        failedItems.push({
+          item,
+          reason: `Category '${primaryCategory}' not found. Available categories: ${validCategoryNames.join(', ')}`
+        });
+        continue;
+      }
+      
       // Map properties to match our FoodItem structure
       const foodItem: Partial<FoodItem> = {
         id: item.id,
         name: item.name,
-        primaryCategory: item.primaryCategory,
+        primaryCategory: primaryCategory, // Use the possibly remapped category
         secondaryCategories: item.secondaryCategories,
         diets: item.diets,
         servingSize: item.servingSize,

@@ -8,6 +8,7 @@ export const categoryDisplayNames: Record<FoodPrimaryCategory, string> = {
   poultry: "Poultry",
   fish: "Fish",
   seafood: "Seafood",
+  shellfish: "Shellfish",
   dairy: "Dairy Products",
   egg: "Eggs",
   grain: "Grains",

@@ -10,6 +10,7 @@ export const foodCategoryHierarchy: Record<FoodPrimaryCategory, FoodPrimaryCateg
   poultry: "meat",
   fish: "meat",
   seafood: "meat",
+  shellfish: "seafood", // Added shellfish as a child of seafood
   
   // Other primary categories
   dairy: null,

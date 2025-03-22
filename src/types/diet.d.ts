@@ -1,3 +1,4 @@
+
 // Food primary category for explicit categorization
 export type FoodPrimaryCategory = 
   | "meat"      // Parent category
@@ -5,6 +6,7 @@ export type FoodPrimaryCategory =
   | "poultry"   // Child of meat
   | "fish"      // Child of meat
   | "seafood"   // Child of meat
+  | "shellfish" // Child of seafood
   | "dairy" 
   | "egg" 
   | "grain" 
