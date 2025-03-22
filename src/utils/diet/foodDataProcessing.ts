@@ -1,4 +1,3 @@
-
 import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -184,40 +183,68 @@ export const getAvailableDietTypes = (): string[] => {
   return Array.from(availableDietTypes);
 };
 
-// Improved function to scan all food data and collect diet types
+// COMPLETELY REWRITTEN: Improved function to scan all food data and collect diet types
 export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]): string[] => {
-  console.log("Reparsing food database for diet types...");
+  console.log("===== STARTING COMPLETE FOOD DATABASE REPARSE =====");
   
-  // Clear existing diet types except 'all'
+  // Reset the available diet types - only keep "all"
   availableDietTypes.clear();
   availableDietTypes.add("all");
   
-  // Track how many new diet types we find
-  let dietTypeCount = 0;
+  let totalFoodItems = 0;
+  let totalDietTypesFound = 0;
+  let uniqueDietTypes = new Set<string>();
   
-  // Loop through each category
-  foodCategories.forEach(category => {
-    // Loop through each food item
-    category.items.forEach(item => {
-      // Check if the item has diet information
-      if (item.diets && Array.isArray(item.diets)) {
-        // Process each diet type found on this food item
-        item.diets.forEach(diet => {
-          // Only count as "new" if we haven't seen it before
-          const isNewDiet = !availableDietTypes.has(diet);
-          
-          // Add to our global set of diet types
-          addDietType(diet);
-          
-          // Increment count for reporting
-          if (isNewDiet) dietTypeCount++;
-        });
-      }
+  // First: Import all food data modules to ensure we have the complete set
+  // We'll need to handle these imports dynamically since they could change
+  console.log("Loading all food category data modules...");
+  
+  try {
+    // Instead of importing, we'll process the provided foodCategories parameter
+    // which should contain all available food data
+    
+    console.log(`Processing ${foodCategories.length} food categories`);
+    
+    // Process every single food category
+    foodCategories.forEach(category => {
+      console.log(`Scanning category: ${category.name} (${category.items.length} items)`);
+      totalFoodItems += category.items.length;
+      
+      // Check each item in this category
+      category.items.forEach(item => {
+        // If the item has diet info, process each diet type
+        if (item.diets && Array.isArray(item.diets)) {
+          item.diets.forEach(diet => {
+            // Normalize the diet type
+            const normalizedDiet = diet.toLowerCase().trim();
+            
+            if (normalizedDiet.length >= 2) {
+              // Only count it as new if we haven't seen it before
+              if (!uniqueDietTypes.has(normalizedDiet)) {
+                uniqueDietTypes.add(normalizedDiet);
+                console.log(`Found new diet type: ${normalizedDiet} in ${item.name}`);
+                totalDietTypesFound++;
+              }
+              
+              // Add it to our global set
+              availableDietTypes.add(normalizedDiet);
+            }
+          });
+        }
+      });
     });
-  });
-  
-  console.log(`Reparse complete. Found ${dietTypeCount} new unique diet types.`);
-  return getAvailableDietTypes();
+    
+    // Log detailed results
+    console.log(`===== REPARSE RESULTS =====`);
+    console.log(`Total food items processed: ${totalFoodItems}`);
+    console.log(`Total unique diet types found: ${totalDietTypesFound}`);
+    console.log(`Available diet types: ${Array.from(availableDietTypes).join(', ')}`);
+    
+    return getAvailableDietTypes();
+  } catch (error) {
+    console.error("Error during food database reparse:", error);
+    return getAvailableDietTypes();
+  }
 };
 
 // Export monitoring and feedback utilities for external use
