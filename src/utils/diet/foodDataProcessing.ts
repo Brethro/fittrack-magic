@@ -1,3 +1,4 @@
+
 import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -183,7 +184,7 @@ export const getAvailableDietTypes = (): string[] => {
   return Array.from(availableDietTypes);
 };
 
-// Function to scan all food data and collect diet types
+// Improved function to scan all food data and collect diet types
 export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]): string[] => {
   console.log("Reparsing food database for diet types...");
   
@@ -191,6 +192,7 @@ export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]):
   availableDietTypes.clear();
   availableDietTypes.add("all");
   
+  // Track how many new diet types we find
   let dietTypeCount = 0;
   
   // Loop through each category
@@ -199,17 +201,22 @@ export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]):
     category.items.forEach(item => {
       // Check if the item has diet information
       if (item.diets && Array.isArray(item.diets)) {
-        // Add each diet type to our collection
+        // Process each diet type found on this food item
         item.diets.forEach(diet => {
-          const added = !availableDietTypes.has(diet);
+          // Only count as "new" if we haven't seen it before
+          const isNewDiet = !availableDietTypes.has(diet);
+          
+          // Add to our global set of diet types
           addDietType(diet);
-          if (added) dietTypeCount++;
+          
+          // Increment count for reporting
+          if (isNewDiet) dietTypeCount++;
         });
       }
     });
   });
   
-  console.log(`Reparse complete. Found ${dietTypeCount} unique diet types.`);
+  console.log(`Reparse complete. Found ${dietTypeCount} new unique diet types.`);
   return getAvailableDietTypes();
 };
 
