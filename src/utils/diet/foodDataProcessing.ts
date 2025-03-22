@@ -1,5 +1,4 @@
-
-import { FoodCategory, FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
 import { fuzzyFindFood, clearFuzzyMatchCache, identifyPotentialMiscategorizations } from "@/utils/diet/fuzzyMatchUtils";
@@ -25,6 +24,25 @@ export const categoryDisplayNames: Record<FoodPrimaryCategory, string> = {
   spice: "Spices",
   processedFood: "Processed Foods",
   other: "Other Foods"
+};
+
+// Store unique diet types found across all food items
+export const availableDietTypes = new Set<string>(["all"]);
+
+// Helper function to extract and collect all diet types from food items
+export const collectDietTypes = (categories: FoodCategory[]): Set<string> => {
+  const dietTypes = new Set<string>(["all"]);
+  
+  categories.forEach(category => {
+    category.items.forEach(item => {
+      if (item.diets && Array.isArray(item.diets)) {
+        item.diets.forEach(diet => dietTypes.add(diet));
+      }
+    });
+  });
+  
+  console.log("Collected diet types from food data:", Array.from(dietTypes));
+  return dietTypes;
 };
 
 // Process each food item with the migration helper to add primaryCategory and validate
@@ -81,6 +99,11 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
     console.log("Potential food categorization issues detected:", potentialIssues);
   }
   
+  // Collect all diet types from processed food items
+  collectDietTypes(processedCategories).forEach(diet => 
+    availableDietTypes.add(diet)
+  );
+  
   // Count total number of food items across all categories
   const totalFoodItems = processedCategories.reduce(
     (total, category) => total + category.items.length, 0
@@ -130,6 +153,11 @@ export const searchFoodItems = (query: string, foodCategories: FoodCategory[]): 
   
   // Use the fuzzy matching utility
   return fuzzyFindFood(query, foodCategories);
+};
+
+// Get all unique diet types found in food data as a string array
+export const getAvailableDietTypes = (): string[] => {
+  return Array.from(availableDietTypes);
 };
 
 // Export monitoring and feedback utilities for external use

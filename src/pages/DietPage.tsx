@@ -11,6 +11,7 @@ import { EmptyStateMessage } from "@/components/diet/EmptyStateMessage";
 import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
+import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -60,6 +61,12 @@ const DietPage = () => {
 
   // Get available diets for current food database
   const availableDiets = getAvailableDiets();
+  
+  // Log available diets for debugging
+  useEffect(() => {
+    console.log("Diet types from food processing:", getAvailableDietTypes());
+    console.log("Available diets for selection:", availableDiets);
+  }, [availableDiets]);
 
   // Generate meal plan function that passes selected food items and the diet type
   const handleGenerateMealPlan = () => {

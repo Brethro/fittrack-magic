@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { filterFoodsByDiet, getCompatibleDiets } from "@/utils/diet/dietCompatibilityChecker";
 import { migrateExistingFoodData, batchMigrateExistingFoodData } from "@/utils/diet/dietDataMigration";
+import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 
 export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
   const { toast } = useToast();
@@ -110,10 +110,11 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     );
   };
 
-  // Get diets that have at least one compatible food
+  // Get diets that have at least one compatible food - now using the dynamically collected diet types
   const getAvailableDiets = (): DietType[] => {
-    // "all" is always available
-    const availableDiets: DietType[] = ["all"];
+    // Start with "all" diet which is always available
+    const dietTypesFromData = getAvailableDietTypes();
+    console.log("Diet types from food data:", dietTypesFromData);
     
     // Get all foods in the database
     const allFoods = migratedFoodCategories.flatMap(category => 
@@ -123,7 +124,7 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     // Only consider non-empty food data
     if (allFoods.length === 0) {
       console.warn("No foods available to determine compatible diets");
-      return ["all"];
+      return ["all" as DietType];
     }
     
     // First, collect diets from explicit diet tags
@@ -134,36 +135,32 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
       }
     });
     
-    // Get all standard diet types except "all"
-    const standardDietTypes: Exclude<DietType, "all">[] = [
-      "mediterranean", "vegetarian", "vegan", "japanese", 
-      "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
-    ];
+    console.log("Diet tags found in foods:", Array.from(dietTagsSet));
     
-    // Add diets that have at least one compatible food
-    standardDietTypes.forEach(diet => {
-      // First check if this diet is in the explicit tags
+    // Return all diets that are in the data and have at least one compatible food
+    const availableDiets = ["all" as DietType];
+    
+    dietTypesFromData.forEach(diet => {
+      // Skip "all" as it's already included
+      if (diet === "all") return;
+      
+      // If this diet is in the explicit tags, include it
       if (dietTagsSet.has(diet)) {
-        console.log(`Diet ${diet} is explicitly tagged in foods`);
-        availableDiets.push(diet);
-        return;
-      }
-      
-      // Fallback to rule-based compatibility check
-      const compatibleFoods = filterFoodsByDiet(allFoods, diet);
-      
-      if (compatibleFoods.length > 0) {
-        console.log(`Diet ${diet} has ${compatibleFoods.length} compatible foods`);
-        availableDiets.push(diet);
+        availableDiets.push(diet as DietType);
       } else {
-        console.log(`Diet ${diet} has no compatible foods - will not be shown`);
+        // Fallback to rule-based compatibility check for standard diets
+        const compatibleFoods = filterFoodsByDiet(allFoods, diet as DietType);
+        
+        if (compatibleFoods.length > 0) {
+          availableDiets.push(diet as DietType);
+        }
       }
     });
     
     // Log the final list of available diets for debugging
     console.log("Final available diets:", availableDiets);
     
-    return availableDiets;
+    return availableDiets as DietType[];
   };
 
   return {
