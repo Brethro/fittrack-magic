@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +7,24 @@ import { RefreshCw, Database, AlertCircle, Plus, Trash, Upload } from "lucide-re
 import { useToast } from "@/components/ui/use-toast";
 import { foodCategoriesData } from "@/data/diet";
 import { reparseFoodDatabaseForDietTypes } from "@/utils/diet/foodDataProcessing";
-import { addFoodItem, initializeFoodCategories, getCurrentFoodCategories } from "@/utils/diet/foodManagement";
+import { 
+  addFoodItem, 
+  initializeFoodCategories, 
+  getCurrentFoodCategories,
+  importFoodsFromJson 
+} from "@/utils/diet/foodManagement";
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
 import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Import all food data modules directly to ensure we parse everything
 import { meatsAndPoultryData } from "@/data/diet/meatData";
@@ -58,6 +71,10 @@ export const AdminDietTools = () => {
   });
   const [isAddingFood, setIsAddingFood] = useState(false);
   const [dietInput, setDietInput] = useState("");
+  
+  // New state for JSON import
+  const [jsonData, setJsonData] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   // Get all raw food data (including categories that might be filtered out in foodCategoriesData)
   const getAllRawFoodData = () => {
@@ -211,6 +228,53 @@ export const AdminDietTools = () => {
       setIsAddingFood(false);
     }
   };
+  
+  // New function to handle JSON import
+  const handleJsonImport = () => {
+    if (!jsonData.trim()) {
+      toast({
+        title: "Missing Data",
+        description: "Please enter JSON data to import",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsImporting(true);
+    
+    try {
+      // Use the importFoodsFromJson function
+      const result = importFoodsFromJson(jsonData);
+      
+      if (result.success) {
+        // Update the last parse results
+        setLastParseResults(result.dietTypes);
+        
+        toast({
+          title: "Foods Imported",
+          description: result.message,
+        });
+        
+        // Reset the JSON data
+        setJsonData("");
+      } else {
+        toast({
+          title: "Error Importing Foods",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error importing foods from JSON:", error);
+      toast({
+        title: "Error Importing Foods",
+        description: "Check console for details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   // Initialize food categories on mount
   useEffect(() => {
@@ -262,6 +326,30 @@ export const AdminDietTools = () => {
                 </div>
               </div>
             )}
+            
+            {/* JSON Import Section */}
+            <div className="mt-10 pt-6 border-t">
+              <h3 className="text-sm font-medium mb-2">Import Foods from JSON</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Batch import food items from JSON. Diet types will be automatically reparsed.
+              </p>
+              
+              <Textarea
+                value={jsonData}
+                onChange={(e) => setJsonData(e.target.value)}
+                placeholder='[{"id": "example_food_1", "name": "Example Food", "primaryCategory": "vegetable", "protein": 5, "carbs": 10, "fats": 2...}]'
+                className="min-h-32 mb-4"
+              />
+              
+              <Button 
+                onClick={handleJsonImport} 
+                disabled={isImporting}
+                className="flex items-center"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {isImporting ? "Importing..." : "Import Foods from JSON"}
+              </Button>
+            </div>
 
             {/* Add New Food Form */}
             <div className="mt-10 pt-6 border-t">
@@ -296,16 +384,22 @@ export const AdminDietTools = () => {
                 
                 <div>
                   <Label className="text-xs font-medium">Primary Category*</Label>
-                  <select
+                  <Select
                     name="primaryCategory"
-                    value={newFood.primaryCategory}
-                    onChange={handleFoodInputChange as any}
-                    className="w-full h-10 px-3 py-2 bg-background border border-input rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={newFood.primaryCategory as string}
+                    onValueChange={(value) => setNewFood(prev => ({ ...prev, primaryCategory: value }))}
                   >
-                    {PRIMARY_CATEGORIES.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRIMARY_CATEGORIES.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div>

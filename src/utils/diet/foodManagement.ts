@@ -8,6 +8,8 @@ let currentFoodCategories: FoodCategory[] = [];
 // Initialize the food categories
 export const initializeFoodCategories = (categories: FoodCategory[]) => {
   currentFoodCategories = categories;
+  // Always reparse when the food database is initialized
+  reparseFoodDatabaseForDietTypes(currentFoodCategories);
   return currentFoodCategories;
 };
 
@@ -59,7 +61,7 @@ export const addFoodItem = (newFood: FoodItem): {
       currentFoodCategories[categoryIndex].items.push(newFood);
     }
 
-    // Reparse all diet types to ensure they're up-to-date
+    // Always reparse all diet types to ensure they're up-to-date
     const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
 
     return {
@@ -108,7 +110,7 @@ export const removeFoodItem = (foodId: string): {
       };
     }
 
-    // Reparse all diet types to ensure they're up-to-date
+    // Always reparse all diet types to ensure they're up-to-date
     const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
 
     return {
@@ -181,7 +183,7 @@ export const importFoodsFromJson = (
       }
     }
     
-    // Reparse all diet types after the batch import
+    // Always reparse all diet types after the batch import
     const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
     
     return {
@@ -200,6 +202,36 @@ export const importFoodsFromJson = (
       addedCount: 0,
       updatedCount: 0,
       failedCount: 0,
+      dietTypes: getAvailableDietTypes()
+    };
+  }
+};
+
+// New function to update the food database with a new set of categories
+export const updateFoodDatabase = (
+  newCategories: FoodCategory[]
+): {
+  success: boolean;
+  message: string;
+  dietTypes: string[];
+} => {
+  try {
+    // Replace the current food categories with the new ones
+    currentFoodCategories = newCategories;
+    
+    // Always reparse all diet types after updating the food database
+    const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
+    
+    return {
+      success: true,
+      message: `Updated food database with ${newCategories.length} categories and reparsed diet types`,
+      dietTypes: updatedDietTypes
+    };
+  } catch (error) {
+    console.error("Error updating food database:", error);
+    return {
+      success: false,
+      message: `Error updating food database: ${error instanceof Error ? error.message : 'Unknown error'}`,
       dietTypes: getAvailableDietTypes()
     };
   }
