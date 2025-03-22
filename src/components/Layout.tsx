@@ -1,6 +1,6 @@
 
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { Home, Target, LineChart, User, Utensils } from "lucide-react";
+import { Home, Target, LineChart, User, Utensils, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -13,6 +13,7 @@ const Layout = () => {
     { path: "/goals", icon: Target, label: "Goals" },
     { path: "/plan", icon: LineChart, label: "Plan" },
     { path: "/diet", icon: Utensils, label: "Diet" },
+    { path: "/admin", icon: Shield, label: "Admin" },
     { path: "/profile", icon: User, label: "Profile" },
   ];
 

@@ -1,4 +1,3 @@
-
 import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -182,6 +181,36 @@ export const searchFoodItems = (query: string, foodCategories: FoodCategory[]): 
 // Get all unique diet types found in food data as a string array
 export const getAvailableDietTypes = (): string[] => {
   return Array.from(availableDietTypes);
+};
+
+// Function to scan all food data and collect diet types
+export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]): string[] => {
+  console.log("Reparsing food database for diet types...");
+  
+  // Clear existing diet types except 'all'
+  availableDietTypes.clear();
+  availableDietTypes.add("all");
+  
+  let dietTypeCount = 0;
+  
+  // Loop through each category
+  foodCategories.forEach(category => {
+    // Loop through each food item
+    category.items.forEach(item => {
+      // Check if the item has diet information
+      if (item.diets && Array.isArray(item.diets)) {
+        // Add each diet type to our collection
+        item.diets.forEach(diet => {
+          const added = !availableDietTypes.has(diet);
+          addDietType(diet);
+          if (added) dietTypeCount++;
+        });
+      }
+    });
+  });
+  
+  console.log(`Reparse complete. Found ${dietTypeCount} unique diet types.`);
+  return getAvailableDietTypes();
 };
 
 // Export monitoring and feedback utilities for external use
