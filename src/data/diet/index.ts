@@ -12,7 +12,6 @@ import { greenVegetablesData } from "./greenVegetablesData";
 import { plantProteinsData } from "./plantProteinsData";
 import { condimentsAndSaucesData } from "./condimentsData";
 import { fishAndSeafoodData } from "./seafoodData";
-import { shellfishData } from "./shellfishData";
 import { breadsAndBreakfastData } from "./breadsData";
 import { eggsAndDairyData } from "./dairyData";
 import { grainsAndPastasData } from "./grainsData";
@@ -32,7 +31,6 @@ const rawFoodCategoriesData = [
   plantProteinsData,
   condimentsAndSaucesData,
   fishAndSeafoodData,
-  shellfishData,
   breadsAndBreakfastData,
   eggsAndDairyData,
   grainsAndPastasData,
