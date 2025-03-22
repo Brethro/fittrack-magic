@@ -18,7 +18,7 @@ import { grainsAndPastasData } from "./grainsData";
 import { fruitsData } from "./fruitsData";
 import { FoodCategory } from "@/types/diet";
 
-// Include all available food categories
+// Include all food categories, regardless of whether they're empty
 const rawFoodCategoriesData = [
   meatsAndPoultryData,
   nutsAndSeedsData,
@@ -37,5 +37,10 @@ const rawFoodCategoriesData = [
   fruitsData
 ];
 
-// Process the raw food data to add primaryCategory to each item
-export const foodCategoriesData = processRawFoodData(rawFoodCategoriesData);
+// Filter out any categories with empty items arrays
+const nonEmptyCategories = rawFoodCategoriesData.filter(
+  category => category.items && category.items.length > 0
+);
+
+// Process the filtered food data to add primaryCategory to each item
+export const foodCategoriesData = processRawFoodData(nonEmptyCategories);

@@ -61,7 +61,7 @@ export function FoodPreferences({
 }: FoodPreferencesProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // Initialize all categories and subcategories as collapsed
+  // Initialize categories and subcategories as collapsed
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
@@ -238,6 +238,27 @@ export function FoodPreferences({
       foodBelongsToCategory(food, selectedDiet as any)
     );
   };
+  
+  // Show a message if there are no food categories to display
+  if (foodCategories.length === 0) {
+    return (
+      <div className="space-y-6">
+        <DietSelector 
+          selectedDiet={selectedDiet}
+          onDietChange={setSelectedDiet}
+          availableDiets={availableDiets}
+        />
+        
+        <div className="glass-panel rounded-lg p-6 text-center">
+          <h2 className="text-lg font-medium mb-3">No Food Categories Available</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            There are currently no food categories available to display.
+            Please check back later or contact support.
+          </p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">

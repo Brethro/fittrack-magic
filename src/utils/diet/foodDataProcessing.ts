@@ -12,25 +12,14 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
   const nonEmptyCategories = categories.filter(category => category.items && category.items.length > 0);
   console.log(`Found ${nonEmptyCategories.length} non-empty food categories.`);
   
-  // Return empty categories with proper structure
+  // Return only non-empty categories with proper structure
   if (nonEmptyCategories.length === 0) {
-    console.log("No food items found in any category. Returning empty categories.");
-    return categories.map(category => ({
-      name: category.name,
-      items: []
-    }));
+    console.log("No food items found in any category. Returning empty array.");
+    return [];
   }
   
-  const processedCategories = categories.map(category => {
+  const processedCategories = nonEmptyCategories.map(category => {
     console.log(`Processing category: ${category.name} with ${category.items.length} items`);
-    
-    // If category is empty, return it as is
-    if (!category.items || category.items.length === 0) {
-      return {
-        name: category.name,
-        items: []
-      };
-    }
     
     const migratedItems = category.items.map(item => {
       // First ensure we have proper categorization
@@ -78,8 +67,11 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
 export const batchProcessFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {
   const startTime = performance.now();
   
+  // Filter out empty categories
+  const nonEmptyCategories = categories.filter(category => category.items && category.items.length > 0);
+  
   // First migrate all items to have proper categorization
-  const migratedCategories = categories.map(category => ({
+  const migratedCategories = nonEmptyCategories.map(category => ({
     name: category.name,
     items: batchMigrateExistingFoodData(category.items as Partial<FoodItem>[])
   }));
