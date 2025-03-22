@@ -1,3 +1,4 @@
+
 import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -184,7 +185,10 @@ export const getAvailableDietTypes = (): string[] => {
 };
 
 // COMPLETELY REWRITTEN: Improved function to scan all food data and collect diet types
-export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]): string[] => {
+export const reparseFoodDatabaseForDietTypes = (
+  // Accept either processed food categories or raw food data
+  foodCategories: FoodCategory[] | { name: string, items: Partial<FoodItem>[] }[]
+): string[] => {
   console.log("===== STARTING COMPLETE FOOD DATABASE REPARSE =====");
   
   // Reset the available diet types - only keep "all"
@@ -200,18 +204,28 @@ export const reparseFoodDatabaseForDietTypes = (foodCategories: FoodCategory[]):
   console.log("Loading all food category data modules...");
   
   try {
-    // Instead of importing, we'll process the provided foodCategories parameter
-    // which should contain all available food data
+    // Process the provided foodCategories parameter which could be either
+    // processed FoodCategory[] or raw food data
     
     console.log(`Processing ${foodCategories.length} food categories`);
     
     // Process every single food category
     foodCategories.forEach(category => {
+      if (!category.items || !Array.isArray(category.items)) {
+        console.log(`Skipping category ${category.name}: no items array found`);
+        return;
+      }
+      
       console.log(`Scanning category: ${category.name} (${category.items.length} items)`);
       totalFoodItems += category.items.length;
       
       // Check each item in this category
       category.items.forEach(item => {
+        // Skip if item doesn't have required fields
+        if (!item || !item.name) {
+          return;
+        }
+        
         // If the item has diet info, process each diet type
         if (item.diets && Array.isArray(item.diets)) {
           item.diets.forEach(diet => {
