@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -349,6 +350,7 @@ export function FoodPreferences({
                     const subcategoryFoodIds = subcategoryItems.map(food => food.id);
                     const allSubcategorySelected = subcategoryFoodIds.every(id => selectedFoods[id] !== false);
                     const someSubcategorySelected = subcategoryFoodIds.some(id => selectedFoods[id] !== false);
+                    const displayName = getCategoryDisplayName(subcategoryName);
                     
                     return (
                       <Collapsible 
@@ -369,7 +371,7 @@ export function FoodPreferences({
                               htmlFor={`subcategory-${subcategoryName}`}
                               className="text-sm font-medium cursor-pointer"
                             >
-                              {getCategoryDisplayName(subcategoryName)}
+                              {displayName}
                             </Label>
                           </div>
                           <CollapsibleTrigger asChild>
@@ -377,7 +379,7 @@ export function FoodPreferences({
                               {openSubcategories[subcategoryName] ? 
                                 <ChevronUp className="h-3.5 w-3.5" /> : 
                                 <ChevronDown className="h-3.5 w-3.5" />}
-                              <span className="sr-only">Toggle {getCategoryDisplayName(subcategoryName)}</span>
+                              <span className="sr-only">Toggle {displayName}</span>
                             </Button>
                           </CollapsibleTrigger>
                         </div>

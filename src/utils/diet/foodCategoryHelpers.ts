@@ -1,4 +1,3 @@
-
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
 import { categoryDisplayNames } from "@/utils/diet/foodDataProcessing";
 
@@ -116,6 +115,30 @@ export const assignDefaultCategory = (food: FoodItem): FoodPrimaryCategory => {
   return "other";
 };
 
+// New function for categorizing ambiguous cases
+export const resolveAmbiguousCategory = (food: FoodItem): FoodPrimaryCategory => {
+  const name = food.name.toLowerCase();
+  
+  // Handle compound foods like "turkey bacon" (poultry primary, processedFood secondary)
+  if (/turkey bacon|chicken sausage|plant-based burger|vegan cheese|almond milk|coconut cream/.test(name)) {
+    // Extract the main ingredient
+    if (name.includes("turkey") || name.includes("chicken")) return "poultry";
+    if (name.includes("plant-based") || name.includes("vegan")) return "legume";
+    if (name.includes("almond")) return "nut";
+    if (name.includes("coconut")) return "fruit";
+    // Otherwise fall back to processed
+    return "processedFood";
+  }
+  
+  // Handle regional food variations
+  if (name.includes("aubergine")) return "vegetable"; // eggplant
+  if (name.includes("courgette")) return "vegetable"; // zucchini
+  if (name.includes("rocket")) return "vegetable"; // arugula
+  
+  // Fall back to other for truly ambiguous cases
+  return "other";
+};
+
 // Helper function to infer secondary categories with improved patterns
 export const inferSecondaryCategories = (food: FoodItem): FoodPrimaryCategory[] => {
   const name = food.name.toLowerCase();
@@ -161,28 +184,4 @@ export const inferSecondaryCategories = (food: FoodItem): FoodPrimaryCategory[] 
   }
   
   return secondaryCategories.length > 0 ? secondaryCategories : undefined;
-};
-
-// Enhanced categorization function for ambiguous cases
-export const resolveAmbiguousCategory = (food: FoodItem): FoodPrimaryCategory => {
-  const name = food.name.toLowerCase();
-  
-  // Handle compound foods like "turkey bacon" (poultry primary, processedFood secondary)
-  if (/turkey bacon|chicken sausage|plant-based burger|vegan cheese|almond milk|coconut cream/.test(name)) {
-    // Extract the main ingredient
-    if (name.includes("turkey") || name.includes("chicken")) return "poultry";
-    if (name.includes("plant-based") || name.includes("vegan")) return "legume";
-    if (name.includes("almond")) return "nut";
-    if (name.includes("coconut")) return "fruit";
-    // Otherwise fall back to processed
-    return "processedFood";
-  }
-  
-  // Handle regional food variations
-  if (name.includes("aubergine")) return "vegetable"; // eggplant
-  if (name.includes("courgette")) return "vegetable"; // zucchini
-  if (name.includes("rocket")) return "vegetable"; // arugula
-  
-  // Fall back to other for truly ambiguous cases
-  return "other";
 };
