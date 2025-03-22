@@ -18,6 +18,7 @@ import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
 import { FoodListItem } from "./FoodListItem";
 import { foodBelongsToCategory } from "@/utils/diet/foodCategoryHierarchy";
 import { getCategoryDisplayName } from "@/utils/diet/foodCategoryHelpers";
+import { cn } from "@/lib/utils";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -369,9 +370,12 @@ export function FoodPreferences({
                   </div>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      {openCategories[category.name] ? 
-                        <ChevronUp className="h-4 w-4" /> : 
-                        <ChevronDown className="h-4 w-4" />}
+                      <ChevronDown 
+                        className={cn(
+                          "h-4 w-4",
+                          openCategories[category.name] ? "rotate-180" : "rotate-0"
+                        )} 
+                      />
                       <span className="sr-only">Toggle {category.displayName || category.name}</span>
                     </Button>
                   </CollapsibleTrigger>
@@ -416,9 +420,12 @@ export function FoodPreferences({
                           </div>
                           <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                              {openSubcategories[subcategoryName] ? 
-                                <ChevronUp className="h-3.5 w-3.5" /> : 
-                                <ChevronDown className="h-3.5 w-3.5" />}
+                              <ChevronDown 
+                                className={cn(
+                                  "h-3.5 w-3.5",
+                                  openSubcategories[subcategoryName] ? "rotate-180" : "rotate-0"
+                                )} 
+                              />
                               <span className="sr-only">Toggle {displayName}</span>
                             </Button>
                           </CollapsibleTrigger>
