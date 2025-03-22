@@ -220,6 +220,9 @@ export const importFoodsFromJson = (
     // Get a list of valid category names for quick reference
     const validCategoryNames = currentFoodCategories.map(cat => cat.name.toLowerCase());
     
+    // Log the valid categories for debugging
+    console.log("Valid categories:", validCategoryNames);
+    
     // Process each food item in the array
     for (const item of foodItems) {
       // Validate the food item has the minimum required fields
@@ -253,16 +256,18 @@ export const importFoodsFromJson = (
       if (!categoryFound) {
         // Map from known non-standard categories to valid ones
         const categoryMapping: Record<string, string> = {
-          'shellfish': 'seafood',
-          'mollusks': 'seafood',
+          'shellfish': 'Fish & Seafood',  // Updated to match actual category name
+          'seafood': 'Fish & Seafood',    // Updated to match actual category name
+          'mollusks': 'Fish & Seafood',   // Updated to match actual category name
           'mushrooms': 'vegetable',
-          'game': 'meat',
-          'offal': 'meat'
+          'game': 'Meats & Poultry',      // Updated to match actual category name
+          'offal': 'Meats & Poultry'      // Updated to match actual category name
           // Add more mappings as needed
         };
         
-        if (categoryMapping[primaryCategory.toLowerCase()]) {
-          primaryCategory = categoryMapping[primaryCategory.toLowerCase()];
+        const lcPrimaryCategory = primaryCategory.toLowerCase();
+        if (categoryMapping[lcPrimaryCategory]) {
+          primaryCategory = categoryMapping[lcPrimaryCategory];
           categoryFound = true;
           console.log(`Mapped non-standard category '${item.primaryCategory}' to '${primaryCategory}'`);
         }
@@ -274,7 +279,7 @@ export const importFoodsFromJson = (
         failedCount++;
         failedItems.push({
           item,
-          reason: `Category '${primaryCategory}' not found. Available categories: ${validCategoryNames.join(', ')}`
+          reason: `Category '${primaryCategory}' not found. Available categories: ${currentFoodCategories.map(c => c.name).join(', ')}`
         });
         continue;
       }
