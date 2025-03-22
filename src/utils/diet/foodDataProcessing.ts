@@ -1,3 +1,4 @@
+
 import { FoodCategory, FoodItem, FoodPrimaryCategory, DietType } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
@@ -26,8 +27,24 @@ export const categoryDisplayNames: Record<FoodPrimaryCategory, string> = {
   other: "Other Foods"
 };
 
-// Store unique diet types found across all food items
+// Store unique diet types found across all food items - always start with "all"
 export const availableDietTypes = new Set<string>(["all"]);
+
+// Add a new diet type to our available diets
+export const addDietType = (dietType: string): void => {
+  if (!dietType || typeof dietType !== 'string') return;
+  
+  // Normalize diet type (lowercase, trim whitespace)
+  const normalizedDiet = dietType.toLowerCase().trim();
+  
+  // Don't add empty strings or very short diet names (likely typos)
+  if (normalizedDiet.length < 2) return;
+  
+  // Add to available diets
+  availableDietTypes.add(normalizedDiet);
+  console.log(`Added diet type: ${normalizedDiet} to available diets`);
+  console.log("Current available diets:", Array.from(availableDietTypes));
+};
 
 // Helper function to extract and collect all diet types from food items
 export const collectDietTypes = (categories: FoodCategory[]): Set<string> => {
@@ -36,7 +53,11 @@ export const collectDietTypes = (categories: FoodCategory[]): Set<string> => {
   categories.forEach(category => {
     category.items.forEach(item => {
       if (item.diets && Array.isArray(item.diets)) {
-        item.diets.forEach(diet => dietTypes.add(diet));
+        item.diets.forEach(diet => {
+          dietTypes.add(diet);
+          // Also add to the global available diets
+          addDietType(diet);
+        });
       }
     });
   });
@@ -76,6 +97,11 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
       // Log successful categorization for monitoring
       logCategorizationEvent(migratedItem, migratedItem.primaryCategory || category.name, validation.isValid ? 1.0 : 0.6);
       
+      // Check for diet information and add to available diets
+      if (migratedItem.diets && Array.isArray(migratedItem.diets)) {
+        migratedItem.diets.forEach(diet => addDietType(diet));
+      }
+      
       // Add diet compatibility tags
       return tagFoodWithDiets(migratedItem);
     });
@@ -99,16 +125,8 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
     console.log("Potential food categorization issues detected:", potentialIssues);
   }
   
-  // Collect all diet types from processed food items
-  collectDietTypes(processedCategories).forEach(diet => 
-    availableDietTypes.add(diet)
-  );
-  
-  // Count total number of food items across all categories
-  const totalFoodItems = processedCategories.reduce(
-    (total, category) => total + category.items.length, 0
-  );
-  console.log(`Food data processing complete. Total items: ${totalFoodItems}`);
+  // Log the available diet types after processing
+  console.log("Available diet types after food processing:", Array.from(availableDietTypes));
   
   return processedCategories;
 };
@@ -130,6 +148,11 @@ export const batchProcessFoodData = (categories: { name: string, items: Omit<Foo
   const processedCategories = migratedCategories.map(category => ({
     name: category.name,
     items: category.items.map(item => {
+      // Check for diet information and add to available diets
+      if (item.diets && Array.isArray(item.diets)) {
+        item.diets.forEach(diet => addDietType(diet));
+      }
+      
       // Log each categorization for monitoring
       logCategorizationEvent(item, item.primaryCategory || category.name);
       return tagFoodWithDiets(item);
@@ -141,6 +164,7 @@ export const batchProcessFoodData = (categories: { name: string, items: Omit<Foo
   
   const endTime = performance.now();
   console.log(`Batch food data processing completed in ${(endTime - startTime).toFixed(2)}ms`);
+  console.log("Available diet types after batch processing:", Array.from(availableDietTypes));
   
   return processedCategories;
 };

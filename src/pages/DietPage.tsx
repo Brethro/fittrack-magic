@@ -62,9 +62,9 @@ const DietPage = () => {
   // Get available diets for current food database
   const availableDiets = getAvailableDiets();
   
-  // Log available diets for debugging
+  // Log available diets for debugging - now using both sources
   useEffect(() => {
-    console.log("Diet types from food processing:", getAvailableDietTypes());
+    console.log("Diet types from central collection:", getAvailableDietTypes());
     console.log("Available diets for selection:", availableDiets);
   }, [availableDiets]);
 
