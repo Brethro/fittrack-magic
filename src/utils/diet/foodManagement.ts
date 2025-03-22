@@ -143,7 +143,7 @@ export const importFoodsFromJson = (
     // Parse the JSON if it's a string
     const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
     
-    let foodItems: Partial<FoodItem>[] = [];
+    let foodItems: any[] = [];
     
     // Handle different data formats
     if (Array.isArray(data)) {
@@ -154,7 +154,7 @@ export const importFoodsFromJson = (
       Object.entries(data).forEach(([category, items]) => {
         if (Array.isArray(items)) {
           // For each item in the category array, add it to our flat list
-          items.forEach(item => {
+          items.forEach((item: any) => {
             // If the item doesn't already have a primaryCategory, use the category key
             if (!item.primaryCategory) {
               item.primaryCategory = category;
@@ -201,20 +201,36 @@ export const importFoodsFromJson = (
       
       // Map properties to match our FoodItem structure
       const foodItem: Partial<FoodItem> = {
-        ...item,
-        // Map known property name differences
-        protein: item.protein,
-        carbs: item.totalCarbohydrates, 
-        fats: item.totalFat,
-        caloriesPerServing: item.calories,
-        fiber: item.dietaryFiber,
-        sugars: item.totalSugars,
+        id: item.id,
+        name: item.name,
+        primaryCategory: item.primaryCategory,
+        secondaryCategories: item.secondaryCategories,
+        diets: item.diets,
         servingSize: item.servingSize,
         servingSizeGrams: item.servingSizeGrams,
-        // Make sure secondary categories is an array if present
-        secondaryCategories: item.secondaryCategories && Array.isArray(item.secondaryCategories) 
-          ? item.secondaryCategories 
-          : undefined
+        
+        // Map nutrition properties with fallbacks to the right property names in our system
+        protein: item.protein || 0,
+        carbs: item.carbs || item.totalCarbohydrates || 0, 
+        fats: item.fats || item.totalFat || 0,
+        caloriesPerServing: item.caloriesPerServing || item.calories || 0,
+        fiber: item.fiber || item.dietaryFiber || 0,
+        sugars: item.sugars || item.totalSugars || 0,
+        
+        // Optional detailed nutrition info
+        saturatedFat: item.saturatedFat,
+        transFat: item.transFat,
+        polyunsaturatedFat: item.polyunsaturatedFat,
+        monounsaturatedFat: item.monounsaturatedFat,
+        cholesterol: item.cholesterol,
+        sodium: item.sodium,
+        addedSugars: item.addedSugars,
+        vitaminA: item.vitaminA,
+        vitaminC: item.vitaminC,
+        vitaminD: item.vitaminD,
+        calcium: item.calcium,
+        iron: item.iron,
+        potassium: item.potassium
       };
       
       // Try to add the food item
