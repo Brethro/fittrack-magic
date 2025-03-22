@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +17,7 @@ import { FoodNutritionDialog } from "./FoodNutritionDialog";
 import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
 import { FoodListItem } from "./FoodListItem";
 import { foodBelongsToCategory } from "@/utils/diet/foodCategoryHierarchy";
+import { getCategoryDisplayName } from "@/utils/diet/foodCategoryHelpers";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -323,7 +323,7 @@ export function FoodPreferences({
                       htmlFor={`category-${category.name}`}
                       className="text-base font-medium cursor-pointer"
                     >
-                      {category.name}
+                      {category.displayName || category.name}
                     </Label>
                   </div>
                   <CollapsibleTrigger asChild>
@@ -331,7 +331,7 @@ export function FoodPreferences({
                       {openCategories[category.name] ? 
                         <ChevronUp className="h-4 w-4" /> : 
                         <ChevronDown className="h-4 w-4" />}
-                      <span className="sr-only">Toggle {category.name}</span>
+                      <span className="sr-only">Toggle {category.displayName || category.name}</span>
                     </Button>
                   </CollapsibleTrigger>
                 </div>
@@ -369,7 +369,7 @@ export function FoodPreferences({
                               htmlFor={`subcategory-${subcategoryName}`}
                               className="text-sm font-medium cursor-pointer"
                             >
-                              {subcategoryName}
+                              {getCategoryDisplayName(subcategoryName)}
                             </Label>
                           </div>
                           <CollapsibleTrigger asChild>
@@ -377,7 +377,7 @@ export function FoodPreferences({
                               {openSubcategories[subcategoryName] ? 
                                 <ChevronUp className="h-3.5 w-3.5" /> : 
                                 <ChevronDown className="h-3.5 w-3.5" />}
-                              <span className="sr-only">Toggle {subcategoryName}</span>
+                              <span className="sr-only">Toggle {getCategoryDisplayName(subcategoryName)}</span>
                             </Button>
                           </CollapsibleTrigger>
                         </div>
