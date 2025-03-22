@@ -367,11 +367,13 @@ export function FoodPreferences({
                       {category.displayName || category.name}
                     </Label>
                   </div>
-                  <CollapsibleTrigger showIcon={false} className="h-8 w-8 p-0">
-                    {openCategories[category.name] ? 
-                      <ChevronUp className="h-4 w-4" /> : 
-                      <ChevronDown className="h-4 w-4" />}
-                    <span className="sr-only">Toggle {category.displayName || category.name}</span>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      {openCategories[category.name] ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />}
+                      <span className="sr-only">Toggle {category.displayName || category.name}</span>
+                    </Button>
                   </CollapsibleTrigger>
                 </div>
                 
@@ -412,11 +414,13 @@ export function FoodPreferences({
                               {displayName}
                             </Label>
                           </div>
-                          <CollapsibleTrigger showIcon={false} className="h-7 w-7 p-0">
-                            {openSubcategories[subcategoryName] ? 
-                              <ChevronUp className="h-3.5 w-3.5" /> : 
-                              <ChevronDown className="h-3.5 w-3.5" />}
-                            <span className="sr-only">Toggle {displayName}</span>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                              {openSubcategories[subcategoryName] ? 
+                                <ChevronUp className="h-3.5 w-3.5" /> : 
+                                <ChevronDown className="h-3.5 w-3.5" />}
+                              <span className="sr-only">Toggle {displayName}</span>
+                            </Button>
                           </CollapsibleTrigger>
                         </div>
                         
