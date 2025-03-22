@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Utensils, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Utensils, ChevronDown, Search } from "lucide-react";
 import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -368,11 +369,11 @@ export function FoodPreferences({
                       {category.displayName || category.name}
                     </Label>
                   </div>
-                  <CollapsibleTrigger asChild>
+                  <CollapsibleTrigger>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <ChevronDown 
                         className={cn(
-                          "h-4 w-4",
+                          "h-4 w-4 transition-transform duration-200",
                           openCategories[category.name] ? "rotate-180" : "rotate-0"
                         )} 
                       />
@@ -418,11 +419,11 @@ export function FoodPreferences({
                               {displayName}
                             </Label>
                           </div>
-                          <CollapsibleTrigger asChild>
+                          <CollapsibleTrigger>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                               <ChevronDown 
                                 className={cn(
-                                  "h-3.5 w-3.5",
+                                  "h-3.5 w-3.5 transition-transform duration-200",
                                   openSubcategories[subcategoryName] ? "rotate-180" : "rotate-0"
                                 )} 
                               />
