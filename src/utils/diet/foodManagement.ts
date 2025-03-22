@@ -1,4 +1,3 @@
-
 import { FoodItem, FoodCategory } from "@/types/diet";
 import { reparseFoodDatabaseForDietTypes, getAvailableDietTypes } from "./foodDataProcessing";
 
@@ -43,7 +42,7 @@ export const addFoodItem = (newFood: FoodItem): {
       // If category doesn't exist, we could create it, but that's probably an error
       return {
         success: false,
-        message: `Category '${newFood.primaryCategory}' not found`,
+        message: `Category '${newFood.primaryCategory}' not found. Available categories: ${currentFoodCategories.map(c => c.name).join(', ')}`,
         dietTypes: getAvailableDietTypes()
       };
     }
@@ -137,6 +136,7 @@ export const importFoodsFromJson = (
   addedCount: number;
   updatedCount: number;
   failedCount: number;
+  failedItems: Array<{item: any, reason: string}>;
   dietTypes: string[];
 } => {
   try {
@@ -170,6 +170,7 @@ export const importFoodsFromJson = (
         addedCount: 0,
         updatedCount: 0,
         failedCount: 0,
+        failedItems: [],
         dietTypes: getAvailableDietTypes()
       };
     }
@@ -182,6 +183,7 @@ export const importFoodsFromJson = (
         addedCount: 0,
         updatedCount: 0,
         failedCount: 0,
+        failedItems: [],
         dietTypes: getAvailableDietTypes()
       };
     }
@@ -189,6 +191,7 @@ export const importFoodsFromJson = (
     let addedCount = 0;
     let updatedCount = 0;
     let failedCount = 0;
+    let failedItems: Array<{item: any, reason: string}> = [];
     
     // Process each food item in the array
     for (const item of foodItems) {
@@ -196,6 +199,10 @@ export const importFoodsFromJson = (
       if (!item.id || !item.name || !item.primaryCategory) {
         console.error("Invalid food item:", item);
         failedCount++;
+        failedItems.push({
+          item,
+          reason: `Missing required fields (id: ${item.id}, name: ${item.name}, primaryCategory: ${item.primaryCategory})`
+        });
         continue;
       }
       
@@ -245,18 +252,40 @@ export const importFoodsFromJson = (
       } else {
         console.error("Failed to add food item:", result.message, item);
         failedCount++;
+        failedItems.push({
+          item,
+          reason: result.message
+        });
       }
     }
     
     // Always reparse all diet types after the batch import
     const updatedDietTypes = reparseFoodDatabaseForDietTypes(currentFoodCategories);
     
+    // Prepare detailed error message if there were failures
+    let detailedMessage = `Imported ${addedCount} new foods, updated ${updatedCount} existing foods, ${failedCount} failed`;
+    
+    if (failedCount > 0) {
+      detailedMessage += `\n\nFailed Items (showing first 5):\n`;
+      failedItems.slice(0, 5).forEach((failure, index) => {
+        detailedMessage += `${index + 1}. ${failure.item.name || failure.item.id || 'Unknown'}: ${failure.reason}\n`;
+      });
+      
+      if (failedItems.length > 5) {
+        detailedMessage += `...and ${failedItems.length - 5} more failures\n`;
+      }
+      
+      // List available categories to help diagnose category-related issues
+      detailedMessage += `\nAvailable Categories: ${currentFoodCategories.map(c => c.name).join(', ')}`;
+    }
+    
     return {
       success: addedCount > 0 || updatedCount > 0,
-      message: `Imported ${addedCount} new foods, updated ${updatedCount} existing foods, ${failedCount} failed`,
+      message: detailedMessage,
       addedCount,
       updatedCount,
       failedCount,
+      failedItems,
       dietTypes: updatedDietTypes
     };
   } catch (error) {
@@ -267,6 +296,7 @@ export const importFoodsFromJson = (
       addedCount: 0,
       updatedCount: 0,
       failedCount: 0,
+      failedItems: [],
       dietTypes: getAvailableDietTypes()
     };
   }
