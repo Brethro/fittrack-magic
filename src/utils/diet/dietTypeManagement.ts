@@ -59,10 +59,6 @@ export const reparseFoodDatabaseForDietTypes = (
   let totalDietTypesFound = 0;
   let uniqueDietTypes = new Set<string>();
   
-  // First: Import all food data modules to ensure we have the complete set
-  // We'll need to handle these imports dynamically since they could change
-  console.log("Loading all food category data modules...");
-  
   try {
     // Process the provided foodCategories parameter which could be either
     // processed FoodCategory[] or raw food data

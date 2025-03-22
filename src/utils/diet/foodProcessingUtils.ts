@@ -4,6 +4,7 @@ import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
 import { fuzzyFindFood, clearFuzzyMatchCache, identifyPotentialMiscategorizations } from "@/utils/diet/fuzzyMatchUtils";
 import { categoryDisplayNames } from "./categoryDisplayNames";
+import { addDietType, getAvailableDietTypes } from "./dietTypeManagement";
 
 // Process each food item with the migration helper to add primaryCategory and validate
 export const processRawFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {
@@ -38,8 +39,6 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
       
       // Check for diet information and add to available diets
       if (migratedItem.diets && Array.isArray(migratedItem.diets)) {
-        // Import addDietType from the new module
-        const { addDietType } = require('./dietTypeManagement');
         migratedItem.diets.forEach(diet => addDietType(diet));
       }
       
@@ -67,7 +66,6 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
   }
   
   // Log the available diet types after processing
-  const { getAvailableDietTypes } = require('./dietTypeManagement');
   console.log("Available diet types after food processing:", getAvailableDietTypes());
   
   return processedCategories;
@@ -85,9 +83,6 @@ export const batchProcessFoodData = (categories: { name: string, items: Omit<Foo
     name: category.name,
     items: batchMigrateExistingFoodData(category.items as Partial<FoodItem>[])
   }));
-  
-  // Import functions from the new module
-  const { addDietType, getAvailableDietTypes } = require('./dietTypeManagement');
   
   // Then tag all items with diet compatibility
   const processedCategories = migratedCategories.map(category => ({

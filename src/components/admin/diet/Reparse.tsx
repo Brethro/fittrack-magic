@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Database } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { reparseFoodDatabaseForDietTypes } from "@/utils/diet/foodDataProcessing";
+import { useFoodDatabase } from "./FoodUtils";
 
 type ReparseProps = {
   totalFoodItems: number;
@@ -13,6 +14,7 @@ type ReparseProps = {
 export const Reparse = ({ totalFoodItems, setLastParseResults }: ReparseProps) => {
   const { toast } = useToast();
   const [isReparsing, setIsReparsing] = useState(false);
+  const { getAllRawFoodData } = useFoodDatabase();
 
   const handleReparse = () => {
     setIsReparsing(true);
@@ -20,7 +22,7 @@ export const Reparse = ({ totalFoodItems, setLastParseResults }: ReparseProps) =
     // Small timeout to ensure UI updates
     setTimeout(() => {
       try {
-        // Get all raw food data directly from the parent component
+        // Get all raw food data from the utility hook
         const allRawFoodData = getAllRawFoodData();
         console.log(`Reparsing with ALL food data - ${allRawFoodData.length} categories with ${totalFoodItems} total items`);
         
@@ -42,30 +44,6 @@ export const Reparse = ({ totalFoodItems, setLastParseResults }: ReparseProps) =
         setIsReparsing(false);
       }
     }, 100);
-  };
-
-  // This function should come from the parent component
-  const getAllRawFoodData = () => {
-    // Import all food data modules directly
-    const allRawData = [
-      require('@/data/diet/meatData').meatsAndPoultryData,
-      require('@/data/diet/nutsAndSeedsData').nutsAndSeedsData,
-      require('@/data/diet/healthyFatsData').healthyFatsData,
-      require('@/data/diet/spicesData').spicesAndHerbsData,
-      require('@/data/diet/beveragesData').beveragesData,
-      require('@/data/diet/starchyVegetablesData').starchyVegetablesData,
-      require('@/data/diet/otherVegetablesData').otherVegetablesData,
-      require('@/data/diet/greenVegetablesData').greenVegetablesData,
-      require('@/data/diet/plantProteinsData').plantProteinsData,
-      require('@/data/diet/condimentsData').condimentsAndSaucesData,
-      require('@/data/diet/seafoodData').fishAndSeafoodData,
-      require('@/data/diet/breadsData').breadsAndBreakfastData,
-      require('@/data/diet/dairyData').eggsAndDairyData,
-      require('@/data/diet/grainsData').grainsAndPastasData,
-      require('@/data/diet/fruitsData').fruitsData
-    ];
-    
-    return allRawData;
   };
 
   return (
