@@ -65,14 +65,14 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
     <div className="mt-10 pt-6 border-t">
       <h3 className="text-sm font-medium mb-2">Import Foods from JSON</h3>
       <p className="text-sm text-muted-foreground mb-4">
-        Batch import food items from JSON. Diet types will be automatically reparsed.
+        Batch import food items from JSON. Supports both an array of food items or a categorized object format. Diet types will be automatically reparsed.
       </p>
       
       <Textarea
         value={jsonData}
         onChange={(e) => setJsonData(e.target.value)}
-        placeholder='[{"id": "example_food_1", "name": "Example Food", "primaryCategory": "vegetable", "protein": 5, "carbs": 10, "fats": 2...}]'
-        className="min-h-32 mb-4"
+        placeholder='{"category1": [{"id": "food_1", "name": "Food Name", "primaryCategory": "category1", ...}], "category2": [...]}'
+        className="min-h-32 mb-4 font-mono text-xs"
       />
       
       <Button 

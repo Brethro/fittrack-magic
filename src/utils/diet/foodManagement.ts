@@ -143,11 +143,42 @@ export const importFoodsFromJson = (
     // Parse the JSON if it's a string
     const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
     
-    // Validate the data structure
-    if (!Array.isArray(data)) {
+    let foodItems: Partial<FoodItem>[] = [];
+    
+    // Handle different data formats
+    if (Array.isArray(data)) {
+      // Original format: array of food items
+      foodItems = data;
+    } else if (typeof data === 'object' && data !== null) {
+      // New format: object with category keys containing arrays of food items
+      Object.entries(data).forEach(([category, items]) => {
+        if (Array.isArray(items)) {
+          // For each item in the category array, add it to our flat list
+          items.forEach(item => {
+            // If the item doesn't already have a primaryCategory, use the category key
+            if (!item.primaryCategory) {
+              item.primaryCategory = category;
+            }
+            foodItems.push(item);
+          });
+        }
+      });
+    } else {
       return {
         success: false,
-        message: "Import data must be an array of food items",
+        message: "Import data must be an array of food items or an object with category keys",
+        addedCount: 0,
+        updatedCount: 0,
+        failedCount: 0,
+        dietTypes: getAvailableDietTypes()
+      };
+    }
+    
+    // Validate we have food items to process
+    if (foodItems.length === 0) {
+      return {
+        success: false,
+        message: "No valid food items found in the import data",
         addedCount: 0,
         updatedCount: 0,
         failedCount: 0,
@@ -160,7 +191,7 @@ export const importFoodsFromJson = (
     let failedCount = 0;
     
     // Process each food item in the array
-    for (const item of data) {
+    for (const item of foodItems) {
       // Validate the food item has the minimum required fields
       if (!item.id || !item.name || !item.primaryCategory) {
         console.error("Invalid food item:", item);
@@ -168,8 +199,26 @@ export const importFoodsFromJson = (
         continue;
       }
       
+      // Map properties to match our FoodItem structure
+      const foodItem: Partial<FoodItem> = {
+        ...item,
+        // Map known property name differences
+        protein: item.protein,
+        carbs: item.totalCarbohydrates, 
+        fats: item.totalFat,
+        caloriesPerServing: item.calories,
+        fiber: item.dietaryFiber,
+        sugars: item.totalSugars,
+        servingSize: item.servingSize,
+        servingSizeGrams: item.servingSizeGrams,
+        // Make sure secondary categories is an array if present
+        secondaryCategories: item.secondaryCategories && Array.isArray(item.secondaryCategories) 
+          ? item.secondaryCategories 
+          : undefined
+      };
+      
       // Try to add the food item
-      const result = addFoodItem(item as FoodItem);
+      const result = addFoodItem(foodItem as FoodItem);
       
       if (result.success) {
         if (result.message.includes("Updated food")) {
