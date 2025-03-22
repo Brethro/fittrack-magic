@@ -1,8 +1,31 @@
 
-import { FoodCategory, FoodItem } from "@/types/diet";
+import { FoodCategory, FoodItem, FoodPrimaryCategory } from "@/types/diet";
 import { migrateExistingFoodData, batchMigrateExistingFoodData, validateFoodData, tagFoodWithDiets } from "@/utils/diet/dietDataMigration";
 import { logCategorizationEvent, logErrorEvent } from "@/utils/diet/testingMonitoring";
 import { fuzzyFindFood, clearFuzzyMatchCache, identifyPotentialMiscategorizations } from "@/utils/diet/fuzzyMatchUtils";
+
+// Map technical category names to human-readable display names
+export const categoryDisplayNames: Record<FoodPrimaryCategory, string> = {
+  meat: "Meats",
+  redMeat: "Red Meats",
+  poultry: "Poultry",
+  fish: "Fish",
+  seafood: "Seafood",
+  dairy: "Dairy Products",
+  egg: "Eggs",
+  grain: "Grains",
+  legume: "Legumes",
+  vegetable: "Vegetables",
+  fruit: "Fruits",
+  nut: "Nuts",
+  seed: "Seeds",
+  oil: "Oils",
+  sweetener: "Sweeteners",
+  herb: "Herbs",
+  spice: "Spices",
+  processedFood: "Processed Foods",
+  other: "Other Foods"
+};
 
 // Process each food item with the migration helper to add primaryCategory and validate
 export const processRawFoodData = (categories: { name: string, items: Omit<FoodItem, 'primaryCategory'>[] }[]): FoodCategory[] => {
@@ -41,7 +64,11 @@ export const processRawFoodData = (categories: { name: string, items: Omit<FoodI
     
     return {
       name: category.name,
-      items: migratedItems
+      items: migratedItems,
+      // Add the display name for the category if it matches a primary category
+      displayName: Object.entries(categoryDisplayNames).find(([key]) => 
+        key.toLowerCase() === category.name.toLowerCase()
+      )?.[1] || category.name
     };
   });
   

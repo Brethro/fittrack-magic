@@ -1,4 +1,3 @@
-
 // Food primary category for explicit categorization
 export type FoodPrimaryCategory = 
   | "meat"      // Parent category
@@ -84,6 +83,7 @@ export type FoodItem = {
 export type FoodCategory = {
   name: string;
   items: FoodItem[];
+  displayName?: string; // Human-readable display name for the category
 };
 
 export type MealFood = {

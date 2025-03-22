@@ -1,4 +1,14 @@
+
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { categoryDisplayNames } from "@/utils/diet/foodDataProcessing";
+
+// Function to get the human-readable display name for a category
+export const getCategoryDisplayName = (category: FoodPrimaryCategory | string): string => {
+  if (category in categoryDisplayNames) {
+    return categoryDisplayNames[category as FoodPrimaryCategory];
+  }
+  return category;
+};
 
 // Function to assign default primary category based on food name with enhanced patterns
 export const assignDefaultCategory = (food: FoodItem): FoodPrimaryCategory => {
