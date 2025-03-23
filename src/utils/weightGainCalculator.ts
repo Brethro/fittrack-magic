@@ -1,4 +1,3 @@
-
 /**
  * Utility for calculating weight gain related values
  */
@@ -123,19 +122,30 @@ export const calculateWeightGainCalories = (
   let isTimelineDriven = false;
   let finalAdjustPercentage: number;
   
-  // If timeline requires more aggressive surplus than the recommended pace percentage
-  if (calculatedAdjustPercent > (recommendedSurplusPercentage / 100)) {
-    // Timeline requires more calories than standard pace recommendation
-    isTimelineDriven = true;
-    finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
-  } else {
-    // Use the pace-based recommendation since timeline doesn't require more
-    // For aggressive pace, always use exactly 19.99% for consistent UI display as 20%
-    if (goalPace === "aggressive") {
-      finalAdjustPercentage = recommendedSurplusPercentage / 100;
+  // For aggressive pace, ALWAYS use exactly 19.99% (displays as 20%) 
+  // UNLESS timeline requires more aggressive surplus
+  if (goalPace === "aggressive") {
+    // Fixed value for aggressive pace (19.99% to display as 20%)
+    const aggressivePaceTarget = 19.99 / 100; // Convert 19.99% to decimal
+    
+    // Only if timeline absolutely requires higher surplus, allow it
+    if (calculatedAdjustPercent > aggressivePaceTarget) {
+      isTimelineDriven = true;
+      finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
     } else {
-      // For other paces, use the timeline calculation if it's close to pace recommendation
-      finalAdjustPercentage = calculatedAdjustPercent;
+      // Otherwise use exactly 19.99% for aggressive pace
+      finalAdjustPercentage = aggressivePaceTarget;
+    }
+  } 
+  // For other paces (moderate, conservative)
+  else {
+    // If timeline requires more calories than standard pace recommendation
+    if (calculatedAdjustPercent > (recommendedSurplusPercentage / 100)) {
+      isTimelineDriven = true;
+      finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
+    } else {
+      // Use the pace-based recommendation since timeline doesn't require more
+      finalAdjustPercentage = recommendedSurplusPercentage / 100;
     }
   }
   
