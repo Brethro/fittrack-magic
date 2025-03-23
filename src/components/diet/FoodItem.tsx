@@ -32,6 +32,11 @@ const FoodItem = ({ product }: FoodItemProps) => {
   
   // Add categories for additional context about the food
   const categories = product.categories?.split(',').slice(0, 2).join(', ') || '';
+  
+  // Add ingredients for more detailed product information
+  const ingredients = product.ingredients_text 
+    ? product.ingredients_text.substring(0, 100) + (product.ingredients_text.length > 100 ? '...' : '')
+    : '';
 
   const handleSelectFood = () => {
     // For now, just log the selection - we'll implement the details page later
@@ -47,6 +52,9 @@ const FoodItem = ({ product }: FoodItemProps) => {
           <p className="text-sm text-muted-foreground">{brand}</p>
           {categories && (
             <p className="text-xs italic text-muted-foreground">{categories}</p>
+          )}
+          {ingredients && (
+            <p className="text-xs text-muted-foreground mt-1">{ingredients}</p>
           )}
           <div className="flex flex-wrap gap-3 mt-2 text-xs">
             <span className="bg-accent/30 rounded-full px-2 py-1">

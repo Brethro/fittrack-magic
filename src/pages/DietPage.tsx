@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
@@ -62,11 +61,11 @@ const DietPage = () => {
 
     setIsLoading(true);
     try {
-      // Improved search parameters using more specific fields to match against 
-      // and dropping the category filter that might have been too restrictive
-      const searchUrl = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(
-        searchQuery
-      )}&sort_by=popularity_key&fields=product_name,brands,serving_size,nutriments,image_url,categories&page_size=30`;
+      // Update the search URL to be more specific and include the search term in multiple parameters
+      const encodedQuery = encodeURIComponent(searchQuery.trim());
+      
+      // Building a more specific search URL that targets product name and categories
+      const searchUrl = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodedQuery}&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text&page_size=50`;
       
       console.log("Searching with URL:", searchUrl);
       
@@ -80,51 +79,87 @@ const DietPage = () => {
       console.log("Search API response:", data); // Debug log
       
       if (data.products && Array.isArray(data.products)) {
-        // Process and score results based on relevance to search terms
-        const scoredResults = data.products.map(product => {
-          const productName = product.product_name?.toLowerCase() || '';
-          const brandName = product.brands?.toLowerCase() || '';
-          const categories = product.categories?.toLowerCase() || '';
-          const searchTerms = searchQuery.toLowerCase().split(' ');
+        // Convert search terms to lowercase for comparison
+        const searchTerms = searchQuery.toLowerCase().split(' ');
+        
+        // First pass: Keep only products that have the search terms in their name, brand, or categories
+        let filteredResults = data.products.filter(product => {
+          const productName = (product.product_name || '').toLowerCase();
+          const brandName = (product.brands || '').toLowerCase();
+          const categories = (product.categories || '').toLowerCase();
+          const ingredients = (product.ingredients_text || '').toLowerCase();
           
-          // Calculate a relevance score based on where matches are found
+          // Check if any search term appears in the product details
+          return searchTerms.some(term => 
+            productName.includes(term) || 
+            brandName.includes(term) || 
+            categories.includes(term) || 
+            ingredients.includes(term)
+          );
+        });
+        
+        // If we don't have enough filtered results, take some from the original list
+        if (filteredResults.length < 5 && data.products.length > 0) {
+          filteredResults = data.products.slice(0, 10);
+          toast({
+            title: "Limited exact matches",
+            description: "Showing some potentially relevant products",
+          });
+        }
+        
+        // Second pass: Score the remaining products by relevance
+        const scoredResults = filteredResults.map(product => {
+          const productName = (product.product_name || '').toLowerCase();
+          const brandName = (product.brands || '').toLowerCase();
+          const categories = (product.categories || '').toLowerCase();
+          const ingredients = (product.ingredients_text || '').toLowerCase();
+          
           let score = 0;
+          
+          // Score based on match location - exact product name matches are most valuable
           searchTerms.forEach(term => {
-            // Prioritize exact name matches
-            if (productName.includes(term)) score += 10;
+            // Full product name matches are worth a lot
+            if (productName === term) score += 100;
+            
+            // Product name containing the term is next best
+            else if (productName.includes(term)) score += 50;
+            
             // Brand matches are also valuable
-            if (brandName.includes(term)) score += 5;
-            // Category matches are helpful
-            if (categories.includes(term)) score += 3;
+            if (brandName.includes(term)) score += 20;
+            
+            // Category and ingredient matches are helpful
+            if (categories.includes(term)) score += 10;
+            if (ingredients.includes(term)) score += 15;
+            
+            // Bonus for having nutritional info
+            if (product.nutriments && 
+                (product.nutriments.proteins_100g || 
+                 product.nutriments.proteins || 
+                 product.nutriments.fat_100g || 
+                 product.nutriments.fat)) {
+              score += 5;
+            }
+            
+            // Bonus for having an image
+            if (product.image_url) score += 5;
           });
           
           return { product, score };
         });
         
-        // Filter out items with zero relevance and sort by score
-        const relevantResults = scoredResults
-          .filter(item => item.score > 0)
+        // Sort by score (high to low) and extract just the product data
+        const sortedResults = scoredResults
           .sort((a, b) => b.score - a.score)
           .map(item => item.product);
         
-        if (relevantResults.length > 0) {
-          setSearchResults(relevantResults);
+        if (sortedResults.length > 0) {
+          setSearchResults(sortedResults);
         } else {
-          // If our filtering was too strict, use original results
-          setSearchResults(data.products.slice(0, 10)); // Limit to top 10
-          
-          // Notify user that exact matches weren't found
-          if (data.products.length > 0) {
-            toast({
-              title: "Limited relevant results",
-              description: "Showing available products that might not exactly match your search",
-            });
-          } else {
-            toast({
-              title: "No results found",
-              description: "Try a different search term",
-            });
-          }
+          toast({
+            title: "No results found",
+            description: "Try a different search term or check your spelling",
+          });
+          setSearchResults([]);
         }
       } else {
         console.error("Unexpected API response format:", data);
