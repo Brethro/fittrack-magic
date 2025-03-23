@@ -10,38 +10,61 @@ const Layout = () => {
   const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
   
-  // Check if content needs scrolling - accounts for navigation padding
+  // Check if content needs scrolling - properly accounting for the navigation bar
   useEffect(() => {
     const checkScrollable = () => {
-      if (mainRef.current && contentRef.current) {
-        // Get the actual content height without padding
+      if (mainRef.current && contentRef.current && navRef.current) {
+        // Get the actual content height
         const mainHeight = mainRef.current.scrollHeight;
-        // Get the available container height
-        const containerHeight = contentRef.current.clientHeight;
         
-        // Compare actual content height to available height
-        // Add a small buffer (2px) to prevent false positives
-        setIsScrollable(mainHeight > containerHeight + 2);
+        // Get the viewport height
+        const viewportHeight = window.innerHeight;
+        
+        // Get the nav height
+        const navHeight = navRef.current.offsetHeight;
+        
+        // Calculate available space (viewport minus nav)
+        const availableHeight = viewportHeight - navHeight;
+        
+        // Compare content height to available height
+        const shouldScroll = mainHeight > availableHeight;
+        
+        setIsScrollable(shouldScroll);
         
         // Debug info
         console.log({
           path: location.pathname,
           mainHeight,
-          containerHeight,
-          isScrollable: mainHeight > containerHeight + 2
+          viewportHeight,
+          navHeight,
+          availableHeight,
+          shouldScroll
         });
       }
     };
     
-    // Initial check after a short delay to ensure content is fully rendered
-    const initialCheckTimer = setTimeout(checkScrollable, 50);
+    // Initial check after content has properly rendered
+    const initialCheckTimer = setTimeout(checkScrollable, 100);
     
-    // Add resize observer to recheck when dimensions change
+    // Recheck when content changes
+    const contentObserver = new MutationObserver(() => {
+      setTimeout(checkScrollable, 50);
+    });
+    
+    if (mainRef.current) {
+      contentObserver.observe(mainRef.current, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true 
+      });
+    }
+    
+    // Add resize observer for dimension changes
     const resizeObserver = new ResizeObserver(() => {
-      // Add a small delay to ensure accurate measurements
-      setTimeout(checkScrollable, 10);
+      setTimeout(checkScrollable, 50);
     });
     
     if (mainRef.current) {
@@ -52,18 +75,17 @@ const Layout = () => {
       resizeObserver.observe(contentRef.current);
     }
     
+    if (navRef.current) {
+      resizeObserver.observe(navRef.current);
+    }
+    
     // Also check on window resize
     window.addEventListener('resize', checkScrollable);
     
     // Clean up
     return () => {
       clearTimeout(initialCheckTimer);
-      if (mainRef.current) {
-        resizeObserver.unobserve(mainRef.current);
-      }
-      if (contentRef.current) {
-        resizeObserver.unobserve(contentRef.current);
-      }
+      contentObserver.disconnect();
       resizeObserver.disconnect();
       window.removeEventListener('resize', checkScrollable);
     };
@@ -84,14 +106,13 @@ const Layout = () => {
       <div 
         ref={contentRef}
         className={`flex-1 w-full ${isScrollable ? 'overflow-auto' : 'overflow-hidden'}`} 
-        style={{ paddingBottom: "80px" }}
       >
-        <main ref={mainRef} className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
+        <main ref={mainRef} className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative pb-[80px]`}>
           <Outlet />
         </main>
       </div>
       
-      <nav className="fixed bottom-0 left-0 right-0 z-50">
+      <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-50">
         <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto glass-panel rounded-t-xl py-3 px-6`}>
           <ul className="flex justify-between items-center">
             {navItems.map((item) => {
