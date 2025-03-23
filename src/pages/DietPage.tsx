@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +15,7 @@ import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { FoodSearchBar } from "@/components/diet/FoodSearchBar";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -151,9 +151,6 @@ const DietPage = () => {
               </AlertDescription>
             </Alert>
           )}
-          
-          {/* Display Open Food Facts integration component */}
-          <FoodData />
           
           <Tabs 
             defaultValue="preferences" 

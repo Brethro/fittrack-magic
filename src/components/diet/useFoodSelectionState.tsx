@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -6,6 +5,7 @@ import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 import { processFoodItems } from "@/components/diet/FoodData";
 import { getFoodsByDiet } from "@/services/openFoodFacts";
 import { searchAndHighlightFoods } from "@/utils/diet/foodSearchUtils";
+import { getCachedFilteredItems } from "@/components/diet/helpers/foodFilterHelpers";
 
 export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => {
   const { toast } = useToast();
@@ -15,6 +15,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
   const [foodCategories, setFoodCategories] = useState<FoodCategory[]>(initialFoodCategories);
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Update food categories when foodItems change
   useEffect(() => {
@@ -42,6 +43,19 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
       }
     }
   }, [foodItems]);
+
+  // Apply current search query when categories or diet changes
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      // Apply the search to the current food categories
+      const filteredItems = getCachedFilteredItems(
+        foodCategories.flatMap(cat => cat.items),
+        searchQuery,
+        selectedDiet
+      );
+      setSearchResults(filteredItems);
+    }
+  }, [foodCategories, selectedDiet, searchQuery]);
 
   // Apply diet filter
   const applyDietFilter = async (diet: DietType) => {
@@ -99,9 +113,11 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
   const searchFoodItems = async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
+      setSearchQuery("");
       return [];
     }
 
+    setSearchQuery(query);
     setLoading(true);
     try {
       // First search local food items using highlighting
@@ -199,6 +215,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     foodCategories,
     loading: loading || isLoading,
     searchFoodItems,
-    searchResults
+    searchResults,
+    searchQuery
   };
 };

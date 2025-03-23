@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -75,7 +74,7 @@ export function FoodPreferences({
       setSearchResults([]);
     }
   }, [searchQuery, foodCategories, onSearch]);
-  
+
   // Toggle food selection
   const toggleFoodSelection = (foodId: string) => {
     setSelectedFoods({
