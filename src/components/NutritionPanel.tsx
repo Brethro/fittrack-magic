@@ -300,7 +300,7 @@ export function NutritionPanel() {
   let exactPercentage: string;
   
   if (isWeightGain) {
-    if (userData.calculatedSurplusPercentage !== undefined) {
+    if (userData.calculatedSurplusPercentage !== undefined && userData.calculatedSurplusPercentage !== null) {
       exactPercentage = userData.calculatedSurplusPercentage.toFixed(1);
       // For aggressive pace with non-timeline driven, show exactly 20%
       if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven && 

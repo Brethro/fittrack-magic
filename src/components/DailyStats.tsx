@@ -42,16 +42,23 @@ const DailyStats = () => {
   let calorieAdjustmentText = '';
   if (userData.tdee && userData.dailyCalories) {
     if (userData.isWeightGain) {
-      // For weight gain, calculate the surplus percentage based on TDEE
-      const surplusAmount = userData.dailyCalories - userData.tdee;
-      const surplusPercentage = (surplusAmount / userData.tdee) * 100;
-      
-      // For aggressive pace without timeline-driven adjustments, always show exactly 20%
-      if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven && 
-          surplusPercentage > 19.5 && surplusPercentage < 20.5) {
-        calorieAdjustmentText = `(20% surplus)`;
+      // For weight gain scenarios
+      if (userData.calculatedSurplusPercentage !== undefined && userData.calculatedSurplusPercentage !== null) {
+        // Use the pre-calculated percentage if available
+        let displayPercentage = userData.calculatedSurplusPercentage;
+        
+        // For aggressive pace without timeline-driven adjustments, always show exactly 20%
+        if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven && 
+            displayPercentage > 19.5 && displayPercentage < 20.5) {
+          calorieAdjustmentText = `(20% surplus)`;
+        } else {
+          // For other percentages, round to one decimal place for precision
+          calorieAdjustmentText = `(${displayPercentage.toFixed(1)}% surplus)`;
+        }
       } else {
-        // For other percentages, round to one decimal place for precision
+        // Fall back to calculating it directly if no pre-calculated value
+        const surplusAmount = userData.dailyCalories - userData.tdee;
+        const surplusPercentage = (surplusAmount / userData.tdee) * 100;
         calorieAdjustmentText = `(${surplusPercentage.toFixed(1)}% surplus)`;
       }
     } else if (userData.calculatedDeficitPercentage) {

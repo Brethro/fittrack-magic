@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useNutritionCalculator } from "@/hooks/useNutritionCalculator";
@@ -35,6 +34,7 @@ export type UserData = {
   isTimelineDriven?: boolean;
   maxSurplusPercentage?: number;
   calculatedDeficitPercentage?: number;
+  calculatedSurplusPercentage?: number;
 };
 
 const initialUserData: UserData = {
