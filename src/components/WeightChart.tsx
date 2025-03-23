@@ -12,6 +12,7 @@ interface CustomTooltipProps {
 
 export function WeightChart() {
   const { userData } = useUserData();
+  const isWeightGain = userData.isWeightGain || false;
   
   // Calculate target weight from body fat goal if applicable
   const calculateTargetWeightFromBodyFat = () => {
@@ -59,6 +60,7 @@ export function WeightChart() {
       startWeight,
       targetWeight,
       totalDays,
+      isWeightGain,
       goalDate: format(goalDate, "yyyy-MM-dd")
     });
     
@@ -79,15 +81,15 @@ export function WeightChart() {
     // Generate projection data
     const projectionData = [];
     
-    // Calculate daily weight loss needed to reach target (ensure it's a small, gradual amount)
-    const weightToLose = startWeight - targetWeight;
-    const dailyLoss = weightToLose / totalDays;
+    // Calculate daily weight change needed to reach target
+    const weightChange = targetWeight - startWeight; // Positive for gain, negative for loss
+    const dailyChange = weightChange / totalDays;
     
     console.log("Projection calculation:", {
       projectionStartWeight: startWeight,
       targetWeight,
-      weightToLose,
-      dailyLoss,
+      weightChange,
+      dailyChange,
       remainingDays: totalDays
     });
     
@@ -118,7 +120,7 @@ export function WeightChart() {
       const currentDate = addDays(today, day);
       
       // Calculate weight with precise decimal values for this day
-      const projectedWeight = startWeight - (dailyLoss * day);
+      const projectedWeight = startWeight + (dailyChange * day);
       
       projectionData.push({
         date: format(currentDate, "MMM d"),
@@ -289,6 +291,9 @@ export function WeightChart() {
                 Est. final weight: {targetBodyFatWeight} {userData.useMetric ? "kg" : "lbs"}
               </span>
             )}
+          </p>
+          <p className="text-xs text-primary mt-1">
+            {isWeightGain ? 'Building muscle mass' : 'Reducing body fat'}
           </p>
         </div>
       </div>

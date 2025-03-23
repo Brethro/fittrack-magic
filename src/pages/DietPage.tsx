@@ -7,10 +7,14 @@ import FoodLogSummary from "@/components/diet/FoodLogSummary";
 import FoodLog from "@/components/diet/FoodLog";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import SearchSection from "@/components/diet/SearchSection";
+import { useUserData } from "@/contexts/UserDataContext";
+import { AlertTriangle } from "lucide-react";
 
 const DietPage = () => {
   const { apiStatus, usdaApiStatus, checkUsdaApiConnection } = useApiConnection();
   const { currentDate, setCurrentDate } = useFoodLog();
+  const { userData } = useUserData();
+  const isWeightGain = userData.isWeightGain || false;
 
   // Check USDA API connection when selected
   useEffect(() => {
@@ -33,6 +37,17 @@ const DietPage = () => {
         <h1 className="text-2xl font-bold mb-2 text-center text-gradient-purple">
           Diet Planner
         </h1>
+
+        {/* Goal Type Banner */}
+        {userData.isWeightGain !== undefined && (
+          <div className={`glass-panel rounded-lg p-2 text-sm text-center ${isWeightGain ? 'border-blue-500/40 bg-blue-950/20' : 'border-purple-500/40 bg-purple-950/20'}`}>
+            <p className="font-medium">
+              {isWeightGain 
+                ? 'Your plan is optimized for muscle gain with minimal fat accumulation.' 
+                : 'Your plan is optimized for fat loss while preserving muscle.'}
+            </p>
+          </div>
+        )}
 
         {/* API Status Indicators */}
         <ApiStatusIndicators 

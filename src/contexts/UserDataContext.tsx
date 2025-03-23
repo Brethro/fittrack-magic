@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { differenceInCalendarDays } from "date-fns";
 
@@ -28,6 +27,7 @@ export type UserData = {
     fats: number | null;
   };
   weightLog: WeightLogEntry[];
+  isWeightGain?: boolean; // Added isWeightGain flag
 };
 
 const initialUserData: UserData = {
@@ -206,111 +206,191 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
     
-    // Calculate time until goal date to adjust deficit
+    // Calculate time until goal date
     const today = new Date();
     const goalDate = new Date(userData.goalDate);
     const daysUntilGoal = Math.max(differenceInCalendarDays(goalDate, today), 1); // At least 1 day
     
     console.log("Days until goal:", daysUntilGoal);
     
-    // Calculate weight loss needed
-    const startWeight = userData.weight;
-    const targetWeight = userData.goalType === "weight" ? 
-      userData.goalValue : 
-      startWeight * (1 - ((userData.bodyFatPercentage! - userData.goalValue!) / 100));
+    // Determine if this is a weight gain or weight loss goal
+    // For weight goal: compare goal weight directly
+    // For body fat goal: calculate target weight and compare
+    const startWeight = userData.weight as number;
+    let targetWeight: number;
     
-    const weightToLose = startWeight - targetWeight;
+    if (userData.goalType === "weight") {
+      targetWeight = userData.goalValue as number;
+    } else {
+      // For body fat goals, calculate the target weight
+      const currentBodyFat = userData.bodyFatPercentage as number;
+      const goalBodyFat = userData.goalValue as number;
+      
+      // Calculate lean body mass (remains constant)
+      const leanBodyMass = startWeight * (1 - (currentBodyFat / 100));
+      
+      // Calculate target weight based on goal body fat percentage
+      targetWeight = leanBodyMass / (1 - (goalBodyFat / 100));
+    }
     
-    // Calculate required caloric deficit
-    // 1 kg of fat = 7700 calories, 1 lb of fat = 3500 calories
-    const caloriesPerUnit = userData.useMetric ? 7700 : 3500;
-    const totalCaloriesDeficit = weightToLose * caloriesPerUnit;
-    const dailyDeficit = totalCaloriesDeficit / daysUntilGoal;
+    // Determine if this is weight gain or weight loss
+    const isWeightGain = targetWeight > startWeight;
+    console.log(`Goal detected: ${isWeightGain ? 'Weight Gain' : 'Weight Loss'}`);
     
-    console.log("Weight to lose:", weightToLose);
-    console.log("Total caloric deficit needed:", totalCaloriesDeficit);
-    console.log("Daily deficit needed:", dailyDeficit);
+    // Calculate weight change needed and caloric adjustment
+    const weightDifference = Math.abs(targetWeight - startWeight);
+    const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
+    const totalCalorieAdjustment = weightDifference * caloriesPerUnit;
+    const dailyCalorieAdjustment = totalCalorieAdjustment / daysUntilGoal;
     
-    // Determine minimum and maximum safe deficits as percentages of TDEE
-    let minDeficitPercent = 0.1; // 10% deficit minimum
-    let maxDeficitPercent = 0.25; // 25% deficit maximum
+    console.log("Weight difference:", weightDifference);
+    console.log("Total calorie adjustment needed:", totalCalorieAdjustment);
+    console.log("Daily calorie adjustment needed:", dailyCalorieAdjustment);
     
-    // Adjust based on body fat percentage
-    const bodyFatPercentage = userData.bodyFatPercentage || 20; // Default if not available
-    const isMale = userData.gender !== 'female';
+    // Determine appropriate adjustment percentage based on goal type
+    let minAdjustPercent, maxAdjustPercent;
     
-    if (isMale) {
-      if (bodyFatPercentage > 25) {
-        maxDeficitPercent = 0.30; // Allow 30% deficit for high body fat
-      } else if (bodyFatPercentage < 12) {
-        maxDeficitPercent = 0.20; // Limit to 20% deficit for low body fat
+    if (isWeightGain) {
+      // For weight gain, we want a surplus
+      minAdjustPercent = 0.1; // 10% surplus minimum
+      maxAdjustPercent = 0.2; // 20% surplus maximum for clean bulk
+      
+      // Adjust based on body fat percentage and gender for weight gain
+      const bodyFatPercentage = userData.bodyFatPercentage || 15; // Default if not available
+      const isMale = userData.gender !== 'female';
+      
+      if (isMale) {
+        if (bodyFatPercentage > 20) {
+          // Higher body fat - more conservative with surplus
+          maxAdjustPercent = 0.15; 
+        } else if (bodyFatPercentage < 10) {
+          // Lower body fat - can be more aggressive with surplus
+          maxAdjustPercent = 0.20;
+        }
+      } else {
+        if (bodyFatPercentage > 28) {
+          // Higher body fat - more conservative with surplus
+          maxAdjustPercent = 0.15;
+        } else if (bodyFatPercentage < 18) {
+          // Lower body fat - can be more aggressive with surplus
+          maxAdjustPercent = 0.20;
+        }
       }
     } else {
-      if (bodyFatPercentage > 32) {
-        maxDeficitPercent = 0.30; // Allow 30% deficit for high body fat
-      } else if (bodyFatPercentage < 18) {
-        maxDeficitPercent = 0.20; // Limit to 20% deficit for low body fat
+      // For weight loss, we want a deficit
+      minAdjustPercent = 0.1; // 10% deficit minimum
+      maxAdjustPercent = 0.25; // 25% deficit maximum
+      
+      // Adjust based on body fat percentage and gender for weight loss
+      const bodyFatPercentage = userData.bodyFatPercentage || 20; // Default if not available
+      const isMale = userData.gender !== 'female';
+      
+      if (isMale) {
+        if (bodyFatPercentage > 25) {
+          maxAdjustPercent = 0.30; // Allow 30% deficit for high body fat
+        } else if (bodyFatPercentage < 12) {
+          maxAdjustPercent = 0.20; // Limit to 20% deficit for low body fat
+        }
+      } else {
+        if (bodyFatPercentage > 32) {
+          maxAdjustPercent = 0.30; // Allow 30% deficit for high body fat
+        } else if (bodyFatPercentage < 18) {
+          maxAdjustPercent = 0.20; // Limit to 20% deficit for low body fat
+        }
       }
     }
     
-    // Adjust deficit based on goal pace if available
+    // Adjust based on goal pace if available
     if (userData.goalPace) {
       switch (userData.goalPace) {
         case "aggressive": 
-          minDeficitPercent += 0.05; // Increase minimum deficit
-          maxDeficitPercent += 0.05; // Increase maximum deficit
+          minAdjustPercent += 0.05; // Increase minimum adjustment
+          maxAdjustPercent += 0.05; // Increase maximum adjustment
           break;
         case "moderate": 
           // Keep the calculated default
           break;
         case "conservative": 
-          minDeficitPercent -= 0.05; // Decrease minimum deficit
-          maxDeficitPercent -= 0.05; // Decrease maximum deficit
+          minAdjustPercent -= 0.05; // Decrease minimum adjustment
+          maxAdjustPercent -= 0.05; // Decrease maximum adjustment
           break;
       }
     }
     
-    // Calculate deficit percentage based on required daily deficit
-    let calculatedDeficitPercent = dailyDeficit / tdee;
+    // Calculate adjustment percentage based on required daily adjustment
+    let calculatedAdjustPercent = dailyCalorieAdjustment / tdee;
     
-    // Ensure the deficit stays within safe bounds
-    calculatedDeficitPercent = Math.max(minDeficitPercent, 
-                               Math.min(maxDeficitPercent, calculatedDeficitPercent));
+    // Ensure the adjustment stays within safe bounds
+    calculatedAdjustPercent = Math.max(minAdjustPercent, 
+                              Math.min(maxAdjustPercent, calculatedAdjustPercent));
     
-    console.log("Calculated deficit percentage:", calculatedDeficitPercent);
+    console.log(`Calculated ${isWeightGain ? 'surplus' : 'deficit'} percentage:`, calculatedAdjustPercent);
     
-    // Calculate daily calories with the percentage-based deficit
-    const dailyCalories = Math.max(Math.round(tdee * (1 - calculatedDeficitPercent)), 1200); // Don't go below 1200 calories
+    // Calculate daily calories with the percentage-based adjustment
+    const dailyCalories = isWeightGain 
+      ? Math.round(tdee * (1 + calculatedAdjustPercent))
+      : Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200); // Don't go below 1200 calories for weight loss
     
     // Calculate macros
+    const bodyFatPercentage = userData.bodyFatPercentage || (userData.gender === 'female' ? 25 : 18); // Default estimate
     const leanBodyMass = weightInKg * (1 - (bodyFatPercentage / 100));
+    const isMale = userData.gender !== 'female';
     
-    // Protein calculation based on body fat percentage and lean body mass
+    // Protein calculation based on goal and lean body mass
     let proteinPerKgLBM;
     
-    if (isMale) {
-      if (bodyFatPercentage > 25) {
-        proteinPerKgLBM = 1.8; // 1.6-2.0 g/kg LBM for high body fat
-      } else if (bodyFatPercentage > 15) {
-        proteinPerKgLBM = 2.2; // 2.0-2.4 g/kg LBM for moderate body fat
+    if (isWeightGain) {
+      // For weight gain (muscle building), protein recommendations are different
+      if (isMale) {
+        if (bodyFatPercentage > 20) {
+          proteinPerKgLBM = 1.8; // Lower protein for higher body fat
+        } else if (bodyFatPercentage > 12) {
+          proteinPerKgLBM = 2.0; // Moderate protein for moderate body fat
+        } else {
+          proteinPerKgLBM = 2.2; // Higher protein for lower body fat
+        }
       } else {
-        proteinPerKgLBM = 2.4; // 2.2-2.6 g/kg LBM for low body fat
+        if (bodyFatPercentage > 28) {
+          proteinPerKgLBM = 1.8; // Lower protein for higher body fat
+        } else if (bodyFatPercentage > 20) {
+          proteinPerKgLBM = 2.0; // Moderate protein for moderate body fat
+        } else {
+          proteinPerKgLBM = 2.2; // Higher protein for lower body fat
+        }
       }
     } else {
-      if (bodyFatPercentage > 32) {
-        proteinPerKgLBM = 1.8; // 1.6-2.0 g/kg LBM for high body fat
-      } else if (bodyFatPercentage > 23) {
-        proteinPerKgLBM = 2.2; // 2.0-2.4 g/kg LBM for moderate body fat
+      // For weight loss, keep the existing higher protein recommendations
+      if (isMale) {
+        if (bodyFatPercentage > 25) {
+          proteinPerKgLBM = 1.8; // 1.6-2.0 g/kg LBM for high body fat
+        } else if (bodyFatPercentage > 15) {
+          proteinPerKgLBM = 2.2; // 2.0-2.4 g/kg LBM for moderate body fat
+        } else {
+          proteinPerKgLBM = 2.4; // 2.2-2.6 g/kg LBM for low body fat
+        }
       } else {
-        proteinPerKgLBM = 2.4; // 2.2-2.6 g/kg LBM for low body fat
+        if (bodyFatPercentage > 32) {
+          proteinPerKgLBM = 1.8; // 1.6-2.0 g/kg LBM for high body fat
+        } else if (bodyFatPercentage > 23) {
+          proteinPerKgLBM = 2.2; // 2.0-2.4 g/kg LBM for moderate body fat
+        } else {
+          proteinPerKgLBM = 2.4; // 2.2-2.6 g/kg LBM for low body fat
+        }
       }
     }
     
     const proteinGrams = Math.round(leanBodyMass * proteinPerKgLBM);
     const proteinCalories = proteinGrams * 4;
     
-    // Fat calculation (25% of total calories)
-    const fatCalories = Math.round(dailyCalories * 0.25);
+    // Fat calculation (different for weight gain vs loss)
+    let fatPercentage;
+    if (isWeightGain) {
+      fatPercentage = 0.30; // Higher fat for weight gain (hormonal support)
+    } else {
+      fatPercentage = 0.25; // Lower fat for weight loss
+    }
+    
+    const fatCalories = Math.round(dailyCalories * fatPercentage);
     const fatGrams = Math.round(fatCalories / 9);
     
     // Carbs calculation (remaining calories)
@@ -320,6 +400,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("Updated nutrition values:", {
       tdee,
       dailyCalories,
+      isWeightGain,
       macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams }
     });
 
@@ -330,13 +411,15 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       userData.dailyCalories !== dailyCalories ||
       userData.macros.protein !== proteinGrams ||
       userData.macros.carbs !== carbGrams ||
-      userData.macros.fats !== fatGrams;
+      userData.macros.fats !== fatGrams ||
+      userData.isWeightGain !== isWeightGain;
       
     if (hasChanged) {
       setUserData(prev => ({
         ...prev,
         tdee,
         dailyCalories,
+        isWeightGain,
         macros: {
           protein: proteinGrams,
           carbs: carbGrams,

@@ -16,6 +16,7 @@ import { calculateMacroCalories } from "@/utils/nutritionCalculator";
 
 export function NutritionPanel() {
   const { userData } = useUserData();
+  const isWeightGain = userData.isWeightGain || false;
 
   // Calculate macro calorie contributions using our utility
   const macroCalories = calculateMacroCalories({
@@ -41,25 +42,47 @@ export function NutritionPanel() {
           <PopoverContent className="w-80 p-4">
             <div className="space-y-2">
               <h4 className="font-medium">How we calculated your nutrition</h4>
-              <p className="text-sm text-muted-foreground">
-                Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate deficit 
-                to achieve your goal by the target date. 
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The high protein amount ({userData.macros.protein}g) is specifically 
-                designed to preserve lean muscle mass during weight loss—approximately {userData.bodyFatPercentage ? 
-                `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '2.0-2.4g per kg'} of 
-                lean body mass.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Fats are set at 25% of total calories for hormone production, with remaining calories allocated to carbs for energy.
-              </p>
+              
+              {isWeightGain ? (
+                // Weight Gain Explanation
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate surplus 
+                    to help you gain muscle with minimal fat accumulation by your target date.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    The protein amount ({userData.macros.protein}g) is designed to support muscle protein synthesis—approximately {userData.bodyFatPercentage ? 
+                    `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '1.8-2.2g per kg'} of 
+                    lean body mass.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Higher carbohydrates provide energy for intense training sessions and recovery, while fats are set at 30% of total calories to support hormonal health during muscle building.
+                  </p>
+                </>
+              ) : (
+                // Weight Loss Explanation
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate deficit 
+                    to achieve your weight loss goal by the target date. 
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    The high protein amount ({userData.macros.protein}g) is specifically 
+                    designed to preserve lean muscle mass during weight loss—approximately {userData.bodyFatPercentage ? 
+                    `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '2.0-2.4g per kg'} of 
+                    lean body mass.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Fats are set at 25% of total calories for hormone production, with remaining calories allocated to carbs for energy.
+                  </p>
+                </>
+              )}
+              
               <div className="pt-2 border-t mt-2">
                 <p className="text-xs text-muted-foreground">
-                  We use the Mifflin-St Jeor equation (or Katch-McArdle when body fat percentage is available) 
-                  to calculate your BMR, then apply activity multipliers. The macro balance prioritizes muscle 
-                  preservation during a caloric deficit, which research shows requires higher protein intake 
-                  than maintenance.
+                  We use the {userData.bodyFatPercentage ? 'Katch-McArdle' : 'Mifflin-St Jeor'} equation 
+                  to calculate your BMR, then apply activity multipliers. The macro balance is optimized for your 
+                  {isWeightGain ? ' muscle building goals, with sufficient carbohydrates for training energy and recovery.' : ' goal of preserving muscle during fat loss, which research shows requires higher protein intake than maintenance.'}
                 </p>
               </div>
             </div>
@@ -71,7 +94,7 @@ export function NutritionPanel() {
       <div className="glass-card rounded-lg p-3 text-center mb-3">
         <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
         <p className="text-lg font-bold">{userData.dailyCalories}</p>
-        <p className="text-xs text-muted-foreground">Calories</p>
+        <p className="text-xs text-muted-foreground">Calories{isWeightGain ? ' (Surplus)' : ' (Deficit)'}</p>
       </div>
       
       {/* Macros (three columns) */}
@@ -80,7 +103,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-blue-400 text-sm font-bold">Protein</span>
-            <span className="text-xs">{(macroCalories.protein / macroCalories.total * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.protein / macroCalories.total * 100).toFixed(0)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.protein}g</p>
           <Progress 
@@ -95,7 +118,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-amber-400 text-sm font-bold">Carbs</span>
-            <span className="text-xs">{(macroCalories.carbs / macroCalories.total * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.carbs / macroCalories.total * 100).toFixed(0)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.carbs}g</p>
           <Progress 
@@ -110,7 +133,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-pink-400 text-sm font-bold">Fats</span>
-            <span className="text-xs">{(macroCalories.fat / macroCalories.total * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.fat / macroCalories.total * 100).toFixed(0)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.fats}g</p>
           <Progress 
