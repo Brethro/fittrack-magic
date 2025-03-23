@@ -41,7 +41,7 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
   };
 
   return (
-    <section className="glass-panel rounded-lg p-4 mb-6">
+    <section className="mb-6">
       <h2 className="text-lg font-semibold mb-3">Food Search</h2>
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">

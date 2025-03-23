@@ -102,21 +102,21 @@ const DietPage = () => {
           Diet Planner
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Left section: Food search */}
-          <div className="md:col-span-7 space-y-4">
-            {/* API Status Indicators */}
-            <ApiStatusIndicators 
-              apiStatus={apiStatus} 
-              usdaApiStatus={usdaApiStatus} 
-            />
+        <div className="flex flex-col space-y-6 max-w-4xl mx-auto">
+          {/* API Status Indicators */}
+          <ApiStatusIndicators 
+            apiStatus={apiStatus} 
+            usdaApiStatus={usdaApiStatus} 
+          />
 
+          {/* Food Search Section */}
+          <div className="glass-panel p-4 rounded-lg">
             {/* Search Form */}
             <FoodSearchForm 
               onSearch={handleSearch} 
               isLoading={isLoading} 
             />
-
+            
             {/* Search Results */}
             {isLoading ? (
               <FoodSearchResultsSkeleton />
@@ -127,10 +127,8 @@ const DietPage = () => {
             )}
           </div>
           
-          {/* Right section: Food log */}
-          <div className="md:col-span-5">
-            <FoodLog />
-          </div>
+          {/* Food Log Section */}
+          <FoodLog />
         </div>
       </motion.div>
     </div>

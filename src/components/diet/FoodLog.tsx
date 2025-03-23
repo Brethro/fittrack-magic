@@ -25,11 +25,11 @@ const FoodLog = () => {
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="log" className="mt-4 pb-4">
+        <TabsContent value="log" className="mt-4">
           <FoodLogList />
         </TabsContent>
         
-        <TabsContent value="add" className="mt-4 pb-4">
+        <TabsContent value="add" className="mt-4">
           <QuickFoodEntry />
         </TabsContent>
       </Tabs>
