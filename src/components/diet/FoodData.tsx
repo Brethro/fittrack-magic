@@ -27,7 +27,7 @@ const FoodData = () => {
   if (isLoading && !isInitialized) {
     return (
       <div className="space-y-4">
-        <Alert variant="default" className="mb-6">
+        <Alert variant="default" className="mb-6 bg-secondary border-secondary-foreground/20">
           <AlertTitle>Loading Food Database</AlertTitle>
           <AlertDescription>
             <p className="mb-2">
@@ -45,9 +45,9 @@ const FoodData = () => {
   }
 
   return (
-    <Alert variant="default" className="mb-6">
-      <AlertTitle>Open Food Facts Integration Active</AlertTitle>
-      <AlertDescription>
+    <Alert variant="default" className="mb-6 bg-secondary/80 border-secondary-foreground/20">
+      <AlertTitle className="text-foreground">Open Food Facts Integration Active</AlertTitle>
+      <AlertDescription className="text-foreground">
         <p className="mb-2">
           Your diet plan is now using Open Food Facts data with {foodItems.length} food items available.
         </p>

@@ -41,7 +41,7 @@ export function FoodSearchBar({
   
   return (
     <div className="relative mb-6">
-      <div className="glass-panel p-3 rounded-lg">
+      <div className="glass-panel p-3 rounded-lg bg-secondary/80">
         <h3 className="text-base font-medium mb-2">Search Foods Database</h3>
         <div className="relative flex items-center">
           {isLoading ? (
@@ -68,7 +68,7 @@ export function FoodSearchBar({
           )}
         </div>
         {searchQuery.length > 0 && (
-          <div className="mt-2 text-xs text-muted-foreground">
+          <div className="mt-2 text-xs text-foreground">
             {searchQuery.length < 2 ? (
               "Type at least 2 characters to search"
             ) : isLoading ? (

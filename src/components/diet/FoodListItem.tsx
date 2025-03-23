@@ -13,6 +13,7 @@ interface FoodListItemProps {
   isHighlighted?: boolean;
   isDisabled?: boolean;
   showSearchIcon?: boolean;
+  isLoading?: boolean;
 }
 
 export function FoodListItem({
@@ -23,13 +24,14 @@ export function FoodListItem({
   onOpenFeedbackDialog,
   isHighlighted = false,
   isDisabled = false,
-  showSearchIcon = false
+  showSearchIcon = false,
+  isLoading = false
 }: FoodListItemProps) {
   return (
     <div
       className={cn(
         "flex items-center space-x-2 rounded-md p-2 cursor-pointer hover:bg-muted/50 transition-colors",
-        isHighlighted && "bg-yellow-100/50 dark:bg-yellow-900/20",
+        isHighlighted && "bg-accent/20 dark:bg-accent/20",
         isDisabled && "opacity-70 cursor-not-allowed"
       )}
       onClick={() => {
@@ -56,7 +58,7 @@ export function FoodListItem({
       <div className="flex flex-1 items-center">
         <span className="text-sm font-medium">
           {food.name}
-          {showSearchIcon && <Search className="inline-block ml-1 h-3 w-3 text-muted-foreground" />}
+          {showSearchIcon && <Search className="inline-block ml-1 h-3 w-3 text-accent" />}
         </span>
         <div className="ml-auto flex items-center space-x-1">
           <button

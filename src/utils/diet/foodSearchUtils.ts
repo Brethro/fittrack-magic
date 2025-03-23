@@ -30,11 +30,29 @@ export const searchFoodItems = (query: string, foodCategories: FoodCategory[]): 
   });
 };
 
-// New function to search with highlighting
+// Function to search with highlighting
 export const searchAndHighlightFoods = (
   query: string, 
   foodCategories: FoodCategory[]
 ): { items: FoodItem[], query: string } => {
   const items = searchFoodItems(query, foodCategories);
-  return { items, query };
+  
+  // Mark items that match the search query for highlighting
+  const markedItems = items.map(item => ({
+    ...item,
+    isHighlighted: true,
+    showSearchIcon: true
+  }));
+  
+  return { items: markedItems, query };
+};
+
+// Helper function to determine if a food item matches the search query
+export const itemMatchesQuery = (item: FoodItem, query: string): boolean => {
+  if (!query || query.length < 2) return false;
+  
+  const lowerQuery = query.toLowerCase();
+  const lowerName = item.name.toLowerCase();
+  
+  return lowerName.includes(lowerQuery);
 };
