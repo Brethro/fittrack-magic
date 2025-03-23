@@ -17,7 +17,7 @@ const CollapsibleTrigger = React.forwardRef<
     className={cn("flex items-center", className)}
     {...props}
   >
-    {children}
+    {React.isValidElement(children) ? children : <span>{children}</span>}
     {showIcon && (
       <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
     )}
@@ -37,7 +37,7 @@ const CollapsibleContent = React.forwardRef<
     )}
     {...props}
   >
-    <div>{children}</div>
+    <div className="w-full">{children}</div>
   </CollapsiblePrimitive.CollapsibleContent>
 ))
 CollapsibleContent.displayName = CollapsiblePrimitive.CollapsibleContent.displayName
