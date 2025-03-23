@@ -5,14 +5,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 import { processFoodItems } from "@/components/diet/FoodData";
 import { getFoodsByDiet } from "@/services/openFoodFacts";
+import { searchAndHighlightFoods } from "@/utils/diet/foodSearchUtils";
 
 export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => {
   const { toast } = useToast();
-  const { foodItems, searchFoodItems, isLoading } = useFoodDatabase();
+  const { foodItems, searchFoodItems: apiSearchFoodItems, isLoading, initializeFoodData } = useFoodDatabase();
   const [selectedFoods, setSelectedFoods] = useState<Record<string, boolean>>({});
   const [selectedDiet, setSelectedDiet] = useState<DietType>("all");
   const [foodCategories, setFoodCategories] = useState<FoodCategory[]>(initialFoodCategories);
   const [loading, setLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
 
   // Update food categories when foodItems change
   useEffect(() => {
@@ -93,6 +95,56 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     }
   };
 
+  // Search food items
+  const searchFoodItems = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return [];
+    }
+
+    setLoading(true);
+    try {
+      // First search local food items using highlighting
+      const { items: localResults } = searchAndHighlightFoods(query, foodCategories);
+      setSearchResults(localResults);
+      
+      // Also search the API for more results
+      const apiResults = await apiSearchFoodItems(query);
+      
+      if (apiResults.length > 0) {
+        // Process the API results into categories
+        const updatedCategories = processFoodItems([...foodItems, ...apiResults]);
+        setFoodCategories(updatedCategories);
+        
+        // Update the search results with the new items from API
+        const { items: combinedResults } = searchAndHighlightFoods(query, updatedCategories);
+        setSearchResults(combinedResults);
+        
+        toast({
+          title: "Search Results",
+          description: `Found ${combinedResults.length} foods matching "${query}"`,
+        });
+        
+        return combinedResults;
+      }
+      
+      // If no API results, return local results
+      return localResults;
+    } catch (error) {
+      console.error("Error searching for food items:", error);
+      
+      toast({
+        title: "Search Error",
+        description: "There was an error searching for foods.",
+        variant: "destructive",
+      });
+      
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get selected food items
   const getSelectedFoodItems = (): FoodItem[] => {
     return foodItems.filter(item => selectedFoods[item.id]);
@@ -146,6 +198,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     getAvailableDiets,
     foodCategories,
     loading: loading || isLoading,
-    searchFoodItems
+    searchFoodItems,
+    searchResults
   };
 };

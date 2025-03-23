@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,6 +11,7 @@ import { FreeMealOption } from "./FreeMealOption";
 import { GenerateMealPlanButton } from "./GenerateMealPlanButton";
 import { EmptyFoodPreferences } from "./EmptyFoodPreferences";
 import { Skeleton } from "@/components/ui/skeleton";
+import { searchAndHighlightFoods, itemMatchesQuery } from "@/utils/diet/foodSearchUtils";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -43,6 +45,7 @@ export function FoodPreferences({
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
@@ -53,6 +56,25 @@ export function FoodPreferences({
   
   const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
   const [selectedFoodForNutrition, setSelectedFoodForNutrition] = useState<FoodItem | null>(null);
+
+  // Handle local search when the search query changes
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      // First, try to use the parent component's search function if available
+      if (onSearch) {
+        onSearch(searchQuery);
+      }
+      
+      // Then, also perform a local search to highlight results
+      const { items } = searchAndHighlightFoods(searchQuery, foodCategories);
+      setSearchResults(items);
+      
+      // Open categories and subcategories with matching items
+      expandRelevantCategories(searchQuery);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, foodCategories, onSearch]);
   
   // Toggle food selection
   const toggleFoodSelection = (foodId: string) => {
@@ -107,13 +129,12 @@ export function FoodPreferences({
     setNutritionDialogOpen(true);
   };
 
-  useEffect(() => {
-    if (!searchQuery) return;
+  // Expand categories and subcategories that contain search matches
+  const expandRelevantCategories = (query: string) => {
+    if (!query || query.length < 2) return;
     
-    // If using fuzzy search with 2+ characters
-    const matchedItems = searchQuery.length >= 2 
-      ? fuzzyFindFood(searchQuery, foodCategories)
-      : [];
+    // Use fuzzy search with 2+ characters
+    const matchedItems = fuzzyFindFood(query, foodCategories);
     
     const newOpenCategories = { ...openCategories };
     const newOpenSubcategories = { ...openSubcategories };
@@ -152,7 +173,7 @@ export function FoodPreferences({
       // Fallback to simpler text-based search
       foodCategories.forEach(category => {
         const hasMatch = category.items.some(food => 
-          food.name.toLowerCase().includes(searchQuery.toLowerCase())
+          food.name.toLowerCase().includes(query.toLowerCase())
         );
         
         if (hasMatch) {
@@ -170,7 +191,7 @@ export function FoodPreferences({
           
           Object.entries(groupedItems).forEach(([subcat, items]) => {
             const hasSubMatch = items.some(food => 
-              food.name.toLowerCase().includes(searchQuery.toLowerCase())
+              food.name.toLowerCase().includes(query.toLowerCase())
             );
             if (hasSubMatch) {
               newOpenSubcategories[subcat] = true;
@@ -182,10 +203,15 @@ export function FoodPreferences({
     
     setOpenCategories(newOpenCategories);
     setOpenSubcategories(newOpenSubcategories);
-  }, [searchQuery, foodCategories]);
+  };
 
   // Calculate total number of selected foods for user feedback
   const selectedFoodCount = Object.values(selectedFoods).filter(Boolean).length;
+
+  // Should we highlight a food item?
+  const shouldHighlightFood = (food: FoodItem): boolean => {
+    return searchQuery.length >= 2 && itemMatchesQuery(food, searchQuery);
+  };
 
   // Show loading state or empty state if appropriate
   if (isLoading && foodCategories.length === 0) {

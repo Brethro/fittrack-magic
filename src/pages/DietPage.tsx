@@ -21,6 +21,7 @@ const DietPage = () => {
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
   const [initialized, setInitialized] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { initializeFoodData } = useFoodDatabase();
 
   // Initialize food data on component mount
@@ -110,6 +111,7 @@ const DietPage = () => {
 
   // Handle food search
   const handleSearch = async (query: string) => {
+    setSearchTerm(query);
     if (query.length >= 2) {
       try {
         await searchFoodItems(query);
@@ -131,7 +133,7 @@ const DietPage = () => {
             Your Diet Plan
           </h1>
           
-          {/* Display new Open Food Facts integration component */}
+          {/* Display Open Food Facts integration component */}
           <FoodData />
           
           <Tabs 

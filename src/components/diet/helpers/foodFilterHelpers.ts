@@ -1,45 +1,29 @@
 
 import { FoodItem, DietType } from "@/types/diet";
-import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
-import { foodBelongsToCategory } from "@/utils/diet/foodCategoryHierarchy";
+import { itemMatchesQuery } from "@/utils/diet/foodSearchUtils";
 
-// Filter food items based on search query and diet compatibility
+// Filter food items based on search query and selected diet
 export const getFilteredItems = (
-  items: FoodItem[], 
+  items: FoodItem[],
   searchQuery: string,
   selectedDiet: DietType
 ): FoodItem[] => {
-  // If search query is 2 or more characters, use fuzzy search
-  if (searchQuery.length >= 2) {
-    // Filter within the current items only
-    const matchedItemIds = new Set(
-      fuzzyFindFood(searchQuery, [{ name: "", items }]).map(item => item.id)
-    );
-    
-    // Return items that match the search
-    const searchFiltered = items.filter(food => matchedItemIds.has(food.id));
-    
-    // If "all" diet is selected, no need for additional filtering
-    if (selectedDiet === "all") return searchFiltered;
-    
-    // For specific diets, only show compatible foods
-    return searchFiltered.filter(food => 
-      food.diets?.includes(selectedDiet) || 
-      foodBelongsToCategory(food, selectedDiet as any)
+  // Start with all items
+  let filteredItems = [...items];
+  
+  // Filter by diet if not "all"
+  if (selectedDiet !== "all") {
+    filteredItems = filteredItems.filter(item => 
+      (item.diets?.includes(selectedDiet)) ||
+      // If no diet data, include item when diet=all
+      (!item.diets || item.diets.length === 0)
     );
   }
   
-  // Default behavior for short search queries
-  const searchFiltered = !searchQuery 
-    ? items 
-    : items.filter(food => food.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Filter by search query if it exists and has 2+ characters
+  if (searchQuery && searchQuery.length >= 2) {
+    filteredItems = filteredItems.filter(item => itemMatchesQuery(item, searchQuery));
+  }
   
-  // If "all" diet is selected, no need for additional filtering
-  if (selectedDiet === "all") return searchFiltered;
-  
-  // For specific diets, only show compatible foods
-  return searchFiltered.filter(food => 
-    food.diets?.includes(selectedDiet) || 
-    foodBelongsToCategory(food, selectedDiet as any)
-  );
+  return filteredItems;
 };
