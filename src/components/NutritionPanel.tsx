@@ -12,24 +12,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { calculateMacroCalories } from "@/utils/nutritionCalculator";
 
 export function NutritionPanel() {
   const { userData } = useUserData();
 
-  // Calculate macro calorie contributions
-  const calculateMacroCalories = () => {
-    if (!userData.macros.protein || !userData.macros.carbs || !userData.macros.fats) {
-      return { protein: 0, carbs: 0, fats: 0 };
-    }
-
-    return {
-      protein: userData.macros.protein * 4, // 4 calories per gram of protein
-      carbs: userData.macros.carbs * 4,     // 4 calories per gram of carbs
-      fats: userData.macros.fats * 9,       // 9 calories per gram of fat
-    };
-  };
-
-  const macroCalories = calculateMacroCalories();
+  // Calculate macro calorie contributions using our utility
+  const macroCalories = calculateMacroCalories({
+    calories: userData.dailyCalories || 0,
+    protein: userData.macros.protein || 0,
+    carbs: userData.macros.carbs || 0,
+    fat: userData.macros.fats || 0
+  });
+  
   const totalCalories = userData.dailyCalories || 0;
 
   return (
@@ -85,7 +80,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-blue-400 text-sm font-bold">Protein</span>
-            <span className="text-xs">{(macroCalories.protein / totalCalories * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.protein / macroCalories.total * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.protein}g</p>
           <Progress 
@@ -100,7 +95,7 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-amber-400 text-sm font-bold">Carbs</span>
-            <span className="text-xs">{(macroCalories.carbs / totalCalories * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.carbs / macroCalories.total * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.carbs}g</p>
           <Progress 
@@ -115,15 +110,15 @@ export function NutritionPanel() {
         <div className="glass-card rounded-lg p-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-pink-400 text-sm font-bold">Fats</span>
-            <span className="text-xs">{(macroCalories.fats / totalCalories * 100).toFixed(2)}%</span>
+            <span className="text-xs">{(macroCalories.fat / macroCalories.total * 100).toFixed(2)}%</span>
           </div>
           <p className="text-lg font-bold">{userData.macros.fats}g</p>
           <Progress 
-            value={Math.round(macroCalories.fats / totalCalories * 100)} 
+            value={Math.round(macroCalories.fat / totalCalories * 100)} 
             className="h-1.5 mt-1 bg-pink-950"
             indicatorClassName="bg-pink-400"
           />
-          <p className="text-xs text-right mt-1">{macroCalories.fats} cal</p>
+          <p className="text-xs text-right mt-1">{macroCalories.fat} cal</p>
         </div>
       </div>
     </div>
@@ -131,4 +126,3 @@ export function NutritionPanel() {
 }
 
 export default NutritionPanel;
-

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { X, ChevronUp, ChevronDown, Save, Clock, Database, Plus, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,15 @@ import { useForm, Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { type UsdaFoodItem, extractNutritionInfo } from "@/utils/usdaApi";
 import { useUserData } from "@/contexts/UserDataContext";
+import {
+  calculateNutritionFromBaseServing,
+  calculateMacroPercentages,
+  calculateMacroCalories,
+  getCommonUnitsForFoodType,
+  convertToStandardUnit,
+  type NutritionValues,
+  type ServingInfo
+} from "@/utils/nutritionCalculator";
 
 interface FoodDetailViewProps {
   food: any;
@@ -36,14 +46,13 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const [isNutrientsOpen, setIsNutrientsOpen] = useState(false);
   
   // Get base nutrition values from the food item
-  const [baseNutrition, setBaseNutrition] = useState<any>({
+  const [baseNutrition, setBaseNutrition] = useState<NutritionValues>({
     calories: 0,
     protein: 0,
     carbs: 0,
     fat: 0,
     fiber: 0,
     sugars: 0,
-    serving: "100g",
   });
   
   // Calculate user's remaining calories and macros for the day
@@ -65,7 +74,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const [availableUnits, setAvailableUnits] = useState<string[]>(["g", "oz", "cup"]);
   
   // Calculate current nutrition based on serving size
-  const [currentNutrition, setCurrentNutrition] = useState({ ...baseNutrition });
+  const [currentNutrition, setCurrentNutrition] = useState<NutritionValues>({ ...baseNutrition });
   
   // Extract detailed nutrients for display
   const [detailedNutrients, setDetailedNutrients] = useState<any[]>([]);
@@ -99,6 +108,10 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
         p.measureUnit?.abbreviation || "g"
       );
       setAvailableUnits([...new Set(["g", "oz", ...units])]);
+    } else {
+      // Use common units based on food category
+      const foodCategory = usdaFood.foodCategory || "";
+      setAvailableUnits(getCommonUnitsForFoodType(foodCategory));
     }
     
     // Extract detailed nutrients
@@ -117,7 +130,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Initialize from Open Food Facts data
   const initializeOpenFoodFacts = (offFood: any) => {
     // Extract basic nutrition from Open Food Facts format
-    const nutrition = {
+    const nutrition: NutritionValues = {
       calories: offFood.nutriments?.["energy-kcal_100g"] || 
                offFood.nutriments?.["energy-kcal"] || 
                offFood.nutriments?.energy_100g || 
@@ -132,7 +145,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
              offFood.nutriments?.fiber || 0,
       sugars: offFood.nutriments?.sugars_100g || 
               offFood.nutriments?.sugars || 0,
-      serving: "100g",
     };
     
     setBaseNutrition(nutrition);
@@ -155,21 +167,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     
     // Generate available units based on food type
     const foodCategory = (offFood.categories || "").toLowerCase();
-    let suggestedUnits = ["g", "oz"];
-    
-    if (foodCategory.includes("beverage") || 
-        foodCategory.includes("drink") || 
-        foodCategory.includes("milk") || 
-        foodCategory.includes("juice")) {
-      suggestedUnits = ["ml", "fl oz", "cup"];
-    } else if (foodCategory.includes("cereal") || 
-               foodCategory.includes("grain") || 
-               foodCategory.includes("pasta") || 
-               foodCategory.includes("rice")) {
-      suggestedUnits = ["g", "oz", "cup"];
-    }
-    
-    setAvailableUnits([...new Set([...suggestedUnits, defaultUnit])]);
+    setAvailableUnits(getCommonUnitsForFoodType(foodCategory));
     
     // Extract detailed nutrients from Open Food Facts format
     const detailedNutrients = Object.entries(offFood.nutriments || {})
@@ -258,54 +256,18 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   
   // Update nutrition values based on serving size
   useEffect(() => {
-    const calculateNutrition = () => {
-      // Convert to standard unit (g or ml) for calculation
-      let standardAmount = amount;
-      
-      // Conversions for common units
-      if (unit === "oz") standardAmount = amount * 28.35;
-      if (unit === "lb") standardAmount = amount * 453.592;
-      if (unit === "cup") standardAmount = amount * 240; // rough approximation for solids/liquids
-      if (unit === "tbsp") standardAmount = amount * 15;
-      if (unit === "tsp") standardAmount = amount * 5;
-      if (unit === "fl oz") standardAmount = amount * 29.57;
-      
-      // Calculate multiplier based on 100g/ml standard
-      const newMultiplier = standardAmount / 100;
-      setMultiplier(newMultiplier);
-      
-      // Update nutrition values
-      setCurrentNutrition({
-        calories: Math.round(baseNutrition.calories * newMultiplier),
-        protein: parseFloat((baseNutrition.protein * newMultiplier).toFixed(1)),
-        carbs: parseFloat((baseNutrition.carbs * newMultiplier).toFixed(1)),
-        fat: parseFloat((baseNutrition.fat * newMultiplier).toFixed(1)),
-        fiber: parseFloat((baseNutrition.fiber * newMultiplier).toFixed(1)),
-        sugars: parseFloat((baseNutrition.sugars * newMultiplier).toFixed(1)),
-        serving: `${amount}${unit}`
-      });
-    };
+    const newNutrition = calculateNutritionFromBaseServing(baseNutrition, amount, unit);
+    setCurrentNutrition(newNutrition);
     
-    calculateNutrition();
+    // Calculate standard multiplier for detailed nutrients
+    const standardAmount = convertToStandardUnit(amount, unit);
+    const newMultiplier = standardAmount / 100;
+    setMultiplier(newMultiplier);
   }, [amount, unit, baseNutrition]);
   
-  // Calculate macronutrient percentages
-  const calculateMacroPercentage = () => {
-    const totalCalories = 
-      (currentNutrition.protein * 4) + 
-      (currentNutrition.carbs * 4) + 
-      (currentNutrition.fat * 9);
-    
-    if (totalCalories === 0) return { protein: 0, carbs: 0, fat: 0 };
-    
-    return {
-      protein: Math.round((currentNutrition.protein * 4 / totalCalories) * 100),
-      carbs: Math.round((currentNutrition.carbs * 4 / totalCalories) * 100),
-      fat: Math.round((currentNutrition.fat * 9 / totalCalories) * 100)
-    };
-  };
-  
-  const macroPercentages = calculateMacroPercentage();
+  // Calculate macronutrient percentages and calories
+  const macroPercentages = calculateMacroPercentages(currentNutrition);
+  const macroCalories = calculateMacroCalories(currentNutrition);
   
   // Handle serving amount adjustments
   const incrementAmount = () => {
@@ -351,9 +313,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const brandOrSource = source === "usda"
     ? `USDA FoodData Central (${food.dataType})`
     : food.brands || "Unknown Brand";
-  
-  // Determine which chevron icon to show based on isNutrientsOpen state
-  const ChevronIcon = isNutrientsOpen ? ChevronUp : ChevronDown;
   
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -491,7 +450,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
                   <span>{macroPercentages.protein}% of calories</span>
-                  <span>{Math.round(currentNutrition.protein * 4)} kcal</span>
+                  <span>{macroCalories.protein} kcal</span>
                 </div>
               </div>
               
@@ -509,7 +468,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
                   <span>{macroPercentages.carbs}% of calories</span>
-                  <span>{Math.round(currentNutrition.carbs * 4)} kcal</span>
+                  <span>{macroCalories.carbs} kcal</span>
                 </div>
                 
                 {/* Fiber & Sugar */}
@@ -543,7 +502,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
                   <span>{macroPercentages.fat}% of calories</span>
-                  <span>{Math.round(currentNutrition.fat * 9)} kcal</span>
+                  <span>{macroCalories.fat} kcal</span>
                 </div>
               </div>
             </div>
@@ -561,7 +520,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 <CollapsibleTrigger>
                   <Button variant="ghost" size="sm" className="p-1 h-8">
                     {isNutrientsOpen ? (
-                      <ChevronIcon className="h-4 w-4" />
+                      <ChevronUp className="h-4 w-4" />
                     ) : (
                       <ChevronDown className="h-4 w-4" />
                     )}
