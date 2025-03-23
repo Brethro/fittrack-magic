@@ -15,7 +15,7 @@ export const calculateMaxSurplusPercentage = (
   let maxAdjustPercent: number;
   
   if (goalPace === "aggressive") {
-    maxAdjustPercent = 20.0; // Exactly 20% for aggressive pace (19.99% for display)
+    maxAdjustPercent = 19.99; // Exactly 19.99% for aggressive pace
   } else if (goalPace === "moderate") {
     maxAdjustPercent = 15.0; // 15% for moderate pace
   } else {
@@ -29,7 +29,7 @@ export const calculateMaxSurplusPercentage = (
   if (isMale) {
     if (bf > 20) {
       // Higher body fat - more conservative with surplus
-      maxAdjustPercent = Math.min(maxAdjustPercent, 20.0); 
+      maxAdjustPercent = Math.min(maxAdjustPercent, 19.99); 
     } else if (bf < 10) {
       // Lower body fat - can be more aggressive with surplus
       maxAdjustPercent = Math.min(maxAdjustPercent + 5.0, 35.0);
@@ -37,7 +37,7 @@ export const calculateMaxSurplusPercentage = (
   } else {
     if (bf > 28) {
       // Higher body fat - more conservative with surplus
-      maxAdjustPercent = Math.min(maxAdjustPercent, 20.0);
+      maxAdjustPercent = Math.min(maxAdjustPercent, 19.99);
     } else if (bf < 18) {
       // Lower body fat - can be more aggressive with surplus
       maxAdjustPercent = Math.min(maxAdjustPercent + 5.0, 35.0);
@@ -115,26 +115,27 @@ export const calculateWeightGainCalories = (
   }
   
   // Hard cap the calculated adjustment to the maximum percentage
-  const finalAdjustPercentage = Math.max(0.05, Math.min(maxSurplusPercentage / 100, calculatedAdjustPercent));
+  const maxAdjustDecimal = maxSurplusPercentage / 100;
+  const finalAdjustPercentage = Math.max(0.05, Math.min(maxAdjustDecimal, calculatedAdjustPercent));
   
   // Calculate daily calories with the percentage-based adjustment
   let dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
   
-  // For display purposes, if this is aggressive pace and would be over 19.99%, cap at 19.99%
-  let displaySurplusPercentage = (dailyCalories - tdee) / tdee * 100;
+  // For display purposes, calculate the actual surplus percentage
+  let displaySurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
   
-  // Check if we need to apply special capping for aggressive pace
+  // Special handling for aggressive pace
   let highSurplusWarning = false;
   
-  // Apply special cap for aggressive pace (19.99%)
-  if (goalPace === "aggressive" && displaySurplusPercentage > 19.99) {
-    // Adjust actual calories to meet the 19.99% cap
+  // For aggressive pace, always use 19.99% and adjust calories to match
+  if (goalPace === "aggressive") {
+    // Ensure we use exactly 19.99% for consistency
     dailyCalories = Math.floor(tdee * 1.1999);
     displaySurplusPercentage = 19.99;
   }
   
   // Check if the surplus is unusually high
-  if (displaySurplusPercentage > 20.0) {
+  if (displaySurplusPercentage > 20.0 && goalPace !== "aggressive") {
     highSurplusWarning = true;
   }
   
