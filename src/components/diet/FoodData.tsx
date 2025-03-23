@@ -1,10 +1,14 @@
 
 import { foodCategoriesData } from "@/data/diet";
 
-// DEPRECATED: This component is scheduled for removal in the Open Food Facts API migration
-// Direct imports from @/data/diet should be used instead
+/**
+ * @deprecated - This component is scheduled for removal in the Open Food Facts API migration
+ * 
+ * Direct imports from @/data/diet should be used instead.
+ * This component will be replaced by the Open Food Facts API integration.
+ */
 const FoodData = () => {
-  console.warn('FoodData component is deprecated and scheduled for removal');
+  console.warn('FoodData component is deprecated and will be removed in future versions');
   return null;
 };
 

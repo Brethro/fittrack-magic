@@ -1,5 +1,7 @@
 
 /**
+ * @deprecated - This file is scheduled for replacement with Open Food Facts API integration
+ * 
  * This file now re-exports functionality from smaller, more focused modules
  * to maintain backward compatibility with existing imports.
  */
