@@ -25,7 +25,7 @@ export function DailyStats() {
 
   // Calculate daily caloric adjustment
   const calorieAdjustment = userData.tdee && userData.dailyCalories 
-    ? (isWeightGain ? userData.dailyCalories - userData.tdee : userData.tdee - userData.dailyCalories)
+    ? Math.round(isWeightGain ? userData.dailyCalories - userData.tdee : userData.tdee - userData.dailyCalories)
     : 0;
     
   const adjustmentPercentage = userData.tdee 
@@ -50,7 +50,9 @@ export function DailyStats() {
               <p className="text-sm text-muted-foreground">Maintenance calories</p>
             </div>
           </div>
-          <p className="text-xl font-bold">{userData.tdee}</p>
+          <div className="text-right">
+            <p className="text-xl font-bold">{userData.tdee || 0}</p>
+          </div>
         </div>
         
         <div className="glass-panel rounded-lg p-4 flex justify-between items-center">
@@ -73,7 +75,9 @@ export function DailyStats() {
               </p>
             </div>
           </div>
-          <p className="text-xl font-bold">{userData.dailyCalories}</p>
+          <div className="text-right">
+            <p className="text-xl font-bold">{userData.dailyCalories || 0}</p>
+          </div>
         </div>
         
         <div className="glass-panel rounded-lg p-4 flex justify-between items-center">
@@ -85,19 +89,23 @@ export function DailyStats() {
               <p className="font-medium">
                 {isWeightGain ? "Projected Gain" : "Projected Loss"}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {weeklyWeightChange} {userData.useMetric ? "kg" : "lbs"}/week
+              <div className="flex items-center text-sm text-muted-foreground">
+                <span>
+                  {weeklyWeightChange} {userData.useMetric ? "kg" : "lbs"}/week
+                </span>
                 {isWeightGain ? (
-                  <ArrowUp className="inline h-3 w-3 ml-1 text-green-500" />
+                  <ArrowUp className="h-3 w-3 ml-1 text-green-500" />
                 ) : (
-                  <ArrowDown className="inline h-3 w-3 ml-1 text-red-500" />
+                  <ArrowDown className="h-3 w-3 ml-1 text-red-500" />
                 )}
-              </p>
+              </div>
             </div>
           </div>
-          <p className="text-base font-medium">
-            {userData.goalDate && format(new Date(userData.goalDate), "MMM d, yyyy")}
-          </p>
+          <div className="text-right">
+            <p className="text-base font-medium">
+              {userData.goalDate && format(new Date(userData.goalDate), "MMM d, yyyy")}
+            </p>
+          </div>
         </div>
       </div>
     </div>
