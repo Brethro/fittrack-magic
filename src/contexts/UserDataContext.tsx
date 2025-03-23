@@ -316,44 +316,63 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     } else {
-      // Keep existing weight loss logic
+      // FIXED: Weight loss deficit calculations with proper aggressive pace handling
+      // Base deficit percentages - increased to ensure we can hit proper percentages
       minAdjustPercent = 0.1; // 10% deficit minimum
-      maxAdjustPercent = 0.25; // 25% deficit maximum
       
-      // Adjust based on body fat percentage and gender for weight loss
-      const bodyFatPercentage = userData.bodyFatPercentage || 20; // Default if not available
+      // Set the base maximum percentage based on body fat
+      const bodyFatPercentage = userData.bodyFatPercentage || 20;
       const isMale = userData.gender !== 'female';
       
+      // Determine the base maximum deficit based on body fat
       if (isMale) {
-        if (bodyFatPercentage > 25) {
-          maxAdjustPercent = 0.30; // Allow 30% deficit for high body fat
+        if (bodyFatPercentage < 10) {
+          maxAdjustPercent = 0.20; // Limit to 20% deficit for very low body fat
         } else if (bodyFatPercentage < 12) {
-          maxAdjustPercent = 0.20; // Limit to 20% deficit for low body fat
+          maxAdjustPercent = 0.22; // Limit to 22% deficit for low body fat
+        } else if (bodyFatPercentage < 15) {
+          maxAdjustPercent = 0.25; // Standard 25% for moderate body fat
+        } else {
+          maxAdjustPercent = 0.30; // Allow 30% deficit for higher body fat
         }
       } else {
-        if (bodyFatPercentage > 32) {
-          maxAdjustPercent = 0.30; // Allow 30% deficit for high body fat
-        } else if (bodyFatPercentage < 18) {
-          maxAdjustPercent = 0.20; // Limit to 20% deficit for low body fat
+        if (bodyFatPercentage < 16) {
+          maxAdjustPercent = 0.20; // Limit to 20% deficit for very low body fat (women)
+        } else if (bodyFatPercentage < 20) {
+          maxAdjustPercent = 0.22; // Limit to 22% deficit for low body fat
+        } else if (bodyFatPercentage < 25) {
+          maxAdjustPercent = 0.25; // Standard 25% for moderate body fat
+        } else {
+          maxAdjustPercent = 0.30; // Allow 30% deficit for higher body fat
         }
       }
-    }
-    
-    // Adjust based on goal pace if available
-    if (userData.goalPace && !isWeightGain) {
-      // Only apply this adjustment to weight loss, for weight gain we use minDailySurplus
-      switch (userData.goalPace) {
-        case "aggressive": 
-          minAdjustPercent += 0.05; // Increase minimum adjustment
-          maxAdjustPercent += 0.05; // Increase maximum adjustment
-          break;
-        case "moderate": 
-          // Keep the calculated default
-          break;
-        case "conservative": 
-          minAdjustPercent -= 0.05; // Decrease minimum adjustment
-          maxAdjustPercent -= 0.05; // Decrease maximum adjustment
-          break;
+      
+      console.log("Base max deficit percentage before pace adjustment:", maxAdjustPercent * 100);
+      
+      // Now apply the goal pace adjustment correctly
+      if (userData.goalPace) {
+        if (userData.goalPace === "aggressive") {
+          // For aggressive, we add 5% to the base max - up to absolute cap of 35%
+          const aggressiveBonus = 0.05; // 5% additional for aggressive
+          maxAdjustPercent = Math.min(maxAdjustPercent + aggressiveBonus, 0.35);
+          console.log("Applied aggressive pace bonus: +5%, new max:", maxAdjustPercent * 100);
+        } else if (userData.goalPace === "conservative") {
+          // For conservative, we reduce by 5-10% depending on the base
+          const conservativeReduction = maxAdjustPercent >= 0.25 ? 0.10 : 0.05;
+          maxAdjustPercent = Math.max(0.15, maxAdjustPercent - conservativeReduction);
+          console.log("Applied conservative reduction:", conservativeReduction * 100, 
+                      "%, new max:", maxAdjustPercent * 100);
+        }
+        // Moderate pace uses the base calculation
+      }
+      
+      // Ensure minimum deficit is appropriate based on pace
+      if (userData.goalPace === "aggressive") {
+        minAdjustPercent = 0.20; // At least 20% for aggressive
+      } else if (userData.goalPace === "moderate") {
+        minAdjustPercent = 0.15; // At least 15% for moderate
+      } else {
+        minAdjustPercent = 0.10; // At least 10% for conservative
       }
     }
     
@@ -394,7 +413,6 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log(`Final adjustment range: ${minAdjustPercent * 100}% to ${maxAdjustPercent * 100}%`);
     
     // Calculate daily calories with the percentage-based adjustment
-    // IMPORTANT FIX: Use floor for weight gain to ensure we don't exceed max percentage
     let dailyCalories;
     if (isWeightGain) {
       // Calculate the exact maximum calories based on the max percentage
@@ -416,18 +434,25 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Applied final correction to ensure exact max percentage:", maxAdjustPercent * 100);
       }
     } else {
-      // Weight loss calculation - BUGFIX: Ensure we're using the correct percentage
-      const minCalories = Math.max(1200, Math.round(tdee * (1 - maxAdjustPercent)));
-      dailyCalories = Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), minCalories);
+      // Weight loss calculation - BUGFIX: Apply correct percentage
+      // First calculate calories based on the deficit percentage
+      dailyCalories = Math.round(tdee * (1 - calculatedAdjustPercent));
       
-      // Add debug logging to verify the deficit percentages being applied
+      // Then enforce a minimum calorie floor (never go below 1200 calories regardless of deficit)
+      dailyCalories = Math.max(1200, dailyCalories);
+      
+      // If this adjustment pushed us below our calculated percentage, recalculate the actual percentage
+      const actualDeficitPercentage = (tdee - dailyCalories) / tdee;
+      
+      // Debug logging for weight loss calculations
       console.log("Weight loss calculation - debug info:");
       console.log("TDEE:", tdee);
-      console.log("Min adjust percent:", minAdjustPercent * 100, "%");
-      console.log("Max adjust percent:", maxAdjustPercent * 100, "%");
-      console.log("Calculated adjust percent:", calculatedAdjustPercent * 100, "%");
+      console.log("Target deficit percent:", calculatedAdjustPercent * 100, "%");
       console.log("Calculated daily calories:", dailyCalories);
-      console.log("Actual deficit percentage:", ((tdee - dailyCalories) / tdee) * 100, "%");
+      console.log("Actual deficit percentage:", actualDeficitPercentage * 100, "%");
+      
+      // Store the actual deficit percentage for UI display
+      calculatedAdjustPercent = actualDeficitPercentage;
     }
 
     // Calculate exact surplus percentage for verification
@@ -540,7 +565,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       highSurplusWarning,
       actualDailyCalorieAdjustment,
       estimatedDaysToGoal,
-      macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams }
+      macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams },
+      calculatedAdjustPercent: calculatedAdjustPercent * 100
     });
 
     // Update the calculated values
@@ -565,7 +591,9 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           protein: proteinGrams,
           carbs: carbGrams,
           fats: fatGrams,
-        }
+        },
+        // Store the actual calculated percentage for display purposes
+        calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent * 100
       }));
     }
     

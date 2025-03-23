@@ -33,10 +33,13 @@ export function NutritionPanel() {
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
   const deficitAmount = !isWeightGain ? tdee - totalCalories : 0;
   
-  // Calculate the exact surplus/deficit percentage with 1 decimal precision for display
-  const exactPercentage = isWeightGain 
-    ? ((surplusAmount / tdee) * 100).toFixed(1)
-    : ((deficitAmount / tdee) * 100).toFixed(1);
+  // Use the stored calculated deficit percentage if available, otherwise calculate it
+  // This ensures we display exactly what was calculated in UserDataContext
+  const exactPercentage = userData.calculatedDeficitPercentage !== undefined && !isWeightGain
+    ? userData.calculatedDeficitPercentage.toFixed(1)
+    : isWeightGain 
+      ? ((surplusAmount / tdee) * 100).toFixed(1)
+      : ((deficitAmount / tdee) * 100).toFixed(1);
   
   // For display in the summary section
   const displayPercent = Number(exactPercentage);
@@ -45,12 +48,14 @@ export function NutritionPanel() {
   const getMaxAllowedDeficit = () => {
     if (!userData.bodyFatPercentage) return 25; // Default max
     
-    if (userData.bodyFatPercentage < 12) {
-      return 20; // Cap at 20% for low body fat
+    if (userData.bodyFatPercentage < 10) {
+      return 20; // Cap at 20% for very low body fat
+    } else if (userData.bodyFatPercentage < 12) {
+      return 22; // Slightly higher for low body fat
     } else if (userData.bodyFatPercentage < 15) {
-      return 22.5; // Slightly higher for moderate-low body fat
+      return 25; // Standard 25% for normal body fat
     } else {
-      return 25; // Standard 25% for normal/higher body fat
+      return 30; // Higher for higher body fat
     }
   };
   
@@ -83,7 +88,7 @@ export function NutritionPanel() {
   
   // For aggressive pace, determine if the additional 5% can be fully or partially applied
   const aggressiveBonusApplied = userData.goalPace === "aggressive" && !isWeightGain
-    ? Math.min(5, 25 - maxAllowedDeficitBasic) // How much of the 5% bonus can be applied
+    ? Math.min(5, 35 - maxAllowedDeficitBasic) // How much of the 5% bonus can be applied
     : 0;
   
   // Final maximum deficit including any aggressive bonus
@@ -142,7 +147,7 @@ export function NutritionPanel() {
                     <ul className="text-xs text-muted-foreground ml-4 list-disc space-y-1 mt-1">
                       <li>Conservative: 15% deficit</li>
                       <li>Moderate: 20% deficit</li>
-                      <li>Aggressive: 25% deficit</li>
+                      <li>Aggressive: 25% deficit (up to 30% for higher body fat)</li>
                     </ul>
                     <p className="text-xs text-muted-foreground mt-1">
                       These limits are adjusted based on your body fat percentage to ensure safety.
