@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -289,14 +288,13 @@ const ProfilePage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.activityLevel === "sedentary" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handleRadioChange("sedentary")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="sedentary" id="profile-sedentary" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="profile-sedentary" className="flex-1 cursor-pointer">
                     <div className="font-medium">Sedentary</div>
                     <div className="text-sm text-muted-foreground">Little or no exercise</div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -305,14 +303,13 @@ const ProfilePage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.activityLevel === "light" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handleRadioChange("light")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="light" id="profile-light" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="profile-light" className="flex-1 cursor-pointer">
                     <div className="font-medium">Light</div>
                     <div className="text-sm text-muted-foreground">Exercise 1-3 times/week</div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -321,14 +318,13 @@ const ProfilePage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.activityLevel === "moderate" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handleRadioChange("moderate")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="moderate" id="profile-moderate" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="profile-moderate" className="flex-1 cursor-pointer">
                     <div className="font-medium">Moderate</div>
                     <div className="text-sm text-muted-foreground">Exercise 3-5 times/week</div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -337,14 +333,13 @@ const ProfilePage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.activityLevel === "active" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handleRadioChange("active")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="active" id="profile-active" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="profile-active" className="flex-1 cursor-pointer">
                     <div className="font-medium">Very Active</div>
                     <div className="text-sm text-muted-foreground">Exercise 6-7 times/week</div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -353,14 +348,13 @@ const ProfilePage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.activityLevel === "extreme" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handleRadioChange("extreme")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="extreme" id="profile-extreme" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="profile-extreme" className="flex-1 cursor-pointer">
                     <div className="font-medium">Extremely Active</div>
                     <div className="text-sm text-muted-foreground">Very intense daily exercise or physical job</div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
             </RadioGroup>

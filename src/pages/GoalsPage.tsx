@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -269,16 +268,15 @@ const GoalsPage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.goalPace === "conservative" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handlePaceChange("conservative")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="conservative" id="conservative" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="conservative" className="flex-1 cursor-pointer">
                     <div className="font-medium">Conservative</div>
                     <div className="text-sm text-muted-foreground">
                       {isWeightGain() ? "0.25-0.5 lbs per week gain" : "0.25-0.5 lbs per week loss"}
                     </div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -287,16 +285,15 @@ const GoalsPage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.goalPace === "moderate" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handlePaceChange("moderate")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="moderate" id="moderate" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="moderate" className="flex-1 cursor-pointer">
                     <div className="font-medium">Moderate</div>
                     <div className="text-sm text-muted-foreground">
                       {isWeightGain() ? "0.5-1 lbs per week gain" : "0.5-1 lbs per week loss"}
                     </div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
               
@@ -305,16 +302,15 @@ const GoalsPage = () => {
                   "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
                   form.goalPace === "aggressive" && "border-primary/70 bg-primary/5"
                 )}
-                onClick={() => handlePaceChange("aggressive")}
               >
                 <CardContent className="flex items-center p-3">
                   <RadioGroupItem value="aggressive" id="aggressive" className="mr-3" />
-                  <div className="flex-1">
+                  <Label htmlFor="aggressive" className="flex-1 cursor-pointer">
                     <div className="font-medium">Aggressive</div>
                     <div className="text-sm text-muted-foreground">
                       {isWeightGain() ? "1-2 lbs per week gain" : "1-2 lbs per week loss"}
                     </div>
-                  </div>
+                  </Label>
                 </CardContent>
               </Card>
             </RadioGroup>
