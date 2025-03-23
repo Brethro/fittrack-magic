@@ -2,12 +2,18 @@
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import FoodItem from "./FoodItem";
+import UsdaFoodItem from "./UsdaFoodItem";
+import { UsdaFoodItem as UsdaFoodItemType } from "@/utils/usdaApi";
 
 interface FoodSearchResultsProps {
   results: any[];
+  usdaResults?: UsdaFoodItemType[];
 }
 
-const FoodSearchResults = ({ results }: FoodSearchResultsProps) => {
+const FoodSearchResults = ({ results, usdaResults = [] }: FoodSearchResultsProps) => {
+  const hasOpenFoodResults = results.length > 0;
+  const hasUsdaResults = usdaResults.length > 0;
+  
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -16,18 +22,59 @@ const FoodSearchResults = ({ results }: FoodSearchResultsProps) => {
       className="space-y-4"
     >
       <h2 className="text-lg font-semibold">Search Results</h2>
-      <div className="space-y-3">
-        {results.map((product, index) => (
-          <motion.div
-            key={product.id || index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.05 }}
-          >
-            <FoodItem product={product} />
-          </motion.div>
-        ))}
-      </div>
+      
+      {/* Results count summary */}
+      {(hasOpenFoodResults || hasUsdaResults) && (
+        <div className="text-sm mb-2">
+          Found {results.length + usdaResults.length} results 
+          {hasOpenFoodResults && hasUsdaResults && (
+            <span> ({results.length} from Open Food Facts, {usdaResults.length} from USDA)</span>
+          )}
+        </div>
+      )}
+      
+      {/* Open Food Facts results */}
+      {hasOpenFoodResults && (
+        <div className="space-y-3">
+          {results.map((product, index) => (
+            <motion.div
+              key={`off-${product.id || index}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+            >
+              <FoodItem product={product} />
+            </motion.div>
+          ))}
+        </div>
+      )}
+      
+      {/* USDA results */}
+      {hasUsdaResults && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 mt-4 mb-2">
+            <h3 className="text-md font-medium text-emerald-600">USDA Database Results</h3>
+          </div>
+          
+          {usdaResults.map((foodItem, index) => (
+            <motion.div
+              key={`usda-${foodItem.fdcId}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+            >
+              <UsdaFoodItem foodItem={foodItem} />
+            </motion.div>
+          ))}
+        </div>
+      )}
+      
+      {/* No results message */}
+      {!hasOpenFoodResults && !hasUsdaResults && (
+        <p className="text-center text-muted-foreground py-4">
+          No results found. Try different search terms or check your spelling.
+        </p>
+      )}
     </motion.section>
   );
 };
