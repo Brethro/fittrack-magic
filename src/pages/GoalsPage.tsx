@@ -258,6 +258,10 @@ const GoalsPage = () => {
       goalValue,
       goalDate: form.goalDate,
       goalPace: form.goalPace,
+      // Store the maximum surplus percentage based on pace to ensure consistency
+      maxSurplusPercentage: isWeightGain() ? 
+        (form.goalPace === "aggressive" ? 20 : 
+         form.goalPace === "moderate" ? 15 : 10) : undefined
     });
     
     // Navigate to the plan page

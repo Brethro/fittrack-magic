@@ -30,6 +30,7 @@ export type UserData = {
   weightLog: WeightLogEntry[];
   isWeightGain?: boolean; // Added isWeightGain flag
   highSurplusWarning?: boolean; // Flag to indicate if the surplus is unusually high
+  maxSurplusPercentage?: number; // Store the maximum surplus percentage based on pace
 };
 
 const initialUserData: UserData = {
@@ -52,6 +53,7 @@ const initialUserData: UserData = {
     fats: null,
   },
   weightLog: [],
+  maxSurplusPercentage: null,
 };
 
 type UserDataContextType = {
@@ -277,16 +279,20 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // For weight gain, the maximum allowed percentage depends on the pace
       minAdjustPercent = 0.05; // 5% minimum for very small goals
       
-      // Set maximum percentage based on pace
-      if (userData.goalPace === "aggressive") {
-        maxAdjustPercent = 0.35; // 35% for aggressive pace
+      // Set maximum percentage based on pace or use stored maxSurplusPercentage
+      if (userData.maxSurplusPercentage) {
+        // Use the stored maximum percentage (converted to decimal)
+        maxAdjustPercent = userData.maxSurplusPercentage / 100;
+        console.log("Using stored max surplus percentage:", userData.maxSurplusPercentage);
+      } else if (userData.goalPace === "aggressive") {
+        maxAdjustPercent = 0.20; // Exactly 20% for aggressive pace
       } else if (userData.goalPace === "moderate") {
-        maxAdjustPercent = 0.25; // 25% for moderate pace
+        maxAdjustPercent = 0.15; // 15% for moderate pace
       } else {
-        maxAdjustPercent = 0.15; // 15% for conservative pace
+        maxAdjustPercent = 0.10; // 10% for conservative pace
       }
       
-      console.log("Using max adjustment percentage for weight gain:", maxAdjustPercent);
+      console.log("Using max adjustment percentage for weight gain:", maxAdjustPercent * 100, "%");
       
       // Adjust based on body fat percentage and gender for weight gain
       const bodyFatPercentage = userData.bodyFatPercentage || 15; // Default if not available
@@ -379,25 +385,25 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
     
-    // Ensure the adjustment stays within safe bounds
+    // CRITICAL FIX: Hard cap the calculated adjustment to the maximum percentage
+    // This ensures we never exceed the maximum percentage for the selected pace
     calculatedAdjustPercent = Math.max(minAdjustPercent, 
-                               Math.min(maxAdjustPercent, calculatedAdjustPercent));
+                              Math.min(maxAdjustPercent, calculatedAdjustPercent));
     
-    console.log(`Calculated ${isWeightGain ? 'surplus' : 'deficit'} percentage:`, calculatedAdjustPercent);
-    console.log(`Final adjustment range: ${minAdjustPercent} to ${maxAdjustPercent}`);
+    console.log(`Calculated ${isWeightGain ? 'surplus' : 'deficit'} percentage:`, calculatedAdjustPercent * 100);
+    console.log(`Final adjustment range: ${minAdjustPercent * 100}% to ${maxAdjustPercent * 100}%`);
     
     // Calculate daily calories with the percentage-based adjustment
     const dailyCalories = isWeightGain 
       ? Math.round(tdee * (1 + calculatedAdjustPercent))
       : Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200); // Don't go below 1200 calories for weight loss
     
-    // Fix for the surplus percentage calculation
-    // We now specifically check if the surplus is > 20% (not >= 21%)
+    // Calculate exact surplus percentage for verification
     if (isWeightGain) {
       const exactSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
-      console.log("Exact surplus percentage:", exactSurplusPercentage);
+      console.log("Final exact surplus percentage:", exactSurplusPercentage);
       
-      // For aggressive plans, we should have max 20% surplus without warning
+      // For aggressive plans or any plan, if the surplus exceeds the stored max, show a warning
       if (exactSurplusPercentage > 20) {
         highSurplusWarning = true;
         console.log("High surplus warning triggered:", exactSurplusPercentage);
@@ -525,7 +531,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setHasCalculated(true);
   }, [userData.age, userData.weight, userData.height, userData.activityLevel, 
       userData.useMetric, userData.bodyFatPercentage, userData.gender, 
-      userData.goalType, userData.goalValue, userData.goalDate, userData.goalPace, setUserData]);
+      userData.goalType, userData.goalValue, userData.goalDate, userData.goalPace, userData.maxSurplusPercentage, setUserData]);
 
   // Create a stable context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
