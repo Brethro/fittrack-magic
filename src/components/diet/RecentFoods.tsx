@@ -96,31 +96,31 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
   }
 
   return (
-    <Card className="p-4 mt-4">
+    <Card className="p-4 mt-4 overflow-hidden">
       <div className="flex items-center mb-3">
         <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
         <h3 className="text-sm font-medium">Recently Added Foods</h3>
       </div>
       
-      <ScrollArea className="w-full">
-        <div className="flex space-x-2 pb-1">
+      <ScrollArea className="w-full pr-3" type="always">
+        <div className="flex space-x-2 pb-1 pr-4">
           {recentFoods.map((food) => (
             <motion.div
               key={food.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex-shrink-0"
+              className="flex-shrink-0 min-w-[120px] max-w-[150px]"
             >
               <div className="flex flex-col">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center h-auto py-1.5 px-3 text-xs mb-1"
+                  className="flex items-center h-auto py-1.5 px-3 text-xs mb-1 justify-between w-full"
                   onClick={() => handleEditServing(food)}
                   disabled={isAdding === food.id}
                 >
-                  <span className="truncate max-w-[120px]">{food.foodName}</span>
-                  <Sliders className="ml-1 h-3 w-3" />
+                  <span className="truncate max-w-[110px] text-left">{food.foodName}</span>
+                  <Sliders className="ml-1 h-3 w-3 flex-shrink-0" />
                 </Button>
                 
                 {editingFood === food.id && (
@@ -142,7 +142,7 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
                 <Button
                   variant="default"
                   size="sm"
-                  className="flex items-center h-6 py-1 px-2 text-xs"
+                  className="flex items-center justify-center h-7 py-1 px-2 text-xs w-full"
                   onClick={() => handleAddFood(food)}
                   disabled={isAdding === food.id}
                 >
