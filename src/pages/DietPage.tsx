@@ -12,8 +12,8 @@ import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
-import { importPoultryData } from "@/utils/diet/importPoultryData";
 import { initializeFoodCategories } from "@/utils/diet/foodManagement";
+import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ const DietPage = () => {
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
   const [initialized, setInitialized] = useState(false);
+  const { importPoultryData } = useFoodDatabase();
 
   // Initialize food categories and import poultry data
   useEffect(() => {
@@ -29,19 +30,14 @@ const DietPage = () => {
     console.log("DietPage: Food categories initialized:", 
       categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`));
     
-    // Then import poultry data
+    // Then import poultry data using the function from FoodUtils
     setTimeout(() => {
-      const result = importPoultryData();
-      if (result.success) {
-        console.log(`DietPage: Successfully imported poultry data: ${result.addedCount} added, ${result.updatedCount} updated`);
-      } else {
-        console.error("DietPage: Failed to import poultry data:", result.message);
-      }
+      importPoultryData();
       
       // Mark initialization as complete
       setInitialized(true);
     }, 500); // Short delay to ensure categories are fully initialized
-  }, []);
+  }, [importPoultryData]);
 
   // Check if user has required data
   useEffect(() => {
@@ -82,7 +78,7 @@ const DietPage = () => {
     targetCarbs: userData.macros.carbs || 200,
     targetFats: userData.macros.fats || 67
   });
-
+  
   // Get available diets for current food database
   const availableDiets = getAvailableDiets();
   

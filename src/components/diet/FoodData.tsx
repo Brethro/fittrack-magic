@@ -1,9 +1,10 @@
 
 import { foodCategoriesData } from "@/data/diet";
 
-// Main FoodData component - now acts as a simple pass-through to the food data
+// DEPRECATED: This component is scheduled for removal in the Open Food Facts API migration
+// Direct imports from @/data/diet should be used instead
 const FoodData = () => {
-  // This component doesn't render anything, but exposes the food database
+  console.warn('FoodData component is deprecated and scheduled for removal');
   return null;
 };
 

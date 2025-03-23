@@ -1,4 +1,6 @@
 
+// DEPRECATED: This file is scheduled for refactoring in the Open Food Facts API migration
+
 // Re-export all utility functions from their respective files
 export * from './macroUtils';
 export * from './mealAdjustUtils';
