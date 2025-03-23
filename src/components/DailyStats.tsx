@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { calculateBMR } from "@/utils/nutritionCalculator";
@@ -34,6 +35,20 @@ const DailyStats = () => {
   };
 
   const tdee = bmr * (activityMultipliers[userData.activityLevel] || 1.2);
+  
+  // Calculate the surplus/deficit percentage if we have both tdee and dailyCalories
+  let calorieAdjustmentText = '';
+  if (userData.tdee && userData.dailyCalories) {
+    if (userData.isWeightGain) {
+      // For weight gain, show surplus percentage
+      const surplusAmount = userData.dailyCalories - userData.tdee;
+      const surplusPercentage = (surplusAmount / userData.tdee) * 100;
+      calorieAdjustmentText = `(${surplusPercentage.toFixed(1)}% surplus)`;
+    } else if (userData.calculatedDeficitPercentage) {
+      // For weight loss, use the pre-calculated percentage if available
+      calorieAdjustmentText = `(${userData.calculatedDeficitPercentage.toFixed(1)}% deficit)`;
+    }
+  }
 
   return (
     <div className="glass-panel rounded-lg p-4">
@@ -49,7 +64,12 @@ const DailyStats = () => {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Daily Calorie Goal</p>
-          <p className="font-medium">{userData.dailyCalories} calories</p>
+          <p className="font-medium">
+            {userData.dailyCalories} calories
+            {calorieAdjustmentText && (
+              <span className="text-sm ml-1 text-muted-foreground">{calorieAdjustmentText}</span>
+            )}
+          </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Protein Intake</p>
