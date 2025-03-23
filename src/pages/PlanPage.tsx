@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,15 +47,17 @@ const PlanPage = () => {
       const actualSurplusPercentage = userData.isWeightGain && tdee > 0 ? 
         ((dailyCalories - tdee) / tdee) * 100 : 0;
       
-      // Adjust the body fat prediction based on the actual surplus percentage
+      // IMPROVED: Adjust the body fat prediction based on the actual surplus percentage
+      // Use more optimistic muscle-to-fat ratio for trained individuals
       let surplusMultiplier = 1.0;
       if (userData.isWeightGain) {
+        // More optimistic multipliers for reasonable surplus ranges
         if (actualSurplusPercentage > 30) {
-          surplusMultiplier = 1.5; // Much more fat gain with very high surplus
+          surplusMultiplier = 1.3; // Reduced from 1.5 to be less pessimistic
         } else if (actualSurplusPercentage > 25) {
-          surplusMultiplier = 1.3; // More fat gain with high surplus
+          surplusMultiplier = 1.2; // Reduced from 1.3
         } else if (actualSurplusPercentage > 20) {
-          surplusMultiplier = 1.15; // Slightly more fat gain with moderately high surplus
+          surplusMultiplier = 1.1; // Reduced from 1.15
         }
       }
       

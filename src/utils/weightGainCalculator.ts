@@ -1,4 +1,3 @@
-
 /**
  * Utility for calculating weight gain related values
  */
@@ -81,13 +80,13 @@ export const calculateWeightGainCalories = (
   dailyCalories: number,
   surplusPercentage: number,
   highSurplusWarning: boolean,
-  isTimelineDriven: boolean  // Flag to indicate if timeline is driving the surplus
+  isTimelineDriven: boolean,  // Flag to indicate if timeline is driving the surplus
+  daysRequiredToReachGoal?: number // Added to return the actual days needed
 } => {
   // Calculate weight change needed and caloric adjustment
   const weightDifference = Math.abs(targetWeight - startWeight);
   const caloriesPerUnit = useMetric ? 7700 : 3500; // Calories per kg or lb
   const totalCalorieAdjustment = weightDifference * caloriesPerUnit;
-  const dailyCalorieAdjustment = totalCalorieAdjustment / daysUntilGoal;
   
   // Get minimum practical surplus values based on pace
   const minDailySurplus = calculateMinSurplusCalories(goalPace);
@@ -95,46 +94,31 @@ export const calculateWeightGainCalories = (
   // Get maximum allowed surplus percentage for pace-guided calculations
   const recommendedSurplusPercentage = calculateMaxSurplusPercentage(goalPace, bodyFatPercentage, gender);
   
-  // Calculate adjustment percentage based on required daily adjustment
-  let calculatedAdjustPercent = dailyCalorieAdjustment / tdee;
-  
-  // For weight gain, apply minimum practical surplus
-  const calculatedSurplus = tdee * calculatedAdjustPercent;
-  
-  // If calculated surplus is less than minimum, adjust the percentage
-  if (calculatedSurplus < minDailySurplus) {
-    calculatedAdjustPercent = minDailySurplus / tdee;
-  }
-  
-  // Handle edge case where goal is extremely close to current weight
-  if (weightDifference < 0.5) { // less than 0.5 pounds/kg difference
-    // Even for tiny goals, ensure some minimal progress
-    const modestSurplus = tdee * 0.05; // 5% surplus
-    const dailySurplusFloor = Math.min(minDailySurplus, modestSurplus);
-    
-    calculatedAdjustPercent = dailySurplusFloor / tdee;
-  }
-  
-  // Allow higher surpluses than recommended if required by timeline
-  // but set a hard cap at 50% to prevent unreasonable values
-  const absoluteMaxSurplus = 0.50; // 50% maximum surplus
-  
   // Flag to track if we're using the timeline-driven adjustment or the pace-based adjustment
   let isTimelineDriven = false;
   let finalAdjustPercentage: number;
+  let daysRequiredToReachGoal: number | undefined = undefined;
   
   // FIXED: For aggressive pace, ALWAYS use exactly 20% regardless of timeline requirements
   if (goalPace === "aggressive") {
     // For aggressive pace, EXACTLY 20.0% (0.20) surplus, NEVER override with timeline
     finalAdjustPercentage = 0.20; // Exactly 20% as decimal
     isTimelineDriven = false; // Never timeline-driven for aggressive pace
+    
+    // Calculate the actual days required with a fixed 20% surplus
+    const dailySurplusCalories = tdee * 0.20;
+    daysRequiredToReachGoal = Math.ceil(totalCalorieAdjustment / dailySurplusCalories);
   } 
   // For other paces (moderate, conservative)
   else {
+    // Calculate adjustment percentage based on required daily adjustment for the given timeline
+    const dailyCalorieAdjustment = totalCalorieAdjustment / daysUntilGoal;
+    let calculatedAdjustPercent = dailyCalorieAdjustment / tdee;
+    
     // If timeline requires more calories than standard pace recommendation
     if (calculatedAdjustPercent > (recommendedSurplusPercentage / 100)) {
       isTimelineDriven = true;
-      finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
+      finalAdjustPercentage = Math.min(0.50, calculatedAdjustPercent); // 50% maximum surplus
     } else {
       // Use the pace-based recommendation since timeline doesn't require more
       finalAdjustPercentage = recommendedSurplusPercentage / 100;
@@ -170,6 +154,7 @@ export const calculateWeightGainCalories = (
     dailyCalories,
     surplusPercentage: displaySurplusPercentage,
     highSurplusWarning,
-    isTimelineDriven
+    isTimelineDriven,
+    daysRequiredToReachGoal
   };
 };

@@ -1,3 +1,4 @@
+
 /**
  * Utilities for calculating and working with macronutrients
  */
@@ -63,7 +64,7 @@ export const calculateMacroDistribution = (
   let proteinPerKgLBM: number;
   
   if (isWeightGain) {
-    // Use 2.2g/kg as base for muscle building
+    // Base protein for muscle building
     proteinPerKgLBM = 2.2;
     
     // Adjust based on body fat levels
@@ -85,9 +86,9 @@ export const calculateMacroDistribution = (
       }
     }
     
-    // For aggressive bulks, provide slightly more protein
+    // IMPROVED: Increased protein for aggressive bulks to optimize muscle protein synthesis
     if (goalPace === "aggressive") {
-      proteinPerKgLBM += 0.2;
+      proteinPerKgLBM += 0.4; // Increased from 0.2 to 0.4 (totaling 2.6-2.8g/kg)
     } else if (goalPace === "moderate") {
       proteinPerKgLBM += 0.1;
     }

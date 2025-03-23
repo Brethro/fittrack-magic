@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays, addDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { UserData } from "@/contexts/UserDataContext";
 import { 
@@ -92,6 +92,7 @@ export const useNutritionCalculator = (
     let calculatedAdjustPercent: number = 0;
     let highSurplusWarning = false;
     let isTimelineDriven = false;
+    let updatedGoalDate = userData.goalDate;
     
     if (isWeightGain) {
       // Use our refactored weight gain calculator
@@ -110,6 +111,12 @@ export const useNutritionCalculator = (
       highSurplusWarning = result.highSurplusWarning;
       calculatedAdjustPercent = result.surplusPercentage;
       isTimelineDriven = result.isTimelineDriven;
+      
+      // FIXED: Update the goal date if we're using an aggressive pace with fixed 20% surplus
+      if (userData.goalPace === "aggressive" && result.daysRequiredToReachGoal) {
+        updatedGoalDate = addDays(new Date(), result.daysRequiredToReachGoal);
+        console.log(`Adjusted goal date to: ${updatedGoalDate} based on fixed 20% surplus`);
+      }
       
       console.log("Weight gain calculation result:", result);
     } else {
@@ -151,7 +158,8 @@ export const useNutritionCalculator = (
       highSurplusWarning,
       isTimelineDriven,
       macros,
-      calculatedAdjustPercent
+      calculatedAdjustPercent,
+      updatedGoalDate
     });
     
     // Update the calculated values
@@ -162,6 +170,7 @@ export const useNutritionCalculator = (
       highSurplusWarning,
       isTimelineDriven,
       macros,
+      goalDate: updatedGoalDate, // FIXED: Update the goal date based on calculation
       // Store the actual calculated percentage for display purposes
       calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent,
       calculatedSurplusPercentage: isWeightGain ? calculatedAdjustPercent : null
