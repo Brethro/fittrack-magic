@@ -30,9 +30,13 @@ export function DailyStats() {
     ? Math.round(isWeightGain ? userData.dailyCalories - userData.tdee : userData.tdee - userData.dailyCalories)
     : 0;
     
-  const adjustmentPercentage = userData.tdee 
-    ? Math.round((calorieAdjustment / userData.tdee) * 100) 
+  // Calculate percentage with exact precision for display
+  const exactAdjustmentPercentage = userData.tdee 
+    ? (calorieAdjustment / userData.tdee) * 100 
     : 0;
+    
+  // Format to show exactly 1 decimal place for more precision
+  const adjustmentPercentage = exactAdjustmentPercentage.toFixed(1);
     
   const weeklyWeightChange = calculateWeeklyWeightChange();
 

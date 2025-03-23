@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -252,20 +251,36 @@ const GoalsPage = () => {
     console.log("Submitting goal form with pace:", form.goalPace);
     console.log("Goal date:", form.goalDate);
     
+    // Determine the maximum surplus percentage based on the goal pace
+    // This is crucial to ensure we don't exceed the intended surplus
+    let maxSurplusPercentage;
+    if (isWeightGain()) {
+      switch (form.goalPace) {
+        case "aggressive":
+          maxSurplusPercentage = 20; // Exactly 20% for aggressive
+          break;
+        case "moderate":
+          maxSurplusPercentage = 15; // 15% for moderate
+          break;
+        case "conservative":
+          maxSurplusPercentage = 10; // 10% for conservative
+          break;
+        default:
+          maxSurplusPercentage = 15; // Default to moderate
+      }
+    }
+    
     // Update user data with new goals
     updateUserData({
       goalType: form.goalType,
       goalValue,
       goalDate: form.goalDate,
       goalPace: form.goalPace,
-      // Store the maximum surplus percentage based on pace to ensure consistency
-      maxSurplusPercentage: isWeightGain() ? 
-        (form.goalPace === "aggressive" ? 20 : 
-         form.goalPace === "moderate" ? 15 : 10) : undefined
+      // Store the maximum surplus percentage to ensure consistency
+      maxSurplusPercentage: isWeightGain() ? maxSurplusPercentage : undefined
     });
     
     // Navigate to the plan page
-    // The PlanPage will run recalculateNutrition when it loads based on the new goal values
     navigate("/plan");
   };
 

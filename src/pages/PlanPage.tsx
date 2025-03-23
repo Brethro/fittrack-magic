@@ -17,7 +17,7 @@ const PlanPage = () => {
   const [weightDialogOpen, setWeightDialogOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // Only recalculate nutrition once when the page loads
+  // Always recalculate nutrition when the page loads to ensure accuracy
   useEffect(() => {
     if (!userData.goalValue || !userData.goalDate) {
       toast({
@@ -29,12 +29,10 @@ const PlanPage = () => {
       return;
     }
     
-    // Only recalculate if not already initialized
-    if (!initialized) {
-      recalculateNutrition();
-      setInitialized(true);
-    }
-  }, [userData.goalValue, userData.goalDate, navigate, toast, recalculateNutrition, initialized]);
+    // Force recalculation every time to ensure accuracy
+    recalculateNutrition();
+    setInitialized(true);
+  }, [userData.goalValue, userData.goalDate, navigate, toast, recalculateNutrition]);
 
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (

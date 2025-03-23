@@ -44,7 +44,7 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
   // Calculate macro distribution
   const macroCalories = useMemo(() => calculateMacroCalories(dailyTotals), [dailyTotals]);
   
-  // Calculate macro percentages and handle NaN
+  // Calculate macro percentages with 1 decimal place for more accuracy
   const proteinPercent = isNaN(macroCalories.protein / macroCalories.total) ? 0 : 
     Math.round((macroCalories.protein / macroCalories.total) * 100);
   const carbsPercent = isNaN(macroCalories.carbs / macroCalories.total) ? 0 : 

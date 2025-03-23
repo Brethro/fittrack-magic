@@ -394,17 +394,44 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log(`Final adjustment range: ${minAdjustPercent * 100}% to ${maxAdjustPercent * 100}%`);
     
     // Calculate daily calories with the percentage-based adjustment
-    const dailyCalories = isWeightGain 
-      ? Math.round(tdee * (1 + calculatedAdjustPercent))
-      : Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200); // Don't go below 1200 calories for weight loss
+    // IMPORTANT FIX: Use floor for weight gain to ensure we don't exceed max percentage
+    let dailyCalories;
+    if (isWeightGain) {
+      // Calculate the exact maximum calories based on the max percentage
+      const maxCalories = Math.floor(tdee * (1 + maxAdjustPercent));
+      
+      // Calculate based on the adjusted percentage, but never exceed max calories
+      dailyCalories = Math.min(
+        Math.floor(tdee * (1 + calculatedAdjustPercent)),
+        maxCalories
+      );
+      
+      // Final verification to ensure we're not exceeding the maximum percentage
+      // This will guarantee we never go above the specified maximum
+      const finalSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
+      
+      // If somehow we're still over the max percentage, force it to max
+      if (finalSurplusPercentage > userData.maxSurplusPercentage) {
+        dailyCalories = Math.floor(tdee * (1 + (userData.maxSurplusPercentage / 100)));
+        console.log("Applied final correction to ensure exact max percentage:", userData.maxSurplusPercentage);
+      }
+    } else {
+      // Weight loss calculation (unchanged)
+      dailyCalories = Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200);
+    }
     
     // Calculate exact surplus percentage for verification
     if (isWeightGain) {
       const exactSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
       console.log("Final exact surplus percentage:", exactSurplusPercentage);
       
-      // For aggressive plans or any plan, if the surplus exceeds the stored max, show a warning
-      if (exactSurplusPercentage > 20) {
+      // Only show warning if we truly exceed max percentage (should never happen now)
+      // Using a small buffer (20.01 instead of 20) to account for potential floating point errors
+      const maxPercentageForWarning = userData.maxSurplusPercentage 
+        ? userData.maxSurplusPercentage + 0.01 
+        : 20.01;
+        
+      if (exactSurplusPercentage > maxPercentageForWarning) {
         highSurplusWarning = true;
         console.log("High surplus warning triggered:", exactSurplusPercentage);
         
