@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useApiConnection } from "@/hooks/useApiConnection";
@@ -73,19 +73,38 @@ const DietPage = () => {
         }
       }
       
-      // Search in USDA if selected
-      if (searchSource === "usda" || searchSource === "both") {
+      // Search in USDA if selected and not rate limited
+      if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
           const usdaSearchResults = await searchUsdaDatabase(searchQuery);
           setUsdaResults(usdaSearchResults);
         } catch (error) {
           console.error("USDA search error:", error);
-          toast({
-            title: "USDA search failed",
-            description: `Could not fetch USDA food data: ${error instanceof Error ? error.message : "Unknown error"}`,
-            variant: "destructive",
-          });
+          
+          // Check if it's a rate limit error
+          if (error instanceof Error && 
+              (error.message.includes("OVER_RATE_LIMIT") || 
+               error.message.includes("rate limit") || 
+               error.message.includes("429"))) {
+            toast({
+              title: "USDA API rate limited",
+              description: "You've reached the USDA API rate limit. Only showing Open Food Facts results.",
+              variant: "warning",
+            });
+          } else {
+            toast({
+              title: "USDA search failed",
+              description: `Could not fetch USDA food data: ${error instanceof Error ? error.message : "Unknown error"}`,
+              variant: "destructive",
+            });
+          }
         }
+      } else if (searchSource === "usda" && usdaApiStatus === "rate_limited") {
+        toast({
+          title: "USDA API rate limited",
+          description: "Please try again later when the API rate limit resets.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -125,6 +144,14 @@ const DietPage = () => {
               onSearch={handleSearch} 
               isLoading={isLoading} 
             />
+            
+            {/* Show warning about rate limiting */}
+            {usdaApiStatus === "rate_limited" && (
+              <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
+                <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
+                The rate limit typically resets after a few minutes.</p>
+              </div>
+            )}
             
             {/* Search Results */}
             {isLoading ? (

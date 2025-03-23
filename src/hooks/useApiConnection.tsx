@@ -1,16 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { searchUsdaFoods } from "@/utils/usdaApi";
 
-type ApiStatus = "idle" | "checking" | "connected" | "error";
+type ApiStatus = "idle" | "checking" | "connected" | "error" | "rate_limited";
 
 export function useApiConnection() {
   const { toast } = useToast();
   const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
   const [usdaApiStatus, setUsdaApiStatus] = useState<ApiStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
-
+  const lastUsdaCheckRef = useRef<number>(0);
+  
   // Check Open Food Facts API connection
   useEffect(() => {
     const checkApiConnection = async () => {
@@ -45,9 +46,20 @@ export function useApiConnection() {
     checkApiConnection();
   }, []);
 
-  // Check USDA API connection
-  const checkUsdaApiConnection = async () => {
+  // Check USDA API connection with rate limiting
+  const checkUsdaApiConnection = useCallback(async () => {
+    // Prevent checking too frequently (once per minute)
+    const now = Date.now();
+    const minimumInterval = 60000; // 1 minute in milliseconds
+    
+    if (now - lastUsdaCheckRef.current < minimumInterval) {
+      console.log("Skipping USDA API check due to rate limiting");
+      return;
+    }
+    
+    lastUsdaCheckRef.current = now;
     setUsdaApiStatus("checking");
+    
     try {
       // Simple search to test connection
       const response = await searchUsdaFoods({
@@ -66,14 +78,29 @@ export function useApiConnection() {
         });
       }
     } catch (error) {
-      setUsdaApiStatus("error");
-      toast({
-        title: "USDA API Error",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      console.error("USDA API check error:", error);
+      
+      // Check if it's a rate limit error
+      if (error instanceof Error && 
+          (error.message.includes("OVER_RATE_LIMIT") || 
+           error.message.includes("rate limit") || 
+           error.message.includes("429"))) {
+        setUsdaApiStatus("rate_limited");
+        toast({
+          title: "USDA API Rate Limited",
+          description: "You've reached the API rate limit. Please try again later.",
+          variant: "destructive",
+        });
+      } else {
+        setUsdaApiStatus("error");
+        toast({
+          title: "USDA API Error",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive",
+        });
+      }
     }
-  };
+  }, [toast]);
 
   return {
     apiStatus,

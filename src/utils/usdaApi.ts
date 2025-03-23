@@ -3,6 +3,12 @@
 const USDA_API_KEY = "1su4bvCoKYGVSnyCBgVCwQATKgRWw9uVHqWFTsw2";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
 
+// Rate limiting parameters
+const REQUEST_COOLDOWN = 2000; // Minimum time between requests (2 seconds)
+let lastRequestTime = 0;
+let pendingRequests: Promise<any>[] = [];
+const MAX_CONCURRENT_REQUESTS = 1;
+
 export interface UsdaFoodItem {
   fdcId: number;
   description: string;
@@ -58,6 +64,51 @@ export interface UsdaSearchResponse {
 }
 
 /**
+ * Rate-limited fetch function for USDA API
+ */
+async function rateLimitedFetch(url: string, options: RequestInit): Promise<Response> {
+  // Calculate time to wait before making the request
+  const now = Date.now();
+  const timeToWait = Math.max(0, REQUEST_COOLDOWN - (now - lastRequestTime));
+  
+  // Wait for the cooldown period
+  if (timeToWait > 0) {
+    console.log(`Throttling USDA API request: waiting ${timeToWait}ms`);
+    await new Promise(resolve => setTimeout(resolve, timeToWait));
+  }
+  
+  // Wait if we have too many concurrent requests
+  while (pendingRequests.length >= MAX_CONCURRENT_REQUESTS) {
+    console.log(`Waiting for pending USDA API requests to complete (${pendingRequests.length} pending)`);
+    await Promise.race(pendingRequests);
+    pendingRequests = pendingRequests.filter(p => p.status === "pending");
+  }
+  
+  // Make the request
+  lastRequestTime = Date.now();
+  
+  try {
+    const response = await fetch(url, options);
+    
+    // Handle rate limit errors
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000; // Default to 1 minute
+      
+      console.log(`USDA API rate limited. Waiting ${waitTime}ms before retry.`);
+      
+      const errorData = await response.json();
+      throw new Error(`USDA API rate limit exceeded: ${errorData.error?.message || 'Try again later'}`);
+    }
+    
+    return response;
+  } catch (error) {
+    console.error("USDA API request failed:", error);
+    throw error;
+  }
+}
+
+/**
  * Search for foods in the USDA FoodData Central database
  */
 export async function searchUsdaFoods(
@@ -77,7 +128,7 @@ export async function searchUsdaFoods(
     // Add API key to the URL as a query parameter
     const url = `${USDA_BASE_URL}/foods/search?api_key=${USDA_API_KEY}`;
     
-    const response = await fetch(url, {
+    const response = await rateLimitedFetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -102,8 +153,9 @@ export async function searchUsdaFoods(
  */
 export async function getUsdaFoodDetails(fdcId: number): Promise<UsdaFoodItem> {
   try {
-    const response = await fetch(
-      `${USDA_BASE_URL}/food/${fdcId}?api_key=${USDA_API_KEY}`
+    const response = await rateLimitedFetch(
+      `${USDA_BASE_URL}/food/${fdcId}?api_key=${USDA_API_KEY}`,
+      { method: 'GET' }
     );
     
     if (!response.ok) {

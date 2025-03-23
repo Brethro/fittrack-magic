@@ -1,9 +1,9 @@
 
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Clock } from "lucide-react";
 
 interface ApiStatusIndicatorsProps {
-  apiStatus: "idle" | "checking" | "connected" | "error";
-  usdaApiStatus: "idle" | "checking" | "connected" | "error";
+  apiStatus: "idle" | "checking" | "connected" | "error" | "rate_limited";
+  usdaApiStatus: "idle" | "checking" | "connected" | "error" | "rate_limited";
 }
 
 const ApiStatusIndicators = ({ apiStatus, usdaApiStatus }: ApiStatusIndicatorsProps) => {
@@ -44,6 +44,12 @@ const ApiStatusIndicators = ({ apiStatus, usdaApiStatus }: ApiStatusIndicatorsPr
         <div className="text-xs bg-red-50 text-red-700 py-1 px-3 rounded-full flex items-center">
           <AlertCircle className="mr-1 h-3 w-3 text-red-500" />
           <span>USDA API error</span>
+        </div>
+      )}
+      {usdaApiStatus === "rate_limited" && (
+        <div className="text-xs bg-amber-50 text-amber-700 py-1 px-3 rounded-full flex items-center">
+          <Clock className="mr-1 h-3 w-3 text-amber-500" />
+          <span>USDA API rate limited</span>
         </div>
       )}
     </div>
