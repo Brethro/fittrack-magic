@@ -13,25 +13,26 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 const Index = () => {
   const { userData } = useUserData();
   const hasStarted = userData.age !== null;
 
   return (
-    <div className="flex flex-col bg-background relative h-full">
+    <div className="flex flex-col bg-background relative min-h-full">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[-5%] right-[-10%] w-[300px] h-[300px] rounded-full bg-accent/5 blur-[80px]" />
         <div className="absolute bottom-[10%] left-[-5%] w-[250px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
       </div>
 
-      <div className="container px-4 py-12 flex flex-col flex-1 relative z-10">
+      <div className="container px-4 py-12 flex flex-col min-h-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex-1 flex flex-col justify-center items-center text-center gap-8"
+          className="flex-1 flex flex-col justify-center items-center text-center gap-8 mb-8"
         >
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -109,9 +110,11 @@ const Index = () => {
           </motion.div>
         </motion.div>
         
-        {/* Disclaimer moved outside the motion.div to be positioned at the bottom and ensure it's visible */}
-        <div className="pt-6 pb-2 w-full">
-          <p className="text-xs text-muted-foreground/90 text-center mx-auto max-w-[90%] border-t border-muted/20 pt-4">
+        {/* Separator and disclaimer */}
+        <Separator className="mt-4 mb-4 opacity-30" />
+        
+        <div className="w-full py-2 relative z-10">
+          <p className="text-xs text-muted-foreground/80 text-center mx-auto max-w-[90%]">
             This application is intended as a fitness tracking tool only and not as a substitute for professional medical or nutritional advice. Consult healthcare professionals before starting any fitness or nutrition program.
           </p>
         </div>
