@@ -61,17 +61,50 @@ export const searchAndHighlightFoods = (
  * Determines if a food item matches a search query by checking various fields
  */
 export const itemMatchesQuery = (item: FoodItem, query: string): boolean => {
+  if (!query || query.length < 2) return false;
+  if (!item) return false;
+  
   // Convert to lowercase for case-insensitive comparison
-  const name = item.name.toLowerCase();
+  const lowerQuery = query.toLowerCase().trim();
+  const name = item.name ? item.name.toLowerCase() : '';
   const primaryCategory = item.primaryCategory ? item.primaryCategory.toLowerCase() : '';
   const diets = item.diets ? item.diets.map(d => d.toLowerCase()) : [];
   
-  // Check if query matches any of the relevant fields
-  return (
-    name.includes(query) ||
-    primaryCategory.includes(query) ||
-    diets.some(diet => diet.includes(query))
-  );
+  // Exact name match (highest priority)
+  if (name === lowerQuery) {
+    return true;
+  }
+  
+  // Name starts with query
+  if (name.startsWith(lowerQuery)) {
+    return true;
+  }
+  
+  // Name contains query
+  if (name.includes(lowerQuery)) {
+    return true;
+  }
+  
+  // Check if any word in the name contains any word in the query
+  const queryWords = lowerQuery.split(/\s+/);
+  const nameWords = name.split(/\s+/);
+  
+  if (queryWords.some(qw => nameWords.some(nw => nw.includes(qw) || qw.includes(nw)))) {
+    return true;
+  }
+  
+  // Check if primary category matches
+  if (primaryCategory.includes(lowerQuery)) {
+    return true;
+  }
+  
+  // Check if diets match
+  if (diets.some(diet => diet.includes(lowerQuery))) {
+    return true;
+  }
+  
+  // If we get here, no match was found
+  return false;
 };
 
 /**

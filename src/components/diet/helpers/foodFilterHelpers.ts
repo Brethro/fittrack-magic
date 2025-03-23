@@ -1,6 +1,5 @@
 
 import { FoodItem, DietType } from "@/types/diet";
-import { itemMatchesQuery } from "@/utils/diet/foodSearchUtils";
 
 // Cache for filtered items to improve performance
 const filterCache = new Map<string, FoodItem[]>();
@@ -34,7 +33,53 @@ export const getFilteredItems = (
   
   // Filter by search query if it exists and has 2+ characters
   if (searchQuery && searchQuery.length >= 2) {
-    filteredItems = filteredItems.filter(item => itemMatchesQuery(item, searchQuery));
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    
+    // First pass: find exact matches or starts-with matches
+    const exactMatches = filteredItems.filter(item => {
+      const itemName = item.name.toLowerCase();
+      return itemName === lowerQuery || itemName.startsWith(lowerQuery);
+    });
+    
+    // Second pass: find items containing the search term
+    const containsMatches = filteredItems.filter(item => {
+      const itemName = item.name.toLowerCase();
+      return !exactMatches.includes(item) && itemName.includes(lowerQuery);
+    });
+    
+    // Third pass: check other fields
+    const otherMatches = filteredItems.filter(item => {
+      // Skip if already in other matches
+      if (exactMatches.includes(item) || containsMatches.includes(item)) {
+        return false;
+      }
+      
+      // Check primary category
+      if (item.primaryCategory?.toLowerCase().includes(lowerQuery)) {
+        return true;
+      }
+      
+      // Check diets
+      if (item.diets && item.diets.some(diet => diet.toLowerCase().includes(lowerQuery))) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    // Combine all matches in order of relevance
+    filteredItems = [...exactMatches, ...containsMatches, ...otherMatches];
+    
+    // If still no matches, do a more flexible search
+    if (filteredItems.length === 0) {
+      // Check if any word in the item name contains any word in the query
+      const queryWords = lowerQuery.split(/\s+/);
+      
+      filteredItems = items.filter(item => {
+        const nameWords = item.name.toLowerCase().split(/\s+/);
+        return queryWords.some(qw => nameWords.some(nw => nw.includes(qw) || qw.includes(nw)));
+      });
+    }
   }
   
   // Cache the results

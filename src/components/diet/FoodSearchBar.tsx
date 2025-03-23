@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, X } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 
 interface FoodSearchBarProps {
@@ -19,14 +19,17 @@ export function FoodSearchBar({
 }: FoodSearchBarProps) {
   const [inputValue, setInputValue] = useState(searchQuery);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isSearching = useRef(false);
   
   // Sync input value with searchQuery prop
   useEffect(() => {
-    setInputValue(searchQuery);
-  }, [searchQuery]);
+    if (searchQuery !== inputValue && !isSearching.current) {
+      setInputValue(searchQuery);
+    }
+  }, [searchQuery, inputValue]);
   
   // Handle input changes with debounce
-  const handleInputChange = (value: string) => {
+  const handleInputChange = useCallback((value: string) => {
     setInputValue(value);
     
     // Clear any existing debounce timeout
@@ -34,15 +37,29 @@ export function FoodSearchBar({
       clearTimeout(debounceTimeout.current);
     }
     
+    // Only trigger search if value has minimum length
+    if (value.length < 2) {
+      setSearchQuery(value);
+      return;
+    }
+    
+    // Set a flag to prevent concurrent searches
+    isSearching.current = true;
+    
     // Set a new timeout to update the search query after a delay
     debounceTimeout.current = setTimeout(() => {
       setSearchQuery(value);
       
-      if (value.length >= 2 && onSearch) {
+      if (onSearch) {
         onSearch(value);
       }
-    }, 500);
-  };
+      
+      // Reset the searching flag
+      setTimeout(() => {
+        isSearching.current = false;
+      }, 100);
+    }, 600); // Increased debounce delay
+  }, [onSearch, setSearchQuery]);
   
   // Clean up on unmount
   useEffect(() => {
@@ -53,13 +70,14 @@ export function FoodSearchBar({
     };
   }, []);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setInputValue('');
     setSearchQuery('');
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-  };
+    isSearching.current = false;
+  }, [setSearchQuery]);
   
   return (
     <div className="relative mb-2">
@@ -77,6 +95,7 @@ export function FoodSearchBar({
             className="pl-10 pr-10 py-2"
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
+            disabled={isLoading}
           />
           {inputValue.length > 0 && (
             <Button
@@ -84,6 +103,7 @@ export function FoodSearchBar({
               size="icon"
               className="absolute right-1 top-1 h-8 w-8 text-muted-foreground"
               onClick={handleClear}
+              disabled={isLoading}
             >
               <X className="h-4 w-4" />
             </Button>

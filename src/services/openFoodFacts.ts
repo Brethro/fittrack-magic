@@ -49,8 +49,8 @@ const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 // Cache for seen product IDs to avoid duplicates across sessions
 const seenProductCodesSet = new Set<string>();
 
-// API call timeout - 5 seconds max
-const API_TIMEOUT = 5000;
+// API call timeout - 8 seconds max
+const API_TIMEOUT = 8000;
 
 // Create a timeout promise
 const timeoutPromise = (ms: number) => {
@@ -74,8 +74,27 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
   const now = Date.now();
   
   if (cachedData && (now - cachedData.timestamp < CACHE_DURATION)) {
-    console.log("Using cached food search results");
+    console.log(`Using cached food search results for "${sanitizedQuery}"`);
     return cachedData.results;
+  }
+  
+  // Add category filter to improve relevance - this helps with searches like "chicken breast"
+  // by adding category filters for meat, poultry, etc.
+  let categoryFilter = '';
+  const lowerQuery = sanitizedQuery.toLowerCase();
+  
+  if (lowerQuery.includes('chicken') || lowerQuery.includes('turkey') || lowerQuery.includes('poultry')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=poultry';
+  } else if (lowerQuery.includes('beef') || lowerQuery.includes('pork') || lowerQuery.includes('steak')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=meat';
+  } else if (lowerQuery.includes('fish') || lowerQuery.includes('salmon') || lowerQuery.includes('tuna')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=fish';
+  } else if (lowerQuery.includes('vegetable') || lowerQuery.includes('broccoli') || lowerQuery.includes('carrot')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=vegetables';
+  } else if (lowerQuery.includes('fruit') || lowerQuery.includes('apple') || lowerQuery.includes('banana')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=fruits';
+  } else if (lowerQuery.includes('dairy') || lowerQuery.includes('milk') || lowerQuery.includes('cheese')) {
+    categoryFilter = '&tagtype_0=categories&tag_contains_0=contains&tag_0=dairy';
   }
   
   // Parameters for the API request
@@ -90,8 +109,11 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
     console.log(`Searching Open Food Facts for "${sanitizedQuery}"`);
     
     // Race between the fetch and a timeout
+    const apiUrl = `${SEARCH_URL}?${params.toString()}${categoryFilter}`;
+    console.log(`API URL: ${apiUrl}`);
+    
     const response = await Promise.race([
-      fetch(`${SEARCH_URL}?${params.toString()}`),
+      fetch(apiUrl),
       timeoutPromise(API_TIMEOUT)
     ]);
     
@@ -106,21 +128,58 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
       return [];
     }
     
+    // If no results from API with category filter but there are generic results, 
+    // try generic search as fallback
+    if (data.products.length === 0 && categoryFilter !== '') {
+      console.log("No results with category filter, trying generic search");
+      const genericResponse = await fetch(`${SEARCH_URL}?${params.toString()}`);
+      if (genericResponse.ok) {
+        const genericData: OpenFoodFactsResponse = await genericResponse.json();
+        if (genericData.products && Array.isArray(genericData.products)) {
+          data.products = genericData.products;
+        }
+      }
+    }
+    
+    // Filter out products with inadequate data
+    const validProducts = data.products.filter(product => 
+      product.code && 
+      (product.product_name || product.product_name_en) &&
+      product.nutriments
+    );
+    
+    console.log(`Found ${validProducts.length} valid products out of ${data.products.length}`);
+    
     // Filter out duplicates based on product code
     const uniqueFoodItems: FoodItem[] = [];
+    const processedCodes = new Set<string>();
     
-    data.products.forEach(product => {
-      if (!product.code || seenProductCodesSet.has(product.code)) {
+    validProducts.forEach(product => {
+      if (!product.code || processedCodes.has(product.code)) {
         return;
       }
       
-      // Add to seen set
-      seenProductCodesSet.add(product.code);
+      // Add to processed set
+      processedCodes.add(product.code);
       
-      // Map and add to results
-      const foodItem = mapProductToFoodItem(product);
-      uniqueFoodItems.push(foodItem);
+      // Only add if not seen before in this session
+      if (!seenProductCodesSet.has(product.code)) {
+        seenProductCodesSet.add(product.code);
+        
+        // Map and add to results
+        const foodItem = mapProductToFoodItem(product);
+        uniqueFoodItems.push(foodItem);
+      }
     });
+    
+    // If no results from API match, provide fallback items
+    if (uniqueFoodItems.length === 0) {
+      const fallbackItem = createFallbackFoodItem(sanitizedQuery);
+      uniqueFoodItems.push(fallbackItem);
+    }
+    
+    // Sort results by relevance to query
+    sortResultsByRelevance(uniqueFoodItems, sanitizedQuery);
     
     // Cache the results
     foodSearchCache[cacheKey] = {
@@ -131,9 +190,105 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
     return uniqueFoodItems;
   } catch (error) {
     console.error("Error searching Open Food Facts:", error);
-    // Return empty array but don't throw - let calling code handle gracefully
-    return [];
+    
+    // Return fallback item on error
+    const fallbackItem = createFallbackFoodItem(sanitizedQuery);
+    return [fallbackItem];
   }
+};
+
+/**
+ * Create a fallback food item when API returns no results
+ */
+const createFallbackFoodItem = (query: string): FoodItem => {
+  // Determine likely category based on query
+  let primaryCategory: FoodPrimaryCategory = "other";
+  const lowerQuery = query.toLowerCase();
+  
+  if (lowerQuery.includes('chicken') || lowerQuery.includes('turkey')) {
+    primaryCategory = "poultry";
+  } else if (lowerQuery.includes('beef') || lowerQuery.includes('pork') || lowerQuery.includes('steak')) {
+    primaryCategory = "redMeat";
+  } else if (lowerQuery.includes('fish') || lowerQuery.includes('salmon') || lowerQuery.includes('tuna')) {
+    primaryCategory = "fish";
+  } else if (lowerQuery.includes('vegetable') || lowerQuery.includes('broccoli') || lowerQuery.includes('carrot')) {
+    primaryCategory = "vegetable";
+  } else if (lowerQuery.includes('fruit') || lowerQuery.includes('apple') || lowerQuery.includes('banana')) {
+    primaryCategory = "fruit";
+  } else if (lowerQuery.includes('dairy') || lowerQuery.includes('milk') || lowerQuery.includes('cheese')) {
+    primaryCategory = "dairy";
+  }
+  
+  // Create a baseline item with reasonable defaults
+  return {
+    id: `fallback_${query.replace(/\s+/g, '_')}_${Date.now()}`,
+    name: query.charAt(0).toUpperCase() + query.slice(1),
+    protein: primaryCategory === "poultry" || primaryCategory === "redMeat" || primaryCategory === "fish" ? 25 : 5,
+    carbs: primaryCategory === "vegetable" || primaryCategory === "fruit" ? 15 : 0,
+    fats: primaryCategory === "redMeat" ? 15 : primaryCategory === "poultry" ? 5 : 0,
+    caloriesPerServing: 120,
+    fiber: primaryCategory === "vegetable" || primaryCategory === "fruit" ? 5 : 0,
+    sugars: primaryCategory === "fruit" ? 10 : 0,
+    saturatedFat: primaryCategory === "redMeat" ? 5 : 0,
+    cholesterol: primaryCategory === "redMeat" || primaryCategory === "poultry" ? 70 : 0,
+    sodium: 50,
+    servingSize: "100g",
+    servingSizeGrams: 100,
+    diets: getDefaultDiets(primaryCategory),
+    primaryCategory
+  };
+};
+
+/**
+ * Get default diets for fallback items based on category
+ */
+const getDefaultDiets = (category: FoodPrimaryCategory): string[] => {
+  switch (category) {
+    case "vegetable":
+    case "fruit":
+    case "grain":
+    case "legume":
+    case "nut":
+    case "seed":
+    case "herb":
+    case "spice":
+      return ["vegetarian", "vegan"];
+    case "fish":
+    case "seafood":
+      return ["pescatarian"];
+    case "dairy":
+    case "egg":
+      return ["vegetarian"];
+    default:
+      return [];
+  }
+};
+
+/**
+ * Sort search results by relevance to the search query
+ */
+const sortResultsByRelevance = (items: FoodItem[], query: string) => {
+  const lowerQuery = query.toLowerCase();
+  
+  items.sort((a, b) => {
+    // Exact matches come first
+    const aNameLower = a.name.toLowerCase();
+    const bNameLower = b.name.toLowerCase();
+    
+    if (aNameLower === lowerQuery && bNameLower !== lowerQuery) return -1;
+    if (bNameLower === lowerQuery && aNameLower !== lowerQuery) return 1;
+    
+    // Then starts with
+    if (aNameLower.startsWith(lowerQuery) && !bNameLower.startsWith(lowerQuery)) return -1;
+    if (bNameLower.startsWith(lowerQuery) && !aNameLower.startsWith(lowerQuery)) return 1;
+    
+    // Then contains
+    if (aNameLower.includes(lowerQuery) && !bNameLower.includes(lowerQuery)) return -1;
+    if (bNameLower.includes(lowerQuery) && !aNameLower.includes(lowerQuery)) return 1;
+    
+    // Default to alphabetical
+    return aNameLower.localeCompare(bNameLower);
+  });
 };
 
 /**
@@ -313,17 +468,21 @@ const mapProductToFoodItem = (product: OpenFoodFactsProduct): FoodItem => {
  */
 export const getFoodsByDiet = async (dietType: string, page = 1, pageSize = 20): Promise<FoodItem[]> => {
   let searchTerm = "";
+  let categoryFilter = "";
   
   // Map diet types to appropriate search terms
   switch(dietType) {
     case "vegan":
       searchTerm = "vegan";
+      categoryFilter = "&tagtype_0=ingredients_analysis&tag_contains_0=contains&tag_0=vegan";
       break;
     case "vegetarian":
       searchTerm = "vegetarian";
+      categoryFilter = "&tagtype_0=ingredients_analysis&tag_contains_0=contains&tag_0=vegetarian";
       break;
     case "pescatarian":
       searchTerm = "fish OR seafood";
+      categoryFilter = "&tagtype_0=categories&tag_contains_0=contains&tag_0=fish";
       break;
     case "keto":
       searchTerm = "keto OR low-carb";
@@ -331,11 +490,85 @@ export const getFoodsByDiet = async (dietType: string, page = 1, pageSize = 20):
     case "mediterranean":
       searchTerm = "olive-oil OR fish OR nuts OR seeds";
       break;
+    case "low-carb":
+      searchTerm = "low-carb";
+      break;
+    case "high-protein":
+      searchTerm = "protein";
+      break;
     default:
       searchTerm = dietType;
   }
   
-  return searchFoods(searchTerm, page, pageSize);
+  // Parameters for the API request
+  const params = new URLSearchParams({
+    search_terms: searchTerm,
+    page_size: pageSize.toString(),
+    page: page.toString(),
+    fields: "code,product_name,product_name_en,brands,nutriments,categories_tags,serving_size,serving_quantity,ingredients_analysis_tags",
+  });
+  
+  try {
+    console.log(`Searching for ${dietType} foods`);
+    
+    // Include the category filter if specified
+    const apiUrl = `${SEARCH_URL}?${params.toString()}${categoryFilter}`;
+    
+    // Race between the fetch and a timeout
+    const response = await Promise.race([
+      fetch(apiUrl),
+      timeoutPromise(API_TIMEOUT)
+    ]);
+    
+    if (!response.ok) {
+      throw new Error(`Open Food Facts API error: ${response.status}`);
+    }
+    
+    const data: OpenFoodFactsResponse = await response.json();
+    
+    if (!data.products || !Array.isArray(data.products)) {
+      console.error("Invalid API response format:", data);
+      return [];
+    }
+    
+    // Filter out products with inadequate data
+    const validProducts = data.products.filter(product => 
+      product.code && 
+      (product.product_name || product.product_name_en) &&
+      product.nutriments
+    );
+    
+    // Filter out duplicates
+    const uniqueFoodItems: FoodItem[] = [];
+    const processedCodes = new Set<string>();
+    
+    validProducts.forEach(product => {
+      if (!product.code || processedCodes.has(product.code)) {
+        return;
+      }
+      
+      // Add to processed set
+      processedCodes.add(product.code);
+      
+      // Only add if not seen before in this session
+      if (!seenProductCodesSet.has(product.code)) {
+        seenProductCodesSet.add(product.code);
+        
+        // Map and add to results
+        const foodItem = mapProductToFoodItem(product);
+        
+        // For diet-specific searches, ensure the item actually belongs to that diet
+        if (foodItem.diets?.includes(dietType) || dietType === "all") {
+          uniqueFoodItems.push(foodItem);
+        }
+      }
+    });
+    
+    return uniqueFoodItems;
+  } catch (error) {
+    console.error(`Error getting foods for diet ${dietType}:`, error);
+    return [];
+  }
 };
 
 /**
