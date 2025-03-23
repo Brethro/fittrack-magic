@@ -17,8 +17,9 @@ const Layout = () => {
   useEffect(() => {
     const checkScrollable = () => {
       if (mainRef.current && contentRef.current && navRef.current) {
-        // Get the actual content height
+        // Get the actual content height without min-height influence
         const mainHeight = mainRef.current.scrollHeight;
+        const mainClientHeight = mainRef.current.clientHeight;
         
         // Get the viewport height
         const viewportHeight = window.innerHeight;
@@ -29,18 +30,35 @@ const Layout = () => {
         // Calculate available space (viewport minus nav)
         const availableHeight = viewportHeight - navHeight;
         
-        // Compare content height to available height
-        const shouldScroll = mainHeight > availableHeight;
+        // Special check for home page path
+        const isHomePage = location.pathname === "/";
+        
+        // Determine if scrolling is needed - with special handling for home page
+        // For home page, we need to check if there's REAL content that overflows
+        // We do this by checking if scrollHeight > clientHeight significantly
+        let shouldScroll;
+        
+        if (isHomePage) {
+          // For home page, only enable scroll if actual content (not min-height)
+          // exceeds available space by more than a small threshold
+          const contentExceedsContainer = mainHeight > mainClientHeight + 10;
+          shouldScroll = contentExceedsContainer && mainHeight > availableHeight;
+        } else {
+          // For other pages, use the standard check
+          shouldScroll = mainHeight > availableHeight;
+        }
         
         setIsScrollable(shouldScroll);
         
-        // Debug info
+        // More detailed debug info
         console.log({
           path: location.pathname,
           mainHeight,
+          mainClientHeight,
           viewportHeight,
           navHeight,
           availableHeight,
+          isHomePage,
           shouldScroll
         });
       }

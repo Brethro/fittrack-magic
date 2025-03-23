@@ -10,7 +10,7 @@ const HomePage = () => {
   const hasStarted = userData.age !== null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">
+    <div className="flex flex-col bg-background overflow-hidden relative">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[-5%] right-[-10%] w-[300px] h-[300px] rounded-full bg-accent/5 blur-[80px]" />
