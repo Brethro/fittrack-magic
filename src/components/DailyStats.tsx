@@ -35,8 +35,13 @@ export function DailyStats() {
     ? (calorieAdjustment / userData.tdee) * 100 
     : 0;
     
-  // Format to show exactly 1 decimal place for more precision
-  const adjustmentPercentage = exactAdjustmentPercentage.toFixed(1);
+  // Format display logic: if it's between 19.5% and 20%, show it as 20%
+  let adjustmentPercentage;
+  if (exactAdjustmentPercentage >= 19.5 && exactAdjustmentPercentage < 20.01) {
+    adjustmentPercentage = "20.0";
+  } else {
+    adjustmentPercentage = exactAdjustmentPercentage.toFixed(1);
+  }
     
   const weeklyWeightChange = calculateWeeklyWeightChange();
 

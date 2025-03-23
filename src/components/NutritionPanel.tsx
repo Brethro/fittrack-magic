@@ -33,9 +33,16 @@ export function NutritionPanel() {
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
   
   // Calculate the exact surplus percentage with 2 decimal precision for display
-  // Using Math.floor to always round down to the nearest integer for comparison
   const exactSurplusPercent = isWeightGain ? ((surplusAmount / tdee) * 100) : 0;
-  const surplusPercent = Math.floor(exactSurplusPercent);
+  
+  // Display logic: if it's between 19.5% and 20%, show it as 20%
+  // This ensures values very close to 20% (like 19.99%) display as 20%
+  let surplusPercent;
+  if (exactSurplusPercent >= 19.5 && exactSurplusPercent < 20.01) {
+    surplusPercent = 20;
+  } else {
+    surplusPercent = Math.floor(exactSurplusPercent);
+  }
 
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
