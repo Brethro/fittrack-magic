@@ -39,6 +39,26 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const { addFoodEntry } = useFoodLog();
   const { toast } = useToast();
   
+  // Get calories with safety checks - Define this before it's used
+  const getCalories = (): number => {
+    if (source === 'openfoodfacts') {
+      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
+                        food.nutriments?.['energy-kcal'] || 0;
+      
+      if (energyKcal) return energyKcal;
+      
+      // Convert kJ to kcal if only energy in kJ is available
+      const energyKj = food.nutriments?.['energy_100g'] || 
+                       food.nutriments?.energy || 0;
+      
+      return energyKj ? (energyKj / 4.184) : 0;
+    } else {
+      // For USDA
+      return food.nutrients?.find((n: any) => 
+        n.name.toLowerCase().includes('energy'))?.amount || 0;
+    }
+  };
+  
   // Default to a reasonable portion size
   useEffect(() => {
     if (food.serving_size_g && !isNaN(food.serving_size_g)) {
@@ -70,26 +90,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
            value !== '' && 
            value !== 0 &&
            !isNaN(value);
-  };
-  
-  // Get calories with safety checks - Define this before it's used
-  const getCalories = (): number => {
-    if (source === 'openfoodfacts') {
-      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
-                        food.nutriments?.['energy-kcal'] || 0;
-      
-      if (energyKcal) return energyKcal;
-      
-      // Convert kJ to kcal if only energy in kJ is available
-      const energyKj = food.nutriments?.['energy_100g'] || 
-                       food.nutriments?.energy || 0;
-      
-      return energyKj ? (energyKj / 4.184) : 0;
-    } else {
-      // For USDA
-      return food.nutrients?.find((n: any) => 
-        n.name.toLowerCase().includes('energy'))?.amount || 0;
-    }
   };
   
   // Format nutrient value to 1 decimal place
@@ -417,7 +417,10 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                     <h4 className="font-medium mb-0">Detailed Nutrients</h4>
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="p-1 h-8">
-                        {isNutrientsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {isNutrientsOpen ? 
+                          <span><ChevronUp className="h-4 w-4" /></span> : 
+                          <span><ChevronDown className="h-4 w-4" /></span>
+                        }
                       </Button>
                     </CollapsibleTrigger>
                   </div>
