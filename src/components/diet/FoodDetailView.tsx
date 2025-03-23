@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { Badge } from "@/components/ui/badge";
