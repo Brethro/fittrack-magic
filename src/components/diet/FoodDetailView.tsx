@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, ChevronUp, ChevronDown, Save, Clock, Database, Plus, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -91,7 +90,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Initialize from USDA food data
   const initializeUsdaFood = (usdaFood: UsdaFoodItem) => {
     // Extract basic nutrition
-    const nutrition = extractNutritionInfo(usdaFood);
+    const nutritionData = extractNutritionInfo(usdaFood);
+    // Remove the 'serving' property before setting state
+    const { serving, ...nutrition } = nutritionData;
     setBaseNutrition(nutrition);
     setCurrentNutrition(nutrition);
     

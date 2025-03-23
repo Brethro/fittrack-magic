@@ -154,7 +154,7 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
   const fiber = findNutrient(NUTRIENT_IDS.FIBER)?.value || 0;
   const sugars = findNutrient(NUTRIENT_IDS.SUGARS)?.value || 0;
   
-  // For 100g serving
+  // For 100g serving - separate serving info and nutrition values
   return {
     calories,
     protein,
@@ -162,6 +162,6 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
     fat,
     fiber,
     sugars,
-    serving: "100g",
+    serving: "100g", // This will be extracted separately in FoodDetailView.tsx
   };
 }
