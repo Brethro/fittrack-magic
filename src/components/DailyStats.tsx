@@ -1,7 +1,12 @@
 
 import React from "react";
 import { useUserData } from "@/contexts/UserDataContext";
-import { calculateBMR } from "@/utils/nutritionCalculator";
+import { 
+  calculateBMR, 
+  getHeightInCm, 
+  getWeightInKg, 
+  calculateTDEE 
+} from "@/utils/nutritionCalculator";
 
 const DailyStats = () => {
   const { userData } = useUserData();
@@ -10,14 +15,11 @@ const DailyStats = () => {
     return <p>Missing user data. Please complete your profile.</p>;
   }
 
-  const heightInCm = userData.useMetric
-    ? userData.height as number
-    : ((userData.height as any).feet * 30.48) + ((userData.height as any).inches * 2.54);
+  // Use our utility functions to get height and weight in metric units
+  const heightInCm = getHeightInCm(userData.height, userData.useMetric);
+  const weightInKg = getWeightInKg(userData.weight as number, userData.useMetric);
 
-  const weightInKg = userData.useMetric
-    ? userData.weight as number
-    : (userData.weight as number) / 2.20462;
-
+  // Calculate BMR using the utility function
   const bmr = calculateBMR({
     weight: weightInKg,
     height: heightInCm,
@@ -26,15 +28,8 @@ const DailyStats = () => {
     bodyFatPercentage: userData.bodyFatPercentage
   });
 
-  const activityMultipliers: { [key: string]: number } = {
-    sedentary: 1.2,
-    light: 1.375,
-    moderate: 1.55,
-    active: 1.725,
-    extreme: 1.9,
-  };
-
-  const tdee = bmr * (activityMultipliers[userData.activityLevel] || 1.2);
+  // Calculate TDEE using the utility function
+  const tdee = calculateTDEE(bmr, userData.activityLevel);
   
   // Calculate the surplus/deficit percentage if we have both tdee and dailyCalories
   let calorieAdjustmentText = '';
