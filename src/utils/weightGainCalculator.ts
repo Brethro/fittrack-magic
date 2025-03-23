@@ -1,3 +1,4 @@
+
 /**
  * Utility for calculating weight gain related values
  */
@@ -122,20 +123,11 @@ export const calculateWeightGainCalories = (
   let isTimelineDriven = false;
   let finalAdjustPercentage: number;
   
-  // For aggressive pace, ALWAYS use exactly 20% 
-  // UNLESS timeline absolutely requires more aggressive surplus
+  // FIXED: For aggressive pace, ALWAYS use exactly 20% regardless of timeline requirements
   if (goalPace === "aggressive") {
-    // For aggressive pace, EXACTLY 20.0% (0.20) surplus
-    const aggressivePaceTarget = 0.20; // Exactly 20% as decimal
-    
-    // Only if timeline absolutely requires higher surplus, allow it
-    if (calculatedAdjustPercent > aggressivePaceTarget) {
-      isTimelineDriven = true;
-      finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
-    } else {
-      // Otherwise use exactly 20% for aggressive pace
-      finalAdjustPercentage = aggressivePaceTarget;
-    }
+    // For aggressive pace, EXACTLY 20.0% (0.20) surplus, NEVER override with timeline
+    finalAdjustPercentage = 0.20; // Exactly 20% as decimal
+    isTimelineDriven = false; // Never timeline-driven for aggressive pace
   } 
   // For other paces (moderate, conservative)
   else {
@@ -153,12 +145,12 @@ export const calculateWeightGainCalories = (
   let dailyCalories: number;
   let displaySurplusPercentage: number;
   
-  if (goalPace === "aggressive" && !isTimelineDriven) {
-    // Calculate exact 20% surplus calories
-    // Use Math.floor to ensure we NEVER exceed 20% surplus
-    dailyCalories = Math.floor(tdee * 1.20);
+  if (goalPace === "aggressive") {
+    // FIXED: For aggressive pace, ALWAYS use exactly 20% regardless of timeline
+    // Use exact 20% surplus calories, with no rounding that could cause deviation
+    dailyCalories = Math.round(tdee * 1.20);
     
-    // Hard-code exactly 20.0%
+    // Hard-code exactly 20.0% for display
     displaySurplusPercentage = 20.0;
   } else {
     dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
