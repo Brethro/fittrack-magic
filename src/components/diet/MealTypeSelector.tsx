@@ -19,7 +19,11 @@ const MealTypeSelector = ({ selectedMeal, onChange }: MealTypeSelectorProps) => 
       {mealTypes.map((meal) => (
         <button
           key={meal.id}
-          onClick={() => onChange(meal.id)}
+          type="button" // Added type="button" to prevent form submission
+          onClick={(e) => {
+            e.preventDefault(); // Prevent form submission
+            onChange(meal.id);
+          }}
           className={`flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md text-sm transition-all
             ${selectedMeal === meal.id 
               ? "bg-primary text-primary-foreground" 
