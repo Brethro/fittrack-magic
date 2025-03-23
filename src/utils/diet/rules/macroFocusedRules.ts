@@ -1,5 +1,5 @@
 
-import { FoodPrimaryCategory } from "@/types/diet";
+import { FoodPrimaryCategory, FoodItem } from "@/types/diet";
 
 // Low-carb diet rules
 export const lowCarbRules = {
@@ -8,32 +8,28 @@ export const lowCarbRules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
+    "egg", 
     "dairy", 
-    "nuts", 
-    "seeds", 
-    "oils", 
-    "vegetables",
-    "herbs",
-    "spices"
-  ],
+    "nut", 
+    "seed", 
+    "oil", 
+    "vegetable",
+    "herb",
+    "spice"
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "grains", 
-    "pasta", 
-    "bread", 
-    "starchy_vegetables", 
-    "legumes", 
-    "fruits", 
-    "sweeteners", 
-    "desserts",
-    "processed_foods"
-  ]
+    "grain", 
+    "legume", 
+    "fruit", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
 // Low-carb diet special rules
-export const lowCarbSpecialRules = (food: any) => {
+export const lowCarbSpecialRules = (food: FoodItem): boolean => {
   // Return false for high-carb foods
-  if (food.carbs > 10 && food.protein < food.carbs) {
+  if (food.carbs && food.carbs > 10 && food.protein && food.protein < food.carbs) {
     return false;
   }
   
@@ -47,23 +43,21 @@ export const highProteinRules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
+    "egg", 
     "dairy", 
-    "legumes", 
-    "nuts", 
-    "seeds",
-    "plant_proteins"
-  ],
+    "legume", 
+    "nut", 
+    "seed"
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "oils", 
-    "sweeteners", 
-    "desserts",
-    "processed_foods"
-  ]
+    "oil", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
 // High-protein diet special rules
-export const highProteinSpecialRules = (food: any) => {
+export const highProteinSpecialRules = (food: FoodItem): boolean => {
   // High protein foods should have good protein content
   if (food.protein && food.protein < 5) {
     return false;

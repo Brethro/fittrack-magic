@@ -96,7 +96,8 @@ export const getCompatibleDiets = (food: FoodItem): DietType[] => {
     // Add all explicitly tagged diets that are valid DietType values
     const validDietTypes: DietType[] = [
       "mediterranean", "vegetarian", "vegan", "japanese", 
-      "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
+      "korean", "mexican", "italian", "paleo", "keto", "pescatarian",
+      "low-carb", "high-protein", "carnivore", "whole30", "atkins", "zone"
     ];
     
     food.diets.forEach(diet => {
@@ -111,7 +112,8 @@ export const getCompatibleDiets = (food: FoodItem): DietType[] => {
   // Check each diet type except "all" using the rules-based approach
   const dietTypes: Exclude<DietType, "all">[] = [
     "mediterranean", "vegetarian", "vegan", "japanese", 
-    "korean", "mexican", "italian", "paleo", "keto", "pescatarian"
+    "korean", "mexican", "italian", "paleo", "keto", "pescatarian",
+    "low-carb", "high-protein", "carnivore", "whole30", "atkins", "zone"
   ];
   
   dietTypes.forEach((diet) => {

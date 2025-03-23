@@ -1,5 +1,5 @@
 
-import { FoodPrimaryCategory } from "@/types/diet";
+import { FoodPrimaryCategory, FoodItem } from "@/types/diet";
 
 // Carnivore diet rules
 export const carnivoreRules = {
@@ -8,31 +8,28 @@ export const carnivoreRules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
+    "egg", 
     "dairy"
-  ],
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "grains", 
-    "pasta", 
-    "bread", 
-    "vegetables", 
-    "fruits", 
-    "legumes", 
-    "nuts", 
-    "seeds", 
-    "oils", 
-    "herbs", 
-    "spices", 
-    "sweeteners", 
-    "desserts", 
-    "processed_foods"
-  ]
+    "grain", 
+    "legume", 
+    "vegetable", 
+    "fruit", 
+    "nut", 
+    "seed", 
+    "oil", 
+    "herb", 
+    "spice", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
-export const carnivoreSpecialRules = (food: any) => {
+export const carnivoreSpecialRules = (food: FoodItem): boolean => {
   // Pure carnivore diet is only animal products
   if (food.primaryCategory && 
-      !["meat", "poultry", "fish", "seafood", "eggs", "dairy"].includes(food.primaryCategory)) {
+      !["meat", "poultry", "fish", "seafood", "egg", "dairy"].includes(food.primaryCategory)) {
     return false;
   }
   
@@ -46,28 +43,25 @@ export const whole30Rules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
-    "vegetables", 
-    "fruits", 
-    "nuts", 
-    "seeds", 
-    "oils", 
-    "herbs", 
-    "spices"
-  ],
+    "egg", 
+    "vegetable", 
+    "fruit", 
+    "nut", 
+    "seed", 
+    "oil", 
+    "herb", 
+    "spice"
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "grains", 
-    "pasta", 
-    "bread", 
+    "grain", 
     "dairy", 
-    "legumes", 
-    "sweeteners", 
-    "desserts", 
-    "processed_foods"
-  ]
+    "legume", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
-export const whole30SpecialRules = (food: any) => {
+export const whole30SpecialRules = (food: FoodItem): boolean => {
   // Whole30 excludes added sugars and certain additives
   if (food.addedSugars && food.addedSugars > 0) {
     return false;
@@ -83,31 +77,27 @@ export const atkinsRules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
+    "egg", 
     "dairy", 
-    "nuts", 
-    "seeds", 
-    "oils", 
-    "vegetables", 
-    "herbs", 
-    "spices"
-  ],
+    "nut", 
+    "seed", 
+    "oil", 
+    "vegetable", 
+    "herb", 
+    "spice"
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "grains", 
-    "pasta", 
-    "bread", 
-    "starchy_vegetables", 
-    "legumes", 
-    "fruits", 
-    "sweeteners", 
-    "desserts",
-    "processed_foods"
-  ]
+    "grain", 
+    "legume", 
+    "fruit", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
-export const atkinsSpecialRules = (food: any) => {
+export const atkinsSpecialRules = (food: FoodItem): boolean => {
   // Atkins restricts carbs
-  if (food.carbs > 10) {
+  if (food.carbs && food.carbs > 10) {
     return false;
   }
   
@@ -121,28 +111,25 @@ export const zoneRules = {
     "poultry", 
     "fish", 
     "seafood", 
-    "eggs", 
+    "egg", 
     "dairy", 
-    "vegetables", 
-    "fruits", 
-    "legumes", 
-    "nuts", 
-    "seeds", 
-    "oils", 
-    "herbs", 
-    "spices"
-  ],
+    "vegetable", 
+    "fruit", 
+    "legume", 
+    "nut", 
+    "seed", 
+    "oil", 
+    "herb", 
+    "spice"
+  ] as FoodPrimaryCategory[],
   restrictedPrimaryCategories: [
-    "grains", 
-    "pasta", 
-    "bread", 
-    "sweeteners", 
-    "desserts",
-    "processed_foods"
-  ]
+    "grain", 
+    "sweetener", 
+    "processedFood"
+  ] as FoodPrimaryCategory[]
 };
 
-export const zoneSpecialRules = (food: any) => {
+export const zoneSpecialRules = (food: FoodItem): boolean => {
   // Zone diet focuses on macronutrient balance
   // This is a simplified rule since the actual Zone diet is about meal composition
   return true;
