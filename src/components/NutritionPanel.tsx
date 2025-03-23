@@ -1,8 +1,7 @@
-
-import { Flame, InfoIcon, AlertTriangle } from "lucide-react";
+import { Flame, InfoIcon, AlertTriangle, HelpCircle } from "lucide-react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Tooltip,
   TooltipContent,
@@ -31,18 +30,37 @@ export function NutritionPanel() {
   const totalCalories = userData.dailyCalories || 0;
   const tdee = userData.tdee || 0;
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
+  const deficitAmount = !isWeightGain ? tdee - totalCalories : 0;
   
-  // Calculate the exact surplus percentage with 2 decimal precision for display
-  const exactSurplusPercent = isWeightGain ? ((surplusAmount / tdee) * 100) : 0;
+  // Calculate the exact surplus/deficit percentage with 2 decimal precision for display
+  const exactPercentage = isWeightGain 
+    ? ((surplusAmount / tdee) * 100) 
+    : ((deficitAmount / tdee) * 100);
   
   // Display logic: if it's between 19.5% and 20%, show it as 20%
   // This ensures values very close to 20% (like 19.99%) display as 20%
-  let surplusPercent;
-  if (exactSurplusPercent >= 19.5 && exactSurplusPercent < 20.01) {
-    surplusPercent = 20;
+  let displayPercent;
+  if (exactPercentage >= 19.5 && exactPercentage < 20.01) {
+    displayPercent = 20;
+  } else if (exactPercentage >= 24.5 && exactPercentage < 25.01) {
+    displayPercent = 25;
   } else {
-    surplusPercent = Math.floor(exactSurplusPercent);
+    displayPercent = Math.floor(exactPercentage);
   }
+
+  // Determine what deficit percentage is being applied based on goal pace
+  const getPaceDeficitPercentage = () => {
+    if (!userData.goalPace) return null;
+    
+    switch (userData.goalPace) {
+      case "aggressive": return 25;
+      case "moderate": return 20;
+      case "conservative": return 15;
+      default: return 20;
+    }
+  };
+  
+  const pacePercentage = getPaceDeficitPercentage();
 
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -63,7 +81,7 @@ export function NutritionPanel() {
                 // Weight Gain Explanation - Updated with higher protein recommendations
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {surplusPercent}% surplus 
+                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {displayPercent}% surplus 
                     to help you gain muscle with minimal fat accumulation by your target date.
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -76,11 +94,11 @@ export function NutritionPanel() {
                   </p>
                 </>
               ) : (
-                // Weight Loss Explanation
+                // Weight Loss Explanation with clarified deficit percentage
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate deficit 
-                    to achieve your weight loss goal by the target date. 
+                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {displayPercent}% deficit 
+                    ({userData.goalPace === "aggressive" ? "maximum" : ""} safe deficit for your body composition).
                   </p>
                   <p className="text-sm text-muted-foreground">
                     The high protein amount ({userData.macros.protein}g) is specifically 
@@ -91,6 +109,18 @@ export function NutritionPanel() {
                   <p className="text-sm text-muted-foreground">
                     Fats are set at 25% of total calories for hormone production, with remaining calories allocated to carbs for energy.
                   </p>
+                  
+                  <div className="pt-2 mt-2 border-t">
+                    <p className="text-xs text-muted-foreground font-medium">Safe deficit limits:</p>
+                    <ul className="text-xs text-muted-foreground ml-4 list-disc space-y-1 mt-1">
+                      <li>Conservative: 15% deficit</li>
+                      <li>Moderate: 20% deficit</li>
+                      <li>Aggressive: 25% deficit</li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      These limits are adjusted based on your body fat percentage to ensure safety.
+                    </p>
+                  </div>
                 </>
               )}
               
@@ -106,11 +136,30 @@ export function NutritionPanel() {
         </Popover>
       </div>
       
-      {isWeightGain && highSurplusWarning && surplusPercent > 20 && (
+      {isWeightGain && highSurplusWarning && displayPercent > 20 && (
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Your {surplusPercent}% caloric surplus ({surplusAmount} calories above maintenance) is high and may lead to increased fat gain. Consider a longer timeframe for optimal muscle-to-fat ratio.
+            Your {displayPercent}% caloric surplus ({surplusAmount} calories above maintenance) is high and may lead to increased fat gain. Consider a longer timeframe for optimal muscle-to-fat ratio.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!isWeightGain && userData.goalPace === "aggressive" && userData.bodyFatPercentage && userData.bodyFatPercentage < 12 && (
+        <Alert variant="warning" className="mb-3">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            With your low body fat of {userData.bodyFatPercentage}%, we've limited your deficit to 25% of TDEE. Larger deficits could risk muscle loss and metabolic slowdown.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {!isWeightGain && (
+        <Alert variant="default" className="mb-3 bg-primary/5 border-primary/20">
+          <HelpCircle className="h-4 w-4" />
+          <AlertTitle>Understanding your calorie target</AlertTitle>
+          <AlertDescription>
+            Based on your selected pace ({userData.goalPace}), we've applied a {pacePercentage}% deficit to your TDEE. This creates a {deficitAmount} calorie daily deficit, which is {userData.goalPace === "aggressive" ? "at the maximum" : "within"} safe range for your body composition.
           </AlertDescription>
         </Alert>
       )}
@@ -121,7 +170,7 @@ export function NutritionPanel() {
         <p className="text-lg font-bold">{userData.dailyCalories}</p>
         <p className="text-xs text-muted-foreground">
           Calories
-          {isWeightGain ? ` (${surplusPercent}% Surplus)` : ' (Deficit)'}
+          {isWeightGain ? ` (${displayPercent}% Surplus)` : ` (${displayPercent}% Deficit)`}
         </p>
       </div>
       
