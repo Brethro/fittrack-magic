@@ -1,17 +1,50 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import FoodSearchResults from "@/components/diet/FoodSearchResults";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import FoodSearchResults, { FoodSearchResultsSkeleton } from "@/components/diet/FoodSearchResults";
 
 const DietPage = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiStatus, setApiStatus] = useState<"idle" | "connected" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Check API connection on component mount
+  useEffect(() => {
+    const checkApiConnection = async () => {
+      try {
+        const response = await fetch(
+          "https://world.openfoodfacts.org/api/v0/product/search.json?search_terms=test&page_size=1"
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.products) {
+            setApiStatus("connected");
+          } else {
+            setApiStatus("error");
+            setErrorMessage("API responded but returned unexpected data format");
+          }
+        } else {
+          setApiStatus("error");
+          setErrorMessage(`API returned status: ${response.status}`);
+        }
+      } catch (error) {
+        setApiStatus("error");
+        setErrorMessage(`Connection error: ${error instanceof Error ? error.message : String(error)}`);
+        console.error("API connection error:", error);
+      }
+    };
+
+    checkApiConnection();
+  }, []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -32,23 +65,35 @@ const DietPage = () => {
       );
       
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error(`Network response was not ok (${response.status})`);
       }
       
       const data = await response.json();
-      setSearchResults(data.products || []);
+      console.log("API response:", data); // Debug log
       
-      if (data.products?.length === 0) {
+      if (data.products && Array.isArray(data.products)) {
+        setSearchResults(data.products);
+        
+        if (data.products.length === 0) {
+          toast({
+            title: "No results found",
+            description: "Try a different search term",
+          });
+        }
+      } else {
+        console.error("Unexpected API response format:", data);
         toast({
-          title: "No results found",
-          description: "Try a different search term",
+          title: "Invalid response format",
+          description: "The API returned an unexpected data format",
+          variant: "destructive",
         });
+        setSearchResults([]);
       }
     } catch (error) {
       console.error("Search error:", error);
       toast({
         title: "Search failed",
-        description: "Could not fetch food data. Please try again.",
+        description: `Could not fetch food data: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
       setSearchResults([]);
@@ -67,6 +112,27 @@ const DietPage = () => {
         <h1 className="text-2xl font-bold mb-6 text-gradient-purple">
           Diet Planner
         </h1>
+
+        {/* API Status Indicator */}
+        <div className="mb-4">
+          {apiStatus === "idle" && (
+            <Alert>
+              <AlertDescription>Checking connection to Open Food Facts API...</AlertDescription>
+            </Alert>
+          )}
+          {apiStatus === "connected" && (
+            <Alert className="bg-green-50 border-green-200 text-green-800">
+              <AlertDescription>Open Food Facts API is connected and ready</AlertDescription>
+            </Alert>
+          )}
+          {apiStatus === "error" && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Unable to connect to Open Food Facts API: {errorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
 
         <section className="glass-panel rounded-lg p-4 mb-6">
           <h2 className="text-lg font-semibold mb-3">Food Search</h2>
@@ -91,8 +157,12 @@ const DietPage = () => {
         </section>
 
         {/* Search Results */}
-        {searchResults.length > 0 && (
-          <FoodSearchResults results={searchResults} />
+        {isLoading ? (
+          <FoodSearchResultsSkeleton />
+        ) : (
+          searchResults.length > 0 && (
+            <FoodSearchResults results={searchResults} />
+          )
         )}
       </motion.div>
     </div>
