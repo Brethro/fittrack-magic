@@ -107,7 +107,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                     <FoodLogEntry 
                       key={entry.id}
                       entry={entry}
-                      onEdit={handleDelete}
+                      onEdit={handleEdit}
                       onDelete={handleDelete}
                     />
                   ))}
