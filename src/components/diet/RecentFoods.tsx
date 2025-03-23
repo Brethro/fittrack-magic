@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Plus } from "lucide-react";
+import { Clock, Plus, Sliders } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 interface RecentFoodsProps {
   onAddFood?: (food: FoodLogEntry) => void;
@@ -16,6 +17,8 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
   const { foodEntries, addFoodEntry } = useFoodLog();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState<string | null>(null);
+  const [editingFood, setEditingFood] = useState<string | null>(null);
+  const [servingSizes, setServingSizes] = useState<Record<string, number>>({});
 
   // Get the 5 most recent unique food items based on food name
   const getRecentFoods = (): FoodLogEntry[] => {
@@ -34,14 +37,39 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
 
   const recentFoods = getRecentFoods();
 
+  const handleEditServing = (food: FoodLogEntry) => {
+    if (editingFood === food.id) {
+      setEditingFood(null);
+    } else {
+      setEditingFood(food.id);
+      // Initialize with current amount if not set
+      if (!servingSizes[food.id]) {
+        setServingSizes(prev => ({
+          ...prev,
+          [food.id]: food.amount
+        }));
+      }
+    }
+  };
+
+  const handleServingSizeChange = (id: string, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      setServingSizes(prev => ({
+        ...prev,
+        [id]: numValue
+      }));
+    }
+  };
+
   const handleAddFood = (food: FoodLogEntry) => {
     setIsAdding(food.id);
     
-    // Create a new entry with current date
+    // Create a new entry with current date and possibly updated amount
     const newEntry: Omit<FoodLogEntry, "id"> = {
       ...food,
       date: new Date(),
-      id: "" // This will be set by addFoodEntry
+      amount: servingSizes[food.id] || food.amount
     };
     
     // Add to food log
@@ -52,9 +80,10 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
       description: `${food.foodName} added to your food log`,
     });
     
-    // Reset adding state after a short delay
+    // Reset states after a short delay
     setTimeout(() => {
       setIsAdding(null);
+      setEditingFood(null);
       
       if (onAddFood) {
         onAddFood(food);
@@ -67,13 +96,13 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
   }
 
   return (
-    <Card className="p-4 mb-4">
+    <Card className="p-4 mt-4">
       <div className="flex items-center mb-3">
         <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
         <h3 className="text-sm font-medium">Recently Added Foods</h3>
       </div>
       
-      <ScrollArea className="w-full" orientation="horizontal">
+      <ScrollArea className="w-full">
         <div className="flex space-x-2 pb-1">
           {recentFoods.map((food) => (
             <motion.div
@@ -82,16 +111,45 @@ const RecentFoods = ({ onAddFood }: RecentFoodsProps) => {
               animate={{ opacity: 1, y: 0 }}
               className="flex-shrink-0"
             >
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center h-auto py-1.5 px-3 text-xs"
-                onClick={() => handleAddFood(food)}
-                disabled={isAdding === food.id}
-              >
-                <span className="truncate max-w-[150px]">{food.foodName}</span>
-                <Plus className="ml-1 h-3 w-3" />
-              </Button>
+              <div className="flex flex-col">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center h-auto py-1.5 px-3 text-xs mb-1"
+                  onClick={() => handleEditServing(food)}
+                  disabled={isAdding === food.id}
+                >
+                  <span className="truncate max-w-[120px]">{food.foodName}</span>
+                  <Sliders className="ml-1 h-3 w-3" />
+                </Button>
+                
+                {editingFood === food.id && (
+                  <div className="flex items-center space-x-1 mb-1">
+                    <Input
+                      type="number"
+                      value={servingSizes[food.id] || food.amount}
+                      onChange={(e) => handleServingSizeChange(food.id, e.target.value)}
+                      className="h-6 w-14 text-xs px-1"
+                      min="0"
+                      step="any"
+                    />
+                    <span className="text-xs text-muted-foreground truncate max-w-[50px]">
+                      {food.unit}
+                    </span>
+                  </div>
+                )}
+                
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center h-6 py-1 px-2 text-xs"
+                  onClick={() => handleAddFood(food)}
+                  disabled={isAdding === food.id}
+                >
+                  Add
+                  <Plus className="ml-1 h-3 w-3" />
+                </Button>
+              </div>
             </motion.div>
           ))}
         </div>

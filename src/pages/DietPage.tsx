@@ -140,9 +140,6 @@ const DietPage = () => {
 
           {/* Food Search Section */}
           <div className="glass-panel p-4 rounded-lg">
-            {/* Recent Foods */}
-            <RecentFoods />
-            
             {/* Search Form */}
             <FoodSearchForm 
               onSearch={handleSearch} 
@@ -165,6 +162,9 @@ const DietPage = () => {
                 <FoodSearchResults results={searchResults} usdaResults={usdaResults} />
               )
             )}
+            
+            {/* Recent Foods - moved below search */}
+            <RecentFoods />
           </div>
           
           {/* Food Log Section */}
