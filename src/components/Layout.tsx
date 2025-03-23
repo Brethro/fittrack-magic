@@ -3,10 +3,40 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { Home, Target, LineChart, User, Shield, Apple } from "lucide-react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useRef, useState } from "react";
 
 const Layout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
+  
+  // Check if content is scrollable
+  useEffect(() => {
+    const checkScrollable = () => {
+      if (contentRef.current) {
+        const { scrollHeight, clientHeight } = contentRef.current;
+        setIsScrollable(scrollHeight > clientHeight);
+      }
+    };
+    
+    // Initial check
+    checkScrollable();
+    
+    // Add resize observer to recheck when dimensions change
+    const resizeObserver = new ResizeObserver(checkScrollable);
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+    
+    // Clean up
+    return () => {
+      if (contentRef.current) {
+        resizeObserver.unobserve(contentRef.current);
+      }
+      resizeObserver.disconnect();
+    };
+  }, [location.pathname]);
   
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
@@ -19,8 +49,12 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Main content area */}
-      <div className="flex-1 w-full" style={{ paddingBottom: "80px" }}>
+      {/* Main content area - only enable scrolling when needed */}
+      <div 
+        ref={contentRef}
+        className={`flex-1 w-full ${isScrollable ? 'overflow-auto' : 'overflow-hidden'}`} 
+        style={{ paddingBottom: "80px" }}
+      >
         <main className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
           <Outlet />
         </main>
