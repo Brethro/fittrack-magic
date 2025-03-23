@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -139,7 +138,7 @@ const DietPage = () => {
       handleFoodSelection(food.description);
     }
   };
-
+  
   return (
     <div className="container px-4 py-6 mx-auto h-screen overflow-auto">
       <motion.div
@@ -158,8 +157,13 @@ const DietPage = () => {
             apiStatus={apiStatus} 
             usdaApiStatus={usdaApiStatus} 
           />
+          
+          {/* Food Log Section - Moved to the top */}
+          <div className="flex-1 max-h-[600px] min-h-[500px]">
+            <FoodLog />
+          </div>
 
-          {/* Food Search Section */}
+          {/* Food Search Section - Now below the Food Log */}
           <div className="glass-panel p-4 rounded-lg">
             {/* Search Form */}
             <FoodSearchForm 
@@ -191,11 +195,6 @@ const DietPage = () => {
                 />
               )
             )}
-          </div>
-          
-          {/* Food Log Section */}
-          <div className="flex-1 max-h-[600px] min-h-[500px]">
-            <FoodLog />
           </div>
         </div>
       </motion.div>
