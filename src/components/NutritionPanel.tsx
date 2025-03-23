@@ -31,7 +31,10 @@ export function NutritionPanel() {
   const totalCalories = userData.dailyCalories || 0;
   const tdee = userData.tdee || 0;
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
-  const surplusPercent = isWeightGain ? Math.round((surplusAmount / tdee) * 100) : 0;
+  
+  // Round down the surplus percentage to handle rounding issues
+  // This ensures 20.99% shows as 20%, not 21%
+  const surplusPercent = isWeightGain ? Math.floor((surplusAmount / tdee) * 100) : 0;
 
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -95,7 +98,7 @@ export function NutritionPanel() {
         </Popover>
       </div>
       
-      {isWeightGain && highSurplusWarning && (
+      {isWeightGain && highSurplusWarning && surplusPercent >= 21 && (
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>

@@ -367,21 +367,6 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Adjusting to minimum practical surplus percentage:", calculatedAdjustPercent);
       }
       
-      // Check if this is a high surplus (over 20%)
-      if (calculatedAdjustPercent > 0.20) {
-        highSurplusWarning = true;
-        console.log("High surplus warning triggered:", calculatedAdjustPercent);
-        
-        // If the surplus is extremely high (over 35%), show a toast warning
-        if (calculatedAdjustPercent > 0.35) {
-          toast({
-            title: "High Caloric Surplus",
-            description: "This goal requires a very high caloric surplus which may result in significant fat gain.",
-            variant: "destructive"  // Change from "warning" to "destructive"
-          });
-        }
-      }
-      
       // Handle edge case where goal is extremely close to current weight
       if (weightDifference < 0.5) { // less than 0.5 pounds/kg difference
         console.log("Edge case: very small weight difference detected");
@@ -405,6 +390,26 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const dailyCalories = isWeightGain 
       ? Math.round(tdee * (1 + calculatedAdjustPercent))
       : Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200); // Don't go below 1200 calories for weight loss
+    
+    // Check if this is a high surplus (over 21%)
+    // Changed from 20% to 21% to fix the rounding issue
+    if (isWeightGain) {
+      // Use floor to handle rounding - this ensures 20.9% won't trigger warning
+      const surplusPercentage = Math.floor((dailyCalories - tdee) / tdee * 100);
+      if (surplusPercentage >= 21) {
+        highSurplusWarning = true;
+        console.log("High surplus warning triggered:", surplusPercentage);
+        
+        // If the surplus is extremely high (over 35%), show a toast warning
+        if (surplusPercentage > 35) {
+          toast({
+            title: "High Caloric Surplus",
+            description: "This goal requires a very high caloric surplus which may result in significant fat gain.",
+            variant: "destructive"  // Change from "warning" to "destructive"
+          });
+        }
+      }
+    }
     
     // Calculate macros
     const bodyFatPercentage = userData.bodyFatPercentage || (userData.gender === 'female' ? 25 : 18); // Default estimate
