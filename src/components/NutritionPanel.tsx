@@ -41,28 +41,53 @@ export function NutritionPanel() {
   // For display in the summary section
   const displayPercent = Number(exactPercentage);
 
-  // Determine what deficit percentage is being applied based on goal pace
-  const getPaceDeficitPercentage = () => {
-    if (!userData.goalPace) return null;
+  // Calculate the maximum allowed deficit based on body fat
+  const getMaxAllowedDeficit = () => {
+    if (!userData.bodyFatPercentage) return 25; // Default max
     
-    // These are the target percentages that should be applied based on pace
-    // The actual calculation might be limited by body fat restrictions
-    switch (userData.goalPace) {
-      case "aggressive": return 25;
-      case "moderate": return 20;
-      case "conservative": return 15;
-      default: return 20;
+    if (userData.bodyFatPercentage < 12) {
+      return 20; // Cap at 20% for low body fat
+    } else if (userData.bodyFatPercentage < 15) {
+      return 22.5; // Slightly higher for moderate-low body fat
+    } else {
+      return 25; // Standard 25% for normal/higher body fat
     }
   };
   
-  const targetPacePercentage = getPaceDeficitPercentage();
+  // Determine what deficit percentage is being applied based on goal pace
+  const getTargetDeficitPercentage = () => {
+    if (!userData.goalPace) return 20; // Default
+    
+    // Base percentages by pace
+    let baseDeficit;
+    switch (userData.goalPace) {
+      case "aggressive": baseDeficit = 25; break;
+      case "moderate": baseDeficit = 20; break;
+      case "conservative": baseDeficit = 15; break;
+      default: baseDeficit = 20;
+    }
+    
+    // Apply body fat limits
+    const maxAllowed = getMaxAllowedDeficit();
+    return Math.min(baseDeficit, maxAllowed);
+  };
   
-  // For low body fat individuals, we need to show if the deficit was limited
-  const wasDeficitLimited = !isWeightGain && 
+  const targetDeficitPercentage = getTargetDeficitPercentage();
+  const maxAllowedDeficitBasic = getMaxAllowedDeficit();
+  
+  // Calculate whether the pace's target deficit exceeds the body fat safety cap
+  const deficitWasLimited = !isWeightGain && 
     userData.bodyFatPercentage && 
     userData.bodyFatPercentage < 12 && 
-    userData.goalPace === "aggressive" && 
-    displayPercent < 25; // If target is 25% but actual is less
+    userData.goalPace === "aggressive";
+  
+  // For aggressive pace, determine if the additional 5% can be fully or partially applied
+  const aggressiveBonusApplied = userData.goalPace === "aggressive" && !isWeightGain
+    ? Math.min(5, 25 - maxAllowedDeficitBasic) // How much of the 5% bonus can be applied
+    : 0;
+  
+  // Final maximum deficit including any aggressive bonus
+  const finalMaxDeficit = maxAllowedDeficitBasic + aggressiveBonusApplied;
   
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -100,7 +125,7 @@ export function NutritionPanel() {
                 <>
                   <p className="text-sm text-muted-foreground">
                     Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {displayPercent}% deficit 
-                    ({userData.goalPace === "aggressive" ? "maximum" : ""} safe deficit for your body composition).
+                    ({deficitWasLimited ? "maximum" : ""} safe deficit for your body composition).
                   </p>
                   <p className="text-sm text-muted-foreground">
                     The high protein amount ({userData.macros.protein}g) is specifically 
@@ -122,6 +147,11 @@ export function NutritionPanel() {
                     <p className="text-xs text-muted-foreground mt-1">
                       These limits are adjusted based on your body fat percentage to ensure safety.
                     </p>
+                    {userData.bodyFatPercentage && userData.bodyFatPercentage < 15 && (
+                      <p className="text-xs text-amber-400 mt-1">
+                        Your body fat ({userData.bodyFatPercentage}%) requires reduced deficit to protect muscle mass.
+                      </p>
+                    )}
                   </div>
                 </>
               )}
@@ -151,7 +181,9 @@ export function NutritionPanel() {
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            With your low body fat of {userData.bodyFatPercentage}%, we've limited your maximum deficit to 20% of TDEE. When selecting aggressive pace, an additional 5% is added (total 25%).
+            With your low body fat of {userData.bodyFatPercentage}%, we've limited your maximum deficit to {maxAllowedDeficitBasic}% of TDEE. 
+            {userData.goalPace === "aggressive" && aggressiveBonusApplied > 0 && 
+              ` When selecting aggressive pace, an additional ${aggressiveBonusApplied}% is added (total ${finalMaxDeficit}%).`}
           </AlertDescription>
         </Alert>
       )}
@@ -161,11 +193,11 @@ export function NutritionPanel() {
           <HelpCircle className="h-4 w-4" />
           <AlertTitle>Understanding your calorie target</AlertTitle>
           <AlertDescription>
-            Based on your selected pace ({userData.goalPace}), we've applied a {targetPacePercentage}% target deficit to your TDEE. 
+            Based on your selected pace ({userData.goalPace}), we've applied a {targetDeficitPercentage}% target deficit to your TDEE. 
             Your actual deficit is {exactPercentage}%, creating a {deficitAmount} calorie daily deficit.
-            {wasDeficitLimited ? 
-              " For your low body fat percentage, we've applied safety limits to protect muscle mass." : 
-              " This is within the safe range for your body composition."}
+            {displayPercent < targetDeficitPercentage ? 
+              ` For your low body fat percentage, we've applied safety limits to protect muscle mass.` : 
+              ` This is within the safe range for your body composition.`}
           </AlertDescription>
         </Alert>
       )}
