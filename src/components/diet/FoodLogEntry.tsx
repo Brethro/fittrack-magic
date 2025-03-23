@@ -51,18 +51,18 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
           {entry.amount} {entry.unit}
         </div>
         
-        {/* Nutrition badges */}
+        {/* Macro pills/badges - Updated to match design */}
         <div className="flex flex-wrap gap-1.5 mt-1">
-          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
+          <Badge variant="outline" className="text-xs px-2 py-0.5 h-6 bg-primary/10 text-primary border-primary/20">
             {Math.round(nutrition.calories)} kcal
           </Badge>
-          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-blue-500/10 text-blue-500 border-blue-300/20">
+          <Badge variant="outline" className="text-xs px-2 py-0.5 h-6 bg-blue-500/10 text-blue-500 border-blue-300/20">
             P: {nutrition.protein.toFixed(1)}g
           </Badge>
-          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-amber-500/10 text-amber-500 border-amber-300/20">
+          <Badge variant="outline" className="text-xs px-2 py-0.5 h-6 bg-amber-500/10 text-amber-500 border-amber-300/20">
             C: {nutrition.carbs.toFixed(1)}g
           </Badge>
-          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-green-500/10 text-green-500 border-green-300/20">
+          <Badge variant="outline" className="text-xs px-2 py-0.5 h-6 bg-green-500/10 text-green-500 border-green-300/20">
             F: {nutrition.fat.toFixed(1)}g
           </Badge>
         </div>
