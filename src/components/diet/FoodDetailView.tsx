@@ -415,7 +415,12 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium mb-0">Detailed Nutrients</h4>
                     <CollapsibleTrigger>
-                      <Button variant="ghost" size="sm" className="p-1 h-8">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-1 h-8"
+                      >
                         {isNutrientsOpen ? "Hide" : "Show"}
                       </Button>
                     </CollapsibleTrigger>
