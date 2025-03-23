@@ -6,6 +6,7 @@ import { useApiConnection } from "@/hooks/useApiConnection";
 import FoodSearchForm from "@/components/diet/FoodSearchForm";
 import ApiStatusIndicators from "@/components/diet/ApiStatusIndicators";
 import FoodSearchResults, { FoodSearchResultsSkeleton } from "@/components/diet/FoodSearchResults";
+import RecentFoods from "@/components/diet/RecentFoods";
 import { UsdaFoodItem } from "@/utils/usdaApi";
 import { 
   searchOpenFoodFacts, 
@@ -139,6 +140,9 @@ const DietPage = () => {
 
           {/* Food Search Section */}
           <div className="glass-panel p-4 rounded-lg">
+            {/* Recent Foods */}
+            <RecentFoods />
+            
             {/* Search Form */}
             <FoodSearchForm 
               onSearch={handleSearch} 
