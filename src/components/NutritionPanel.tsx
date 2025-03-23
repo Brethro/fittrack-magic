@@ -32,9 +32,10 @@ export function NutritionPanel() {
   const tdee = userData.tdee || 0;
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
   
-  // Round down the surplus percentage to handle rounding issues
-  // This ensures 20.99% shows as 20%, not 21%
-  const surplusPercent = isWeightGain ? Math.floor((surplusAmount / tdee) * 100) : 0;
+  // Calculate the exact surplus percentage with 2 decimal precision for display
+  // Using Math.floor to always round down to the nearest integer for comparison
+  const exactSurplusPercent = isWeightGain ? ((surplusAmount / tdee) * 100) : 0;
+  const surplusPercent = Math.floor(exactSurplusPercent);
 
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -98,7 +99,7 @@ export function NutritionPanel() {
         </Popover>
       </div>
       
-      {isWeightGain && highSurplusWarning && surplusPercent >= 21 && (
+      {isWeightGain && highSurplusWarning && surplusPercent > 20 && (
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>

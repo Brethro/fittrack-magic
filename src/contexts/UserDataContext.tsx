@@ -391,21 +391,23 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ? Math.round(tdee * (1 + calculatedAdjustPercent))
       : Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200); // Don't go below 1200 calories for weight loss
     
-    // Check if this is a high surplus (over 21%)
-    // Changed from 20% to 21% to fix the rounding issue
+    // Fix for the surplus percentage calculation
+    // We now specifically check if the surplus is > 20% (not >= 21%)
     if (isWeightGain) {
-      // Use floor to handle rounding - this ensures 20.9% won't trigger warning
-      const surplusPercentage = Math.floor((dailyCalories - tdee) / tdee * 100);
-      if (surplusPercentage >= 21) {
+      const exactSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
+      console.log("Exact surplus percentage:", exactSurplusPercentage);
+      
+      // For aggressive plans, we should have max 20% surplus without warning
+      if (exactSurplusPercentage > 20) {
         highSurplusWarning = true;
-        console.log("High surplus warning triggered:", surplusPercentage);
+        console.log("High surplus warning triggered:", exactSurplusPercentage);
         
         // If the surplus is extremely high (over 35%), show a toast warning
-        if (surplusPercentage > 35) {
+        if (exactSurplusPercentage > 35) {
           toast({
             title: "High Caloric Surplus",
             description: "This goal requires a very high caloric surplus which may result in significant fat gain.",
-            variant: "destructive"  // Change from "warning" to "destructive"
+            variant: "destructive"
           });
         }
       }
