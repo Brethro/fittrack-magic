@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -252,12 +253,15 @@ export function FoodPreferences({
           <span className="block mt-1 text-xs italic">Click on any food to see detailed nutrition information.</span>
         </p>
         
-        <FoodSearchBar 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery}
-          onSearch={onSearch}
-          isLoading={isLoading}
-        />
+        {/* Search bar is now more prominent with improved styling */}
+        <div className="mb-6">
+          <FoodSearchBar 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            onSearch={onSearch}
+            isLoading={isLoading}
+          />
+        </div>
         
         <FoodCategoryList
           foodCategories={foodCategories}

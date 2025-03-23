@@ -80,7 +80,7 @@ export function FoodSearchBar({
   }, [setSearchQuery]);
   
   return (
-    <div className="relative mb-2">
+    <div className="relative">
       <div className="glass-panel p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-sm">
         <h3 className="text-base font-medium mb-2">Search Foods Database</h3>
         <div className="relative flex items-center">
@@ -92,7 +92,7 @@ export function FoodSearchBar({
           <Input
             type="search"
             placeholder="Type to search Open Food Facts..."
-            className="pl-10 pr-10 py-2"
+            className="pl-10 pr-10 py-2 focus:ring-2 focus:ring-primary/20"
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
             disabled={isLoading}

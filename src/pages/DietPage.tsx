@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +15,6 @@ import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { FoodSearchBar } from "@/components/diet/FoodSearchBar";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -155,15 +153,7 @@ const DietPage = () => {
             </Alert>
           )}
           
-          {/* Add search bar at the top level for visibility */}
-          <div className="mb-4">
-            <FoodSearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              onSearch={handleSearch}
-              isLoading={loading}
-            />
-          </div>
+          {/* Removed duplicate search bar that was here */}
           
           <Tabs 
             defaultValue="preferences" 
