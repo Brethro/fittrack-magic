@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -237,44 +239,89 @@ const OnboardingPage = () => {
               onValueChange={handleRadioChange}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sedentary" id="sedentary" />
-                <Label htmlFor="sedentary" className="font-normal cursor-pointer">
-                  <span className="font-medium">Sedentary</span>
-                  <p className="text-sm text-muted-foreground">Little or no exercise</p>
-                </Label>
+              <div className="relative">
+                <Card 
+                  className={cn(
+                    "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
+                    form.activityLevel === "sedentary" && "border-primary/70 bg-primary/5"
+                  )}
+                >
+                  <CardContent className="flex items-center p-3">
+                    <RadioGroupItem id="sedentary" value="sedentary" className="mr-3" />
+                    <Label htmlFor="sedentary" className="font-normal cursor-pointer flex-1">
+                      <span className="font-medium">Sedentary</span>
+                      <p className="text-sm text-muted-foreground">Little or no exercise</p>
+                    </Label>
+                  </CardContent>
+                </Card>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="light" id="light" />
-                <Label htmlFor="light" className="font-normal cursor-pointer">
-                  <span className="font-medium">Light</span>
-                  <p className="text-sm text-muted-foreground">Exercise 1-3 times/week</p>
-                </Label>
+              <div className="relative">
+                <Card 
+                  className={cn(
+                    "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
+                    form.activityLevel === "light" && "border-primary/70 bg-primary/5"
+                  )}
+                >
+                  <CardContent className="flex items-center p-3">
+                    <RadioGroupItem id="light" value="light" className="mr-3" />
+                    <Label htmlFor="light" className="font-normal cursor-pointer flex-1">
+                      <span className="font-medium">Light</span>
+                      <p className="text-sm text-muted-foreground">Exercise 1-3 times/week</p>
+                    </Label>
+                  </CardContent>
+                </Card>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="moderate" id="moderate" />
-                <Label htmlFor="moderate" className="font-normal cursor-pointer">
-                  <span className="font-medium">Moderate</span>
-                  <p className="text-sm text-muted-foreground">Exercise 3-5 times/week</p>
-                </Label>
+              <div className="relative">
+                <Card 
+                  className={cn(
+                    "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
+                    form.activityLevel === "moderate" && "border-primary/70 bg-primary/5"
+                  )}
+                >
+                  <CardContent className="flex items-center p-3">
+                    <RadioGroupItem id="moderate" value="moderate" className="mr-3" />
+                    <Label htmlFor="moderate" className="font-normal cursor-pointer flex-1">
+                      <span className="font-medium">Moderate</span>
+                      <p className="text-sm text-muted-foreground">Exercise 3-5 times/week</p>
+                    </Label>
+                  </CardContent>
+                </Card>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="active" id="active" />
-                <Label htmlFor="active" className="font-normal cursor-pointer">
-                  <span className="font-medium">Very Active</span>
-                  <p className="text-sm text-muted-foreground">Exercise 6-7 times/week</p>
-                </Label>
+              <div className="relative">
+                <Card 
+                  className={cn(
+                    "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
+                    form.activityLevel === "active" && "border-primary/70 bg-primary/5"
+                  )}
+                >
+                  <CardContent className="flex items-center p-3">
+                    <RadioGroupItem id="active" value="active" className="mr-3" />
+                    <Label htmlFor="active" className="font-normal cursor-pointer flex-1">
+                      <span className="font-medium">Very Active</span>
+                      <p className="text-sm text-muted-foreground">Exercise 6-7 times/week</p>
+                    </Label>
+                  </CardContent>
+                </Card>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="extreme" id="extreme" />
-                <Label htmlFor="extreme" className="font-normal cursor-pointer">
-                  <span className="font-medium">Extremely Active</span>
-                  <p className="text-sm text-muted-foreground">Very intense daily exercise or physical job</p>
-                </Label>
+              <div className="relative">
+                <Card 
+                  className={cn(
+                    "cursor-pointer border border-border/50 hover:border-primary/50 transition-colors", 
+                    form.activityLevel === "extreme" && "border-primary/70 bg-primary/5"
+                  )}
+                >
+                  <CardContent className="flex items-center p-3">
+                    <RadioGroupItem id="extreme" value="extreme" className="mr-3" />
+                    <Label htmlFor="extreme" className="font-normal cursor-pointer flex-1">
+                      <span className="font-medium">Extremely Active</span>
+                      <p className="text-sm text-muted-foreground">Very intense daily exercise or physical job</p>
+                    </Label>
+                  </CardContent>
+                </Card>
               </div>
             </RadioGroup>
           </div>
