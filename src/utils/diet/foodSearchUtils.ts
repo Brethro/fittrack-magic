@@ -54,11 +54,10 @@ export const itemMatchesQuery = (item: FoodItem, query: string): boolean => {
   const lowerQuery = query.toLowerCase();
   const lowerName = item.name.toLowerCase();
   
-  // Check multiple properties for a match
+  // Check multiple properties for a match, removing the 'description' property
   return (
     lowerName.includes(lowerQuery) || 
     item.primaryCategory?.toLowerCase().includes(lowerQuery) ||
-    item.description?.toLowerCase().includes(lowerQuery) ||
     item.diets?.some(diet => diet.toLowerCase().includes(lowerQuery)) ||
     false
   );
