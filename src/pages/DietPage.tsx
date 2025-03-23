@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
@@ -65,37 +66,20 @@ const DietPage = () => {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
       
       /**
-       * COMPLETELY REVISED API SEARCH APPROACH:
-       * 
-       * 1. Based on deeper research into the Open Food Facts API:
-       * - Using direct search with clearer parameters
-       * - Using categories and keywords as separate filters
-       * - Focusing on food-related categories
-       * - Setting specific taxonomy tags to filter to food items
-       * - Using multiple tag filters to improve results
-       * - Requesting focused nutrition fields
+       * REVISED SEARCH APPROACH: Using the basic search endpoint and standard parameters
+       * without overly complex filtering that could restrict results too much
        */
       
-      // Build a more targeted search URL
-      const searchUrl = 
-        `https://world.openfoodfacts.org/cgi/search.pl` +
+      // Basic search approach
+      const basicSearchUrl = 
+        `https://world.openfoodfacts.org/api/v2/search` +
         `?search_terms=${encodedQuery}` +
-        `&search_simple=1` +
-        `&action=process` +
-        `&json=true` +
-        `&tagtype_0=categories` +
-        `&tag_contains_0=contains` +
-        `&tag_0=foods` +
-        `&tagtype_1=categories` +
-        `&tag_contains_1=contains` +
-        `&tag_1=${encodedQuery}` +
-        `&sort_by=unique_scans_n` + // Sort by popularity/scan count
-        `&page_size=50` +
-        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade`;
+        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade` +
+        `&page_size=50`;
       
-      console.log("Searching with URL:", searchUrl);
+      console.log("Searching with URL:", basicSearchUrl);
       
-      const response = await fetch(searchUrl);
+      const response = await fetch(basicSearchUrl);
       
       if (!response.ok) {
         throw new Error(`Network response was not ok (${response.status})`);
@@ -108,80 +92,69 @@ const DietPage = () => {
         // Convert search terms to lowercase for comparison
         const searchTerms = searchQuery.toLowerCase().split(' ');
         
-        // First filter: Only keep products that have any match to search terms
-        // to eliminate completely irrelevant results
-        let filteredProducts = data.products.filter(product => {
-          const productName = (product.product_name || '').toLowerCase();
-          const brandName = (product.brands || '').toLowerCase();
-          const categories = (product.categories || '').toLowerCase();
-          const ingredients = (product.ingredients_text || '').toLowerCase();
-          
-          // Check if any of the search terms appear in any of the product fields
-          return searchTerms.some(term => 
-            productName.includes(term) || 
-            brandName.includes(term) || 
-            categories.includes(term) || 
-            ingredients.includes(term)
-          );
-        });
-        
-        // If we have no matches after filtering, use the original data (with a warning)
-        if (filteredProducts.length === 0) {
-          toast({
-            title: "No exact matches found",
-            description: "Showing general results. Try different search terms.",
-          });
-          filteredProducts = data.products.slice(0, 10); // Limit to top 10
-        }
-        
-        // Second pass: Score remaining products by relevance
-        const scoredResults = filteredProducts.map(product => {
+        // Score and filter results for relevance
+        const scoredResults = data.products.map(product => {
           const productName = (product.product_name || '').toLowerCase();
           const brandName = (product.brands || '').toLowerCase();
           const categories = (product.categories || '').toLowerCase();
           const ingredients = (product.ingredients_text || '').toLowerCase();
           
           let score = 0;
+          let matches = false;
           
-          // Score based on search terms
+          // Check for matches in any field
           searchTerms.forEach(term => {
             // Direct matches in product name (highest priority)
-            if (productName === term) score += 100;
-            else if (productName.includes(` ${term} `)) score += 80;
-            else if (productName.includes(term)) score += 60;
+            if (productName === term) {
+              score += 100;
+              matches = true;
+            } else if (productName.includes(` ${term} `)) {
+              score += 80;
+              matches = true;
+            } else if (productName.includes(term)) {
+              score += 60;
+              matches = true;
+            }
             
-            // Category matches (important for food types)
-            if (categories.includes(term)) score += 50;
+            // Category matches
+            if (categories.includes(term)) {
+              score += 50;
+              matches = true;
+            }
             
-            // Ingredient matches (vital for foods)
-            if (ingredients && ingredients.includes(term)) score += 40;
+            // Ingredient matches
+            if (ingredients && ingredients.includes(term)) {
+              score += 40;
+              matches = true;
+            }
             
             // Brand matches
-            if (brandName.includes(term)) score += 20;
-            
-            // Extra points for having complete data
-            if (product.nutriments) score += 5;
-            if (product.image_url) score += 5;
-            if (product.ecoscore_grade) score += 2;
-            if (product.nutriscore_grade) score += 2;
+            if (brandName.includes(term)) {
+              score += 20;
+              matches = true;
+            }
           });
           
-          return { product, score };
+          // Complete data quality bonus points
+          if (product.nutriments) score += 5;
+          if (product.image_url) score += 5;
+          
+          return { product, score, matches };
         });
         
+        // Filter to only include items with at least one match to any search term
+        const matchedResults = scoredResults.filter(item => item.matches);
+        
         // Sort by score (high to low) and extract just the product data
-        const sortedResults = scoredResults
+        const sortedResults = matchedResults
           .sort((a, b) => b.score - a.score)
           .map(item => item.product);
         
         setSearchResults(sortedResults);
         
         if (sortedResults.length === 0) {
-          toast({
-            title: "No results found",
-            description: "Try different search terms or check your spelling.",
-            variant: "destructive",
-          });
+          // If no matches, try a fallback approach with a different endpoint
+          await searchWithFallback(encodedQuery);
         }
       } else {
         console.error("Unexpected API response format:", data);
@@ -202,6 +175,51 @@ const DietPage = () => {
       setSearchResults([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fallback search approach for when the primary search returns no results
+  const searchWithFallback = async (encodedQuery: string) => {
+    try {
+      // Use the legacy search endpoint with more permissive parameters
+      const fallbackSearchUrl = 
+        `https://world.openfoodfacts.org/cgi/search.pl` +
+        `?search_terms=${encodedQuery}` +
+        `&search_simple=1` +
+        `&action=process` +
+        `&json=true` +
+        `&page_size=50` +
+        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade`;
+      
+      console.log("Fallback search with URL:", fallbackSearchUrl);
+      
+      const response = await fetch(fallbackSearchUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Network response was not ok (${response.status})`);
+      }
+      
+      const data = await response.json();
+      console.log("Fallback search API response:", data);
+      
+      if (data.products && Array.isArray(data.products)) {
+        if (data.products.length > 0) {
+          setSearchResults(data.products);
+          toast({
+            title: "Limited results found",
+            description: "We found some items that might match what you're looking for.",
+          });
+        } else {
+          toast({
+            title: "No results found",
+            description: "Try different search terms or check your spelling.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Fallback search error:", error);
+      // Don't show another toast here since we already showed one for the main search
     }
   };
 
