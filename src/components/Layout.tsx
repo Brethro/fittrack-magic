@@ -18,10 +18,13 @@ const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <main className={`flex-1 w-full ${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative pb-20 overflow-y-auto max-h-screen`}>
-        <Outlet />
-      </main>
+    <div className="flex flex-col min-h-screen bg-background overflow-hidden">
+      {/* Main scrollable area that takes the full viewport height minus nav height */}
+      <div className="flex-1 w-full overflow-y-auto pb-20">
+        <main className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
+          <Outlet />
+        </main>
+      </div>
       
       <nav className="fixed bottom-0 left-0 right-0 z-50">
         <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto glass-panel rounded-t-xl py-3 px-6`}>
