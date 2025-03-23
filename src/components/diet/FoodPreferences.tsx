@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FoodCategory, DietType, FoodItem } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,6 +9,7 @@ import { FoodCategoryList } from "./FoodCategoryList";
 import { FreeMealOption } from "./FreeMealOption";
 import { GenerateMealPlanButton } from "./GenerateMealPlanButton";
 import { EmptyFoodPreferences } from "./EmptyFoodPreferences";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FoodPreferencesProps {
   foodCategories: FoodCategory[];
@@ -22,6 +22,8 @@ interface FoodPreferencesProps {
   generateMealPlan: () => void;
   dailyCalories: number;
   availableDiets?: DietType[];
+  onSearch?: (query: string) => void;
+  isLoading?: boolean;
 }
 
 export function FoodPreferences({
@@ -35,21 +37,20 @@ export function FoodPreferences({
   generateMealPlan,
   dailyCalories,
   availableDiets,
+  onSearch,
+  isLoading = false
 }: FoodPreferencesProps) {
   const { toast } = useToast();
+
   const [searchQuery, setSearchQuery] = useState<string>("");
-  // Initialize categories and subcategories as collapsed
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     foodCategories.reduce((acc, category) => ({ ...acc, [category.name]: false }), {})
   );
-  // Track open subcategories
   const [openSubcategories, setOpenSubcategories] = useState<Record<string, boolean>>({});
   
-  // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedFoodForFeedback, setSelectedFoodForFeedback] = useState<FoodItem | null>(null);
   
-  // State for nutrition dialog
   const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
   const [selectedFoodForNutrition, setSelectedFoodForNutrition] = useState<FoodItem | null>(null);
   
@@ -106,7 +107,6 @@ export function FoodPreferences({
     setNutritionDialogOpen(true);
   };
 
-  // Expand categories/subcategories if they contain matched search results
   useEffect(() => {
     if (!searchQuery) return;
     
@@ -187,6 +187,25 @@ export function FoodPreferences({
   // Calculate total number of selected foods for user feedback
   const selectedFoodCount = Object.values(selectedFoods).filter(Boolean).length;
 
+  // Show loading state or empty state if appropriate
+  if (isLoading && foodCategories.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="glass-panel rounded-lg p-4">
+          <h2 className="text-lg font-medium mb-3">Loading Food Data...</h2>
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show a message if there are no food categories to display
   if (foodCategories.length === 0 || foodCategories.every(category => category.items.length === 0)) {
     return (
@@ -210,7 +229,9 @@ export function FoodPreferences({
         
         <FoodSearchBar 
           searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
+          setSearchQuery={setSearchQuery}
+          onSearch={onSearch}
+          isLoading={isLoading}
         />
         
         <FoodCategoryList
@@ -226,6 +247,7 @@ export function FoodPreferences({
           toggleSubcategory={toggleSubcategory}
           openFeedbackDialog={openFeedbackDialog}
           openNutritionDialog={openNutritionDialog}
+          isLoading={isLoading}
         />
 
         <FreeMealOption
@@ -237,6 +259,7 @@ export function FoodPreferences({
         <GenerateMealPlanButton
           generateMealPlan={generateMealPlan}
           selectedFoodCount={selectedFoodCount}
+          isLoading={isLoading}
         />
       </div>
       

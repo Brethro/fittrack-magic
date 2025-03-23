@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,11 +9,10 @@ import { FoodPreferences } from "@/components/diet/FoodPreferences";
 import { MealPlanDisplay } from "@/components/diet/MealPlanDisplay";
 import { EmptyStateMessage } from "@/components/diet/EmptyStateMessage";
 import { DietSelector } from "@/components/diet/DietSelector"; 
-import { foodCategoriesData } from "@/data/diet";
+import FoodData, { foodCategoriesData } from "@/components/diet/FoodData";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
-import { initializeFoodCategories } from "@/utils/diet/foodManagement";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
 
 const DietPage = () => {
@@ -21,18 +21,27 @@ const DietPage = () => {
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
   const [initialized, setInitialized] = useState(false);
-  const { importPoultryData } = useFoodDatabase();
+  const { initializeFoodData } = useFoodDatabase();
 
-  // Initialize food categories only
+  // Initialize food data on component mount
   useEffect(() => {
-    // First, initialize food categories - removed argument to match stub signature
-    const categories = initializeFoodCategories();
-    console.log("DietPage: Food categories initialized:", 
-      categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`));
+    const initData = async () => {
+      try {
+        await initializeFoodData();
+        console.log("DietPage: Food data initialized from Open Food Facts API");
+        setInitialized(true);
+      } catch (error) {
+        console.error("Error initializing food data:", error);
+        toast({
+          title: "Data Initialization Error",
+          description: "There was an error loading food data. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
     
-    // Mark initialization as complete
-    setInitialized(true);
-  }, []);
+    initData();
+  }, [initializeFoodData, toast]);
 
   // Check if user has required data
   useEffect(() => {
@@ -58,7 +67,10 @@ const DietPage = () => {
     selectedDiet,
     setSelectedDiet,
     getSelectedFoodItems,
-    getAvailableDiets 
+    getAvailableDiets,
+    foodCategories,
+    loading,
+    searchFoodItems
   } = useFoodSelectionState(foodCategoriesData);
   
   const { 
@@ -96,6 +108,17 @@ const DietPage = () => {
     regenerateMealHook(mealId, getSelectedFoodItems());
   };
 
+  // Handle food search
+  const handleSearch = async (query: string) => {
+    if (query.length >= 2) {
+      try {
+        await searchFoodItems(query);
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    }
+  };
+
   return (
     <div className="container px-4 py-8 mx-auto">
       <AnimatePresence>
@@ -107,6 +130,9 @@ const DietPage = () => {
           <h1 className="text-2xl font-bold mb-6 text-gradient-purple">
             Your Diet Plan
           </h1>
+          
+          {/* Display new Open Food Facts integration component */}
+          <FoodData />
           
           <Tabs 
             defaultValue="preferences" 
@@ -124,10 +150,11 @@ const DietPage = () => {
                 selectedDiet={selectedDiet}
                 onDietChange={setSelectedDiet}
                 availableDiets={availableDiets}
+                isLoading={loading}
               />
               
               <FoodPreferences 
-                foodCategories={foodCategoriesData}
+                foodCategories={foodCategories}
                 selectedFoods={selectedFoods}
                 setSelectedFoods={setSelectedFoods}
                 selectedDiet={selectedDiet}
@@ -137,6 +164,8 @@ const DietPage = () => {
                 generateMealPlan={handleGenerateMealPlan}
                 dailyCalories={userData.dailyCalories || 2000}
                 availableDiets={availableDiets}
+                onSearch={handleSearch}
+                isLoading={loading}
               />
             </TabsContent>
             
