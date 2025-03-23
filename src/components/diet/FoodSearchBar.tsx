@@ -40,8 +40,8 @@ export function FoodSearchBar({
   };
   
   return (
-    <div className="relative mb-6">
-      <div className="glass-panel p-3 rounded-lg bg-secondary/80">
+    <div className="relative mb-2">
+      <div className="glass-panel p-3 rounded-lg bg-primary/10 border border-primary/20 shadow-sm">
         <h3 className="text-base font-medium mb-2">Search Foods Database</h3>
         <div className="relative flex items-center">
           {isLoading ? (

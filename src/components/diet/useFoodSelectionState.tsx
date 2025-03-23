@@ -113,11 +113,9 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
   const searchFoodItems = async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
-      setSearchQuery("");
       return [];
     }
 
-    setSearchQuery(query);
     setLoading(true);
     try {
       // First search local food items using highlighting
@@ -216,6 +214,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     loading: loading || isLoading,
     searchFoodItems,
     searchResults,
-    searchQuery
+    searchQuery,
+    setSearchQuery
   };
 };

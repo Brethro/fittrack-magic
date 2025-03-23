@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,7 +81,10 @@ const DietPage = () => {
     getAvailableDiets,
     foodCategories,
     loading,
-    searchFoodItems
+    searchFoodItems,
+    searchResults,
+    searchQuery,
+    setSearchQuery
   } = useFoodSelectionState(foodCategoriesData);
   
   const { 
@@ -121,6 +125,7 @@ const DietPage = () => {
   // Handle food search
   const handleSearch = async (query: string) => {
     setSearchTerm(query);
+    setSearchQuery(query);
     if (query.length >= 2) {
       try {
         await searchFoodItems(query);
@@ -151,6 +156,16 @@ const DietPage = () => {
               </AlertDescription>
             </Alert>
           )}
+          
+          {/* Add search bar at the top level for visibility */}
+          <div className="mb-4">
+            <FoodSearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onSearch={handleSearch}
+              isLoading={loading}
+            />
+          </div>
           
           <Tabs 
             defaultValue="preferences" 
