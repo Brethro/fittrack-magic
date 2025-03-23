@@ -7,6 +7,13 @@ import {
   getWeightInKg, 
   calculateTDEE 
 } from "@/utils/nutritionCalculator";
+import { 
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const DailyStats = () => {
   const { userData } = useUserData();
@@ -36,49 +43,91 @@ const DailyStats = () => {
   if (userData.tdee && userData.dailyCalories) {
     if (userData.isWeightGain) {
       // For weight gain, show the calculated surplus percentage from userData if available
-      // This ensures consistency with our weightGainCalculator implementation
       if (userData.goalPace === 'aggressive') {
-        // For aggressive pace, always use 19.99% to avoid floating point issues
-        calorieAdjustmentText = `(19.99% surplus)`;
+        // For aggressive pace, always display 20% (rounded up from 19.99%)
+        calorieAdjustmentText = `(20% surplus)`;
       } else {
         // For other paces, calculate and display the actual percentage
         const surplusAmount = userData.dailyCalories - userData.tdee;
         const surplusPercentage = (surplusAmount / userData.tdee) * 100;
-        calorieAdjustmentText = `(${surplusPercentage.toFixed(1)}% surplus)`;
+        calorieAdjustmentText = `(${Math.round(surplusPercentage)}% surplus)`;
       }
     } else if (userData.calculatedDeficitPercentage) {
       // For weight loss, use the pre-calculated percentage if available
-      calorieAdjustmentText = `(${userData.calculatedDeficitPercentage.toFixed(1)}% deficit)`;
+      calorieAdjustmentText = `(${Math.round(userData.calculatedDeficitPercentage)}% deficit)`;
     }
   }
 
+  // Calculate percentage of daily calories compared to TDEE
+  const caloriePercentage = (userData.dailyCalories && userData.tdee) 
+    ? Math.min(100, Math.round((userData.dailyCalories / userData.tdee) * 100))
+    : 0;
+
+  // Calculate percentage of protein compared to goal
+  const proteinPercentage = (userData.macros.protein) 
+    ? Math.min(100, Math.round((userData.macros.protein / 2) * 100)) // Just for visual, assuming 50% progress
+    : 0;
+
   return (
-    <div className="glass-panel rounded-lg p-4">
-      <h2 className="text-lg font-medium mb-4">Daily Stats</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">BMR (Basal Metabolic Rate)</p>
-          <p className="font-medium">{Math.round(bmr)} calories</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">TDEE (Total Daily Energy Expenditure)</p>
-          <p className="font-medium">{Math.round(tdee)} calories</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Daily Calorie Goal</p>
-          <p className="font-medium">
-            {userData.dailyCalories} calories
+    <Card className="backdrop-blur-lg bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 shadow-lg">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xl text-gradient-purple">Daily Stats</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* BMR Card */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">BMR (Basal Metabolic Rate)</p>
+            <div className="flex items-end gap-1">
+              <p className="text-2xl font-bold">{Math.round(bmr)}</p>
+              <p className="text-sm text-muted-foreground mb-1">calories</p>
+            </div>
+            <Progress value={60} className="h-1 bg-muted/30" indicatorClassName="bg-blue-400" />
+          </div>
+          
+          {/* TDEE Card */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">TDEE (Total Daily Energy Expenditure)</p>
+            <div className="flex items-end gap-1">
+              <p className="text-2xl font-bold">{Math.round(tdee)}</p>
+              <p className="text-sm text-muted-foreground mb-1">calories</p>
+            </div>
+            <Progress value={80} className="h-1 bg-muted/30" indicatorClassName="bg-purple-400" />
+          </div>
+          
+          {/* Daily Calorie Goal */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Daily Calorie Goal</p>
+            <div className="flex items-end gap-1">
+              <p className="text-2xl font-bold">{userData.dailyCalories}</p>
+              <p className="text-sm text-muted-foreground mb-1">calories</p>
+            </div>
             {calorieAdjustmentText && (
-              <span className="text-sm ml-1 text-muted-foreground">{calorieAdjustmentText}</span>
+              <p className="text-sm text-primary font-medium">{calorieAdjustmentText}</p>
             )}
-          </p>
+            <Progress 
+              value={caloriePercentage} 
+              className="h-1 bg-muted/30" 
+              indicatorClassName="bg-amber-400" 
+            />
+          </div>
+          
+          {/* Protein Intake */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Protein Intake</p>
+            <div className="flex items-end gap-1">
+              <p className="text-2xl font-bold">{userData.macros.protein}</p>
+              <p className="text-sm text-muted-foreground mb-1">g</p>
+            </div>
+            <Progress 
+              value={proteinPercentage} 
+              className="h-1 bg-muted/30" 
+              indicatorClassName="bg-green-400" 
+            />
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Protein Intake</p>
-          <p className="font-medium">{userData.macros.protein}g</p>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
