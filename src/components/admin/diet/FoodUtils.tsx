@@ -14,11 +14,30 @@ export const useFoodDatabase = () => {
 
   // Function to search for foods using the Open Food Facts API
   const searchFoodItems = async (query: string, page = 1, pageSize = 20) => {
+    if (query.length < 2) {
+      return [];
+    }
+    
     setIsLoading(true);
     try {
       const results = await searchFoods(query, page, pageSize);
       setFoodItems(results);
       setTotalFoodItems(results.length);
+      
+      // Show a toast notification with search results
+      if (results.length > 0) {
+        toast({
+          title: "Search Results",
+          description: `Found ${results.length} items matching "${query}"`,
+        });
+      } else {
+        toast({
+          title: "No Results",
+          description: `No foods found matching "${query}"`,
+          variant: "destructive",
+        });
+      }
+      
       return results;
     } catch (error) {
       console.error("Error searching foods:", error);

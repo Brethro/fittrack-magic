@@ -29,13 +29,14 @@ export function GenerateMealPlanButton({
         onClick={generateMealPlan}
         className="w-full"
         disabled={selectedFoodCount < 10 || isLoading}
+        size="lg"
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
         ) : (
-          <Utensils className="mr-2 h-4 w-4" />
+          <Utensils className="mr-2 h-5 w-5" />
         )}
-        {isLoading ? "Loading..." : "Generate Meal Plan"}
+        {isLoading ? "Generating Meal Plan..." : "Generate Meal Plan"}
       </Button>
     </div>
   );

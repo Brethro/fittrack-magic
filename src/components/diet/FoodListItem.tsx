@@ -1,7 +1,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { FoodItem } from "@/types/diet";
-import { Info } from "lucide-react";
+import { Info, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FoodListItemProps {
@@ -12,6 +12,7 @@ interface FoodListItemProps {
   onOpenFeedbackDialog: (event: React.MouseEvent) => void;
   isHighlighted?: boolean;
   isDisabled?: boolean;
+  showSearchIcon?: boolean;
 }
 
 export function FoodListItem({
@@ -21,7 +22,8 @@ export function FoodListItem({
   onOpenNutritionDialog,
   onOpenFeedbackDialog,
   isHighlighted = false,
-  isDisabled = false
+  isDisabled = false,
+  showSearchIcon = false
 }: FoodListItemProps) {
   return (
     <div
@@ -54,6 +56,7 @@ export function FoodListItem({
       <div className="flex flex-1 items-center">
         <span className="text-sm font-medium">
           {food.name}
+          {showSearchIcon && <Search className="inline-block ml-1 h-3 w-3 text-muted-foreground" />}
         </span>
         <div className="ml-auto flex items-center space-x-1">
           <button
