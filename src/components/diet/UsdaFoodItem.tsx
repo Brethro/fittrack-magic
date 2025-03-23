@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Info, Database, Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { type UsdaFoodItem as UsdaFoodItemType, extractNutritionInfo } from "@/utils/usdaApi";
@@ -19,18 +19,11 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   // Format description and category
   const description = foodItem.description || "Unnamed Food";
   const category = foodItem.foodCategory || "";
-  const brand = foodItem.brandName || "USDA Database";
   
   // Handle serving size information
   const servingSize = foodItem.servingSize
     ? `${foodItem.servingSize}${foodItem.servingSizeUnit || "g"}`
     : "100g";
-    
-  // Format ingredients if available
-  const ingredients = foodItem.ingredients
-    ? foodItem.ingredients.substring(0, 120) + 
-      (foodItem.ingredients.length > 120 ? "..." : "")
-    : "";
 
   const handleSelectFood = () => {
     if (onSelect) {
@@ -41,69 +34,63 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   };
 
   return (
-    <div className="glass-panel p-4 rounded-lg border-l-4 border-emerald-500 hover:shadow-lg transition-all duration-200">
+    <div className="glass-panel p-4 rounded-lg hover:shadow-lg transition-all duration-200">
       <div className="flex justify-between items-start gap-3">
-        <div className="space-y-2 flex-1">
-          <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
             <h3 className="font-medium text-md sm:text-lg">{description}</h3>
-            <Database className="h-4 w-4 text-emerald-500" />
+            <div className="flex gap-2">
+              <Button 
+                size="icon"
+                variant="ghost" 
+                className="h-8 w-8 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500"
+                onClick={handleSelectFood}
+              >
+                <Info size={18} />
+              </Button>
+              
+              <Button 
+                size="icon"
+                variant="outline" 
+                className="h-8 w-8 rounded-full text-emerald-500 border-emerald-300/30 hover:bg-emerald-500/10 hover:border-emerald-300/50"
+                onClick={handleSelectFood}
+              >
+                <Plus size={18} />
+              </Button>
+            </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 items-center">
-            <p className="text-xs sm:text-sm text-muted-foreground">{brand}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+              USDA Database
+            </Badge>
             
             {category && (
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-300/20 hover:bg-emerald-500/20">
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
                 {category}
               </Badge>
             )}
           </div>
           
-          {ingredients && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ingredients}</p>
-          )}
-          
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Badge className="bg-secondary text-secondary-foreground">
               {Math.round(nutrition.calories)} kcal
             </Badge>
-            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
+            <Badge className="bg-secondary text-secondary-foreground">
               P: {nutrition.protein.toFixed(1)}g
             </Badge>
-            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
+            <Badge className="bg-secondary text-secondary-foreground">
               C: {nutrition.carbs.toFixed(1)}g
             </Badge>
-            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
+            <Badge className="bg-secondary text-secondary-foreground">
               F: {nutrition.fat.toFixed(1)}g
             </Badge>
           </div>
           
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-xs sm:text-sm">Serving: {servingSize}</p>
-            <p className="text-xs sm:text-sm text-emerald-500 font-medium">USDA FoodData Central</p>
+          <div className="flex justify-between items-center mt-2 text-xs sm:text-sm">
+            <p>Serving: {servingSize}</p>
+            <p className="text-emerald-500">Source: USDA FoodData Central</p>
           </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button 
-            size={isMobile ? "icon" : "sm"}
-            variant="ghost" 
-            className="rounded-full hover:bg-emerald-500/10 hover:text-emerald-500"
-            onClick={handleSelectFood}
-          >
-            <Info size={18} />
-            {!isMobile && <span className="ml-1">Info</span>}
-          </Button>
-          
-          <Button 
-            size={isMobile ? "icon" : "sm"}
-            variant="outline" 
-            className="rounded-full text-emerald-500 border-emerald-300/30 hover:bg-emerald-500/10 hover:border-emerald-300/50"
-            onClick={handleSelectFood}
-          >
-            <Plus size={18} />
-            {!isMobile && <span className="ml-1">Add</span>}
-          </Button>
         </div>
       </div>
     </div>
