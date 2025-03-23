@@ -1,4 +1,3 @@
-
 /**
  * Converts kebab-case, camelCase or snake_case to Title Case for display
  */
@@ -78,18 +77,18 @@ export const assignDefaultCategory = (food: import('@/types/diet').FoodItem): im
   // Basic categorization patterns
   if (/chicken|turkey|duck|fowl|poultry/i.test(name)) return 'poultry';
   if (/beef|steak|pork|lamb|veal|bison|venison|redMeat/i.test(name)) return 'redMeat';
-  if (/fish|salmon|tuna|cod|tilapia|sardine|anchov|trout/i.test(name)) return 'seafood';
+  if (/fish|salmon|tuna|cod|tilapia|sardine|anchov|trout/i.test(name)) return 'fish';
   if (/shrimp|prawn|lobster|crab|clam|mussel|oyster|scallop/i.test(name)) return 'seafood';
   if (/milk|cheese|yogurt|butter|cream|dairy/i.test(name)) return 'dairy';
-  if (/bread|bun|roll|bagel|croissant|pastry|muffin/i.test(name)) return 'grains';
-  if (/rice|pasta|noodle|grain|cereal|oat|quinoa|barley/i.test(name)) return 'grains';
-  if (/apple|orange|banana|berry|fruit|pear|grape|melon/i.test(name)) return 'fruits';
-  if (/vegetable|broccoli|carrot|spinach|lettuce|greens/i.test(name)) return 'vegetables';
-  if (/bean|lentil|pea|tofu|tempeh|legume/i.test(name)) return 'legumes';
-  if (/oil|avocado|olive|coconut|fat/i.test(name)) return 'fats';
-  if (/nut|seed|almond|peanut|walnut|cashew/i.test(name)) return 'nuts';
-  if (/sauce|dressing|condiment|ketchup|mustard/i.test(name)) return 'condiments';
-  if (/water|juice|soda|coffee|tea|drink|beverage/i.test(name)) return 'beverages';
+  if (/bread|bun|roll|bagel|croissant|pastry|muffin/i.test(name)) return 'grain';
+  if (/rice|pasta|noodle|grain|cereal|oat|quinoa|barley/i.test(name)) return 'grain';
+  if (/apple|orange|banana|berry|fruit|pear|grape|melon/i.test(name)) return 'fruit';
+  if (/vegetable|broccoli|carrot|spinach|lettuce|greens/i.test(name)) return 'vegetable';
+  if (/bean|lentil|pea|tofu|tempeh|legume/i.test(name)) return 'legume';
+  if (/oil|avocado|olive|coconut|fat/i.test(name)) return 'oil';
+  if (/nut|seed|almond|peanut|walnut|cashew/i.test(name)) return 'nut';
+  if (/sauce|dressing|condiment|ketchup|mustard/i.test(name)) return 'processedFood';
+  if (/water|juice|soda|coffee|tea|drink|beverage/i.test(name)) return 'processedFood';
   
   // Default fallback
   return 'other';
@@ -110,21 +109,21 @@ export const inferSecondaryCategories = (food: import('@/types/diet').FoodItem):
   }
   
   // Add protein category for protein-rich foods
-  if (['meat', 'poultry', 'redMeat', 'seafood', 'fish', 'legumes', 'nuts'].includes(food.primaryCategory as string) || 
+  if (['meat', 'poultry', 'redMeat', 'seafood', 'fish', 'legume', 'nut'].includes(food.primaryCategory as string) || 
       food.protein > 10) {
-    secondaryCategories.push('protein');
+    secondaryCategories.push('meat'); // Using 'meat' as a proxy for protein-rich foods
   }
   
-  // Add fruits category for fruit-based items
+  // Add fruit category for fruit-based items
   if (/fruit|berry|apple|orange|banana|pear|grape|melon/i.test(name) && 
-      food.primaryCategory !== 'fruits') {
-    secondaryCategories.push('fruits');
+      food.primaryCategory !== 'fruit') {
+    secondaryCategories.push('fruit');
   }
   
   // Add vegetables category for veggie-based items
   if (/veggie|vegetable|salad|broccoli|spinach|kale|carrot/i.test(name) && 
-      food.primaryCategory !== 'vegetables') {
-    secondaryCategories.push('vegetables');
+      food.primaryCategory !== 'vegetable') {
+    secondaryCategories.push('vegetable');
   }
   
   return secondaryCategories.length > 0 ? secondaryCategories : undefined;
@@ -139,28 +138,28 @@ export const resolveAmbiguousCategory = (food: import('@/types/diet').FoodItem):
   // Use macros to help determine category
   if (food.protein > 15 && food.carbs < 5) {
     // High protein, low carb likely meat or seafood
-    if (/fish|salmon|tuna|cod|seafood/i.test(name)) return 'seafood';
+    if (/fish|salmon|tuna|cod|seafood/i.test(name)) return 'fish';
     if (/chicken|turkey|poultry/i.test(name)) return 'poultry';
-    return 'protein';
+    return 'meat';
   }
   
   if (food.carbs > 20 && food.protein < 5) {
     // High carb, low protein likely fruit, grain or starchy veggie
-    if (/sweet|sugar|dessert/i.test(name)) return 'desserts';
-    if (/fruit|berry|apple|banana/i.test(name)) return 'fruits';
-    return 'grains';
+    if (/sweet|sugar|dessert/i.test(name)) return 'processedFood';
+    if (/fruit|berry|apple|banana/i.test(name)) return 'fruit';
+    return 'grain';
   }
   
   if (food.fats > 15) {
     // High fat items
-    if (/oil|butter|cream/i.test(name)) return 'fats';
-    if (/nut|seed|almond|peanut/i.test(name)) return 'nuts';
-    return 'fats';
+    if (/oil|butter|cream/i.test(name)) return 'oil';
+    if (/nut|seed|almond|peanut/i.test(name)) return 'nut';
+    return 'oil';
   }
   
   // Check for prepared foods or dishes
   if (/salad|soup|stew|curry|dish|meal|prepared/i.test(name)) {
-    return 'miscellaneous';
+    return 'processedFood';
   }
   
   // Keep 'other' as fallback
