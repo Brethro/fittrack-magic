@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, RefreshCw, Shield, LogOut } from "lucide-react";
+import { Lock, Shield, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { AdminDietTools } from "@/components/admin/AdminDietTools";
 
 const ADMIN_PASSWORD = "gayest"; // Simple password as requested
 const ADMIN_AUTH_KEY = "fittrack_admin_auth"; // localStorage key
@@ -148,11 +147,19 @@ const AdminPage = () => {
               </Button>
             </div>
             
-            <div className="p-1 rounded-lg bg-gradient-to-r from-green-400/30 to-green-500/30">
-              <Card className="border-green-400/30">
-                <AdminDietTools />
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Administration</CardTitle>
+                <CardDescription>
+                  This section contains administrative tools for managing the application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  No administrative tools are currently available.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         )}
       </motion.div>
