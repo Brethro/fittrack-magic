@@ -9,32 +9,63 @@ const Layout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
   
-  // Check if content is scrollable
+  // Check if content needs scrolling - accounts for navigation padding
   useEffect(() => {
     const checkScrollable = () => {
-      if (contentRef.current) {
-        const { scrollHeight, clientHeight } = contentRef.current;
-        setIsScrollable(scrollHeight > clientHeight);
+      if (mainRef.current && contentRef.current) {
+        // Get the actual content height without padding
+        const mainHeight = mainRef.current.scrollHeight;
+        // Get the available container height
+        const containerHeight = contentRef.current.clientHeight;
+        
+        // Compare actual content height to available height
+        // Add a small buffer (2px) to prevent false positives
+        setIsScrollable(mainHeight > containerHeight + 2);
+        
+        // Debug info
+        console.log({
+          path: location.pathname,
+          mainHeight,
+          containerHeight,
+          isScrollable: mainHeight > containerHeight + 2
+        });
       }
     };
     
-    // Initial check
-    checkScrollable();
+    // Initial check after a short delay to ensure content is fully rendered
+    const initialCheckTimer = setTimeout(checkScrollable, 50);
     
     // Add resize observer to recheck when dimensions change
-    const resizeObserver = new ResizeObserver(checkScrollable);
+    const resizeObserver = new ResizeObserver(() => {
+      // Add a small delay to ensure accurate measurements
+      setTimeout(checkScrollable, 10);
+    });
+    
+    if (mainRef.current) {
+      resizeObserver.observe(mainRef.current);
+    }
+    
     if (contentRef.current) {
       resizeObserver.observe(contentRef.current);
     }
     
+    // Also check on window resize
+    window.addEventListener('resize', checkScrollable);
+    
     // Clean up
     return () => {
+      clearTimeout(initialCheckTimer);
+      if (mainRef.current) {
+        resizeObserver.unobserve(mainRef.current);
+      }
       if (contentRef.current) {
         resizeObserver.unobserve(contentRef.current);
       }
       resizeObserver.disconnect();
+      window.removeEventListener('resize', checkScrollable);
     };
   }, [location.pathname]);
   
@@ -55,7 +86,7 @@ const Layout = () => {
         className={`flex-1 w-full ${isScrollable ? 'overflow-auto' : 'overflow-hidden'}`} 
         style={{ paddingBottom: "80px" }}
       >
-        <main className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
+        <main ref={mainRef} className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
           <Outlet />
         </main>
       </div>
