@@ -19,8 +19,8 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Main content area with scrolling enabled */}
-      <div className="flex-1 w-full overflow-auto" style={{ paddingBottom: "80px" }}>
+      {/* Main content area */}
+      <div className="flex-1 w-full" style={{ paddingBottom: "80px" }}>
         <main className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
           <Outlet />
         </main>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -57,7 +58,7 @@
     padding: 0;
     height: 100%;
     width: 100%;
-    overflow: auto;
+    overflow: hidden;
   }
 
   html {
@@ -66,7 +67,7 @@
     padding: 0;
     height: 100%;
     width: 100%;
-    overflow: auto;
+    overflow: hidden;
   }
 
   #root {
