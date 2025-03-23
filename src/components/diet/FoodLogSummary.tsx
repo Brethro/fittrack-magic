@@ -114,21 +114,21 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
         />
       </div>
       
-      {/* Macros grid */}
+      {/* Macros grid - Improved layout */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         {/* Protein */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-blue-400 text-xs font-medium">Protein</span>
+            <span className="text-blue-400 font-medium">Protein</span>
             <span className="text-xs">{proteinPercentage}%</span>
           </div>
-          <p className="text-sm font-semibold">
-            {dailyTotals.protein.toFixed(1)}
-            <span className="text-xs font-normal text-muted-foreground">/{userData.macros.protein}g</span>
-          </p>
+          <div className="flex justify-between items-baseline mb-1">
+            <p className="text-base font-semibold">{dailyTotals.protein.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">/{userData.macros.protein}g</p>
+          </div>
           <Progress 
             value={proteinPercentage} 
-            className="h-1.5 mt-1 bg-blue-950"
+            className="h-1.5 mb-1 bg-blue-950"
             indicatorClassName="bg-blue-400"
           />
         </div>
@@ -136,16 +136,16 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
         {/* Carbs */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-amber-400 text-xs font-medium">Carbs</span>
+            <span className="text-amber-400 font-medium">Carbs</span>
             <span className="text-xs">{carbsPercentage}%</span>
           </div>
-          <p className="text-sm font-semibold">
-            {dailyTotals.carbs.toFixed(1)}
-            <span className="text-xs font-normal text-muted-foreground">/{userData.macros.carbs}g</span>
-          </p>
+          <div className="flex justify-between items-baseline mb-1">
+            <p className="text-base font-semibold">{dailyTotals.carbs.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">/{userData.macros.carbs}g</p>
+          </div>
           <Progress 
             value={carbsPercentage} 
-            className="h-1.5 mt-1 bg-amber-950"
+            className="h-1.5 mb-1 bg-amber-950"
             indicatorClassName="bg-amber-400"
           />
         </div>
@@ -153,16 +153,16 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
         {/* Fats */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-pink-400 text-xs font-medium">Fats</span>
+            <span className="text-pink-400 font-medium">Fats</span>
             <span className="text-xs">{fatPercentage}%</span>
           </div>
-          <p className="text-sm font-semibold">
-            {dailyTotals.fat.toFixed(1)}
-            <span className="text-xs font-normal text-muted-foreground">/{userData.macros.fats}g</span>
-          </p>
+          <div className="flex justify-between items-baseline mb-1">
+            <p className="text-base font-semibold">{dailyTotals.fat.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">/{userData.macros.fats}g</p>
+          </div>
           <Progress 
             value={fatPercentage} 
-            className="h-1.5 mt-1 bg-pink-950"
+            className="h-1.5 mb-1 bg-pink-950"
             indicatorClassName="bg-pink-400"
           />
         </div>

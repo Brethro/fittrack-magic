@@ -21,8 +21,6 @@ const FoodLog = () => {
   
   return (
     <div className="flex flex-col space-y-3 w-full h-full">
-      <h2 className="text-xl font-semibold">Food Log</h2>
-      
       <div className="mb-1">
         <FoodLogSummary onDateChange={handleDateChange} />
       </div>
