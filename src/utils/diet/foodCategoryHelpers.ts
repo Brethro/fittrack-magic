@@ -1,3 +1,4 @@
+
 /**
  * Converts kebab-case, camelCase or snake_case to Title Case for display
  */
@@ -71,7 +72,7 @@ export const getDisplayNameForCategory = (category: string): string => {
 /**
  * Assigns a default category to a food item based on its name or other properties
  */
-export const assignDefaultCategory = (food: import('@/types/diet').FoodItem): string => {
+export const assignDefaultCategory = (food: import('@/types/diet').FoodItem): import('@/types/diet').FoodPrimaryCategory => {
   const name = food.name.toLowerCase();
 
   // Basic categorization patterns
@@ -97,9 +98,9 @@ export const assignDefaultCategory = (food: import('@/types/diet').FoodItem): st
 /**
  * Infers possible secondary categories for a food item
  */
-export const inferSecondaryCategories = (food: import('@/types/diet').FoodItem): string[] | undefined => {
+export const inferSecondaryCategories = (food: import('@/types/diet').FoodItem): import('@/types/diet').FoodPrimaryCategory[] | undefined => {
   const name = food.name.toLowerCase();
-  const secondaryCategories: string[] = [];
+  const secondaryCategories: import('@/types/diet').FoodPrimaryCategory[] = [];
   
   // Add meat category for all meat types
   if (food.primaryCategory === 'poultry' || 
@@ -109,7 +110,7 @@ export const inferSecondaryCategories = (food: import('@/types/diet').FoodItem):
   }
   
   // Add protein category for protein-rich foods
-  if (['meat', 'poultry', 'redMeat', 'seafood', 'fish', 'legumes', 'nuts'].includes(food.primaryCategory) || 
+  if (['meat', 'poultry', 'redMeat', 'seafood', 'fish', 'legumes', 'nuts'].includes(food.primaryCategory as string) || 
       food.protein > 10) {
     secondaryCategories.push('protein');
   }
@@ -132,7 +133,7 @@ export const inferSecondaryCategories = (food: import('@/types/diet').FoodItem):
 /**
  * Resolves ambiguous categories based on additional food properties
  */
-export const resolveAmbiguousCategory = (food: import('@/types/diet').FoodItem): string => {
+export const resolveAmbiguousCategory = (food: import('@/types/diet').FoodItem): import('@/types/diet').FoodPrimaryCategory => {
   const name = food.name.toLowerCase();
   
   // Use macros to help determine category

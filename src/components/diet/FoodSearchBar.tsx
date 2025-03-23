@@ -58,7 +58,7 @@ export function FoodSearchBar({
       setTimeout(() => {
         isSearching.current = false;
       }, 150);
-    }, 800); // Increased debounce delay further to prevent rapid API calls
+    }, 500); // Reduced debounce delay for more responsive search
   }, [onSearch, setSearchQuery]);
   
   // Clean up on unmount

@@ -253,7 +253,7 @@ export function FoodPreferences({
           <span className="block mt-1 text-xs italic">Click on any food to see detailed nutrition information.</span>
         </p>
         
-        {/* Search bar is now more prominent with improved styling */}
+        {/* Search bar is prominently placed here */}
         <div className="mb-6">
           <FoodSearchBar 
             searchQuery={searchQuery} 
