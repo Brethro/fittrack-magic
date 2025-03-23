@@ -37,6 +37,7 @@ export type DailyNutrition = {
 // Food log context type
 type FoodLogContextType = {
   foodLog: FoodLogEntry[];
+  foodEntries: FoodLogEntry[]; // Add foodEntries to the context type
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
   addFoodEntry: (entry: Omit<FoodLogEntry, "id">) => void;
@@ -176,6 +177,7 @@ export const FoodLogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Create value object with memoized functions to prevent unnecessary re-renders
   const contextValue = {
     foodLog,
+    foodEntries: foodLog, // Add foodEntries property to the context, pointing to the same foodLog array
     currentDate,
     setCurrentDate,
     addFoodEntry,

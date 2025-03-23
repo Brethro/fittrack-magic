@@ -12,7 +12,7 @@ import {
   searchUsdaDatabase, 
   searchWithFallback 
 } from "@/services/foodSearchService";
-import { FoodLogProvider, useFoodLog } from "@/contexts/FoodLogContext";
+import { useFoodLog } from "@/contexts/FoodLogContext";
 import FoodLog from "@/components/diet/FoodLog";
 
 const DietPage = () => {
@@ -33,7 +33,7 @@ const DietPage = () => {
   // Check USDA API connection when selected
   useEffect(() => {
     checkUsdaApiConnection();
-  }, []);
+  }, [checkUsdaApiConnection]);
 
   const handleSearch = async (
     searchQuery: string, 
