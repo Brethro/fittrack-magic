@@ -42,21 +42,18 @@ const DailyStats = () => {
   let calorieAdjustmentText = '';
   if (userData.tdee && userData.dailyCalories) {
     if (userData.isWeightGain) {
-      // For weight gain scenarios
+      // For weight gain scenarios - use pre-calculated value
       if (userData.calculatedSurplusPercentage !== undefined && userData.calculatedSurplusPercentage !== null) {
-        // Use the pre-calculated percentage if available
-        let displayPercentage = userData.calculatedSurplusPercentage;
-        
-        // For aggressive pace without timeline-driven adjustments, always show exactly 20%
-        if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven && 
-            displayPercentage > 19.5 && displayPercentage < 20.5) {
-          calorieAdjustmentText = `(20% surplus)`;
+        // Use the pre-calculated percentage
+        // For aggressive pace without timeline-driven adjustments, always show EXACTLY 20%
+        if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven) {
+          calorieAdjustmentText = `(20.0% surplus)`;
         } else {
           // For other percentages, round to one decimal place for precision
-          calorieAdjustmentText = `(${displayPercentage.toFixed(1)}% surplus)`;
+          calorieAdjustmentText = `(${userData.calculatedSurplusPercentage.toFixed(1)}% surplus)`;
         }
       } else {
-        // Fall back to calculating it directly if no pre-calculated value
+        // Fallback calculation if needed
         const surplusAmount = userData.dailyCalories - userData.tdee;
         const surplusPercentage = (surplusAmount / userData.tdee) * 100;
         calorieAdjustmentText = `(${surplusPercentage.toFixed(1)}% surplus)`;

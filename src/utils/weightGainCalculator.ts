@@ -149,25 +149,20 @@ export const calculateWeightGainCalories = (
     }
   }
   
-  // Calculate daily calories with the percentage-based adjustment
-  // For aggressive pace that's NOT timeline-driven, ensure exact 20% by using ceiling 
-  // instead of floor to prevent rounding errors
+  // FIX: For aggressive pace that's NOT timeline-driven, guarantee EXACTLY 20%
   let dailyCalories: number;
+  let displaySurplusPercentage: number;
+  
   if (goalPace === "aggressive" && !isTimelineDriven) {
-    // Use Math.round to ensure we get EXACTLY 20% surplus when calculating back
-    // This avoids floating point precision issues
-    dailyCalories = Math.round(tdee * 1.20);
+    // Calculate exact 20% surplus calories
+    // Use Math.ceil to avoid rounding down and getting 19.x%
+    dailyCalories = Math.ceil(tdee * 1.20);
+    
+    // Hard-code exactly 20.0%
+    displaySurplusPercentage = 20.0;
   } else {
     dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
-  }
-  
-  // For aggressive pace that's not timeline-driven, always return exactly 20.0%
-  // This ensures display consistency
-  let displaySurplusPercentage: number;
-  if (goalPace === "aggressive" && !isTimelineDriven) {
-    displaySurplusPercentage = 20.0; // EXACTLY 20.0% for display
-  } else {
-    // Otherwise calculate the actual percentage
+    // Calculate the actual percentage for non-aggressive pace
     displaySurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
   }
   
