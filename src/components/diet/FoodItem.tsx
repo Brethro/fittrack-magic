@@ -30,12 +30,14 @@ const FoodItem = ({ product }: FoodItemProps) => {
   const brand = product.brands || "Unknown Brand";
   const servingSize = product.serving_size || "100g";
   
-  // Add categories for additional context about the food
-  const categories = product.categories?.split(',').slice(0, 2).join(', ') || '';
+  // Format categories for better readability
+  const categories = product.categories
+    ? product.categories.split(',').slice(0, 3).join(', ')
+    : '';
   
   // Add ingredients for more detailed product information
   const ingredients = product.ingredients_text 
-    ? product.ingredients_text.substring(0, 100) + (product.ingredients_text.length > 100 ? '...' : '')
+    ? product.ingredients_text.substring(0, 120) + (product.ingredients_text.length > 120 ? '...' : '')
     : '';
 
   const handleSelectFood = () => {
@@ -50,28 +52,33 @@ const FoodItem = ({ product }: FoodItemProps) => {
         <div className="space-y-1 flex-1">
           <h3 className="font-medium">{productName}</h3>
           <p className="text-sm text-muted-foreground">{brand}</p>
+          
           {categories && (
-            <p className="text-xs italic text-muted-foreground">{categories}</p>
+            <p className="text-xs italic text-primary/70">{categories}</p>
           )}
+          
           {ingredients && (
             <p className="text-xs text-muted-foreground mt-1">{ingredients}</p>
           )}
-          <div className="flex flex-wrap gap-3 mt-2 text-xs">
+          
+          <div className="flex flex-wrap gap-2 mt-2 text-xs">
             <span className="bg-accent/30 rounded-full px-2 py-1">
               {Math.round(calories)} kcal
             </span>
             <span className="bg-accent/30 rounded-full px-2 py-1">
-              Protein: {protein.toFixed(1)}g
+              P: {protein.toFixed(1)}g
             </span>
             <span className="bg-accent/30 rounded-full px-2 py-1">
-              Carbs: {carbs.toFixed(1)}g
+              C: {carbs.toFixed(1)}g
             </span>
             <span className="bg-accent/30 rounded-full px-2 py-1">
-              Fat: {fat.toFixed(1)}g
+              F: {fat.toFixed(1)}g
             </span>
           </div>
+          
           <p className="text-xs mt-1">Serving: {servingSize}</p>
         </div>
+        
         {product.image_url && (
           <img 
             src={product.image_url} 
@@ -83,6 +90,7 @@ const FoodItem = ({ product }: FoodItemProps) => {
             }}
           />
         )}
+        
         <Button 
           size="sm" 
           variant="ghost" 
