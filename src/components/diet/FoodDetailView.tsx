@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { Badge } from "@/components/ui/badge";
@@ -106,60 +107,31 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     return (value * multiplier / 100) * amount;
   };
   
-  // Handle form submission
-  const onSubmit = (data: any) => {
-    
-    
-    // Prepare nutritional data
-    const calories = source === 'openfoodfacts' 
-      ? getNutrientValue('energy-kcal') || getNutrientValue('energy') / 4.184
-      : getNutrientValue('energy');
-    
-    const protein = getNutrientValue('proteins');
-    const carbs = getNutrientValue('carbohydrates');
-    const fat = getNutrientValue('fat');
-    const fiber = getNutrientValue('fiber');
-    const sugars = getNutrientValue('sugars');
-    
-    // Create food entry
-    const foodEntry: Omit<FoodLogEntry, "id"> = {
-      foodName: food.product_name || food.description || "Unnamed Food",
-      amount: data.amount,
-      unit: data.unit,
-      date: data.date,
-      mealType: data.mealType,
-      nutrition: {
-        calories: Math.round(calories),
-        protein: parseFloat(protein.toFixed(1)),
-        carbs: parseFloat(carbs.toFixed(1)),
-        fat: parseFloat(fat.toFixed(1)),
-        fiber: parseFloat(fiber.toFixed(1)),
-        sugars: parseFloat(sugars.toFixed(1))
-      },
-      source,
-      sourceId: food.code || food.fdcId || food.id || undefined
-    };
-    
-    // Add entry to food log
-    addFoodEntry(foodEntry);
-    
-    // Show success message
-    toast({
-      title: 'Food Added',
-      description: `Added ${foodEntry.foodName} to your food log`,
-    });
-    
-    // Close modal
-    onClose();
-    
-    // Call custom onSave handler if provided
-    if (onSave) {
-      onSave(foodEntry);
+  // Extract product details with fallbacks
+  const productName = food.product_name || food.description || "Unnamed Food";
+  const brandName = source === 'usda' 
+    ? food.brandOwner || food.brandName || "USDA Database" 
+    : food.brands || "Unknown Brand";
+  
+  // Extraction of getCalories function needed for calculateNutrients
+  const getCalories = (): number => {
+    if (source === 'openfoodfacts') {
+      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
+                        food.nutriments?.['energy-kcal'] || 0;
+      
+      if (energyKcal) return energyKcal;
+      
+      // Convert kJ to kcal if only energy in kJ is available
+      const energyKj = food.nutriments?.['energy_100g'] || 
+                       food.nutriments?.energy || 0;
+      
+      return energyKj ? (energyKj / 4.184) : 0;
+    } else {
+      // For USDA
+      return food.nutrients?.find((n: any) => 
+        n.name.toLowerCase().includes('energy'))?.amount || 0;
     }
   };
-  
-  // Extraction of product details with fallbacks
-  
   
   // Calculate all nutrient values based on amount
   const calculateNutrients = () => {
@@ -214,34 +186,59 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     return nutrients;
   };
   
-  // Nutrients for display
-  const nutrients = calculateNutrients();
-  
-  // Extract product details with fallbacks
-  const productName = food.product_name || food.description || "Unnamed Food";
-  const brandName = source === 'usda' 
-    ? food.brandOwner || food.brandName || "USDA Database" 
-    : food.brands || "Unknown Brand";
-  
-  // Extraction of getCalories function needed for calculateNutrients
-  const getCalories = (): number => {
-    if (source === 'openfoodfacts') {
-      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
-                        food.nutriments?.['energy-kcal'] || 0;
-      
-      if (energyKcal) return energyKcal;
-      
-      // Convert kJ to kcal if only energy in kJ is available
-      const energyKj = food.nutriments?.['energy_100g'] || 
-                       food.nutriments?.energy || 0;
-      
-      return energyKj ? (energyKj / 4.184) : 0;
-    } else {
-      // For USDA
-      return food.nutrients?.find((n: any) => 
-        n.name.toLowerCase().includes('energy'))?.amount || 0;
+  // Handle form submission
+  const onSubmit = (data: any) => {
+    
+    // Prepare nutritional data
+    const calories = source === 'openfoodfacts' 
+      ? getNutrientValue('energy-kcal') || getNutrientValue('energy') / 4.184
+      : getNutrientValue('energy');
+    
+    const protein = getNutrientValue('proteins');
+    const carbs = getNutrientValue('carbohydrates');
+    const fat = getNutrientValue('fat');
+    const fiber = getNutrientValue('fiber');
+    const sugars = getNutrientValue('sugars');
+    
+    // Create food entry
+    const foodEntry: Omit<FoodLogEntry, "id"> = {
+      foodName: food.product_name || food.description || "Unnamed Food",
+      amount: data.amount,
+      unit: data.unit,
+      date: data.date,
+      mealType: data.mealType,
+      nutrition: {
+        calories: Math.round(calories),
+        protein: parseFloat(protein.toFixed(1)),
+        carbs: parseFloat(carbs.toFixed(1)),
+        fat: parseFloat(fat.toFixed(1)),
+        fiber: parseFloat(fiber.toFixed(1)),
+        sugars: parseFloat(sugars.toFixed(1))
+      },
+      source,
+      sourceId: food.code || food.fdcId || food.id || undefined
+    };
+    
+    // Add entry to food log
+    addFoodEntry(foodEntry);
+    
+    // Show success message
+    toast({
+      title: 'Food Added',
+      description: `Added ${foodEntry.foodName} to your food log`,
+    });
+    
+    // Close modal
+    onClose();
+    
+    // Call custom onSave handler if provided
+    if (onSave) {
+      onSave(foodEntry);
     }
   };
+  
+  // Nutrients for display
+  const nutrients = calculateNutrients();
   
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
