@@ -1,7 +1,9 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Info, Star, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FoodItemProps {
   product: any;
@@ -10,6 +12,7 @@ interface FoodItemProps {
 
 const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Extract and format nutritional information with better fallbacks
   const calories = product.nutriments?.["energy-kcal_100g"] || 
@@ -121,21 +124,21 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const highlighted = isLikelyExactMatch(productName);
 
   return (
-    <div className={`glass-panel p-4 rounded-lg ${highlighted ? 'border-l-4 border-primary' : ''}`}>
-      <div className="flex justify-between items-start">
-        <div className="space-y-1 flex-1">
+    <div className={`glass-panel p-4 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-4 border-primary' : 'border-l border-primary/30'}`}>
+      <div className="flex justify-between items-start gap-3">
+        <div className="space-y-2 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium">{productName}</h3>
+            <h3 className="font-medium text-md sm:text-lg">{productName}</h3>
             {highlighted && <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />}
           </div>
           
           <div className="flex flex-wrap gap-2 items-center">
-            <p className="text-sm text-muted-foreground">{brand}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{brand}</p>
             
             {mainCategory && (
-              <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                 {mainCategory}
-              </span>
+              </Badge>
             )}
           </div>
           
@@ -144,70 +147,76 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
           )}
           
           {ingredients && (
-            <p className="text-xs text-muted-foreground mt-1">{ingredients}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ingredients}</p>
           )}
           
-          <div className="flex flex-wrap gap-2 mt-2 text-xs">
-            <span className="bg-accent/30 rounded-full px-2 py-1">
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
               {Math.round(calories)} kcal
-            </span>
-            <span className="bg-accent/30 rounded-full px-2 py-1">
+            </Badge>
+            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
               P: {protein.toFixed(1)}g
-            </span>
-            <span className="bg-accent/30 rounded-full px-2 py-1">
+            </Badge>
+            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
               C: {carbs.toFixed(1)}g
-            </span>
-            <span className="bg-accent/30 rounded-full px-2 py-1">
+            </Badge>
+            <Badge className="bg-secondary/80 text-secondary-foreground hover:bg-secondary/70">
               F: {fat.toFixed(1)}g
-            </span>
+            </Badge>
           </div>
           
           {(nutriscoreGrade || novaGroup) && (
             <div className="flex gap-2 mt-1 text-xs">
               {nutriscoreGrade && (
-                <span className="text-green-600 font-semibold">{nutriscoreGrade}</span>
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-300/20 hover:bg-green-500/20">
+                  {nutriscoreGrade}
+                </Badge>
               )}
               {novaGroup && (
-                <span className="text-blue-600 font-semibold">{novaGroup}</span>
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-300/20 hover:bg-blue-500/20">
+                  {novaGroup}
+                </Badge>
               )}
             </div>
           )}
           
-          <p className="text-xs mt-1">Serving: {servingSize}</p>
+          <p className="text-xs sm:text-sm mt-1">Serving: {servingSize}</p>
         </div>
         
-        {product.image_url && (
-          <img 
-            src={product.image_url} 
-            alt={productName} 
-            className="w-16 h-16 object-contain rounded-md ml-2"
-            onError={(e) => {
-              // Hide broken images
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        )}
-        
-        <div className="flex flex-col gap-2 ml-2">
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="flex-shrink-0"
-            onClick={handleSelectFood}
-          >
-            <Info size={16} />
-            <span className="sr-only">View Details</span>
-          </Button>
+        <div className="flex flex-col items-center gap-2">
+          {product.image_url && (
+            <img 
+              src={product.image_url} 
+              alt={productName} 
+              className="w-16 h-16 object-contain rounded-md bg-white/5 p-1 shadow-sm border border-white/10"
+              onError={(e) => {
+                // Hide broken images
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          )}
           
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="flex-shrink-0 text-primary border-primary/20 hover:bg-primary/10"
-            onClick={handleSelectFood}
-          >
-            <Plus size={16} />
-            <span className="sr-only">Add Food</span>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 mt-auto">
+            <Button 
+              size={isMobile ? "icon" : "sm"}
+              variant="ghost" 
+              className="rounded-full hover:bg-primary/10 hover:text-primary"
+              onClick={handleSelectFood}
+            >
+              <Info size={18} />
+              {!isMobile && <span className="ml-1">Info</span>}
+            </Button>
+            
+            <Button 
+              size={isMobile ? "icon" : "sm"}
+              variant="outline" 
+              className="rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              onClick={handleSelectFood}
+            >
+              <Plus size={18} />
+              {!isMobile && <span className="ml-1">Add</span>}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

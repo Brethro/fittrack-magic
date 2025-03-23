@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FoodItem from "./FoodItem";
 import UsdaFoodItem from "./UsdaFoodItem";
 import { UsdaFoodItem as UsdaFoodItemType } from "@/utils/usdaApi";
+import { Badge } from "@/components/ui/badge";
 
 interface FoodSearchResultsProps {
   results: any[];
@@ -28,17 +29,16 @@ const FoodSearchResults = ({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <h2 className="text-lg font-semibold">Search Results</h2>
-      
-      {/* Results count summary */}
-      {(hasOpenFoodResults || hasUsdaResults) && (
-        <div className="text-sm mb-2">
-          Found {results.length + usdaResults.length} results 
-          {hasOpenFoodResults && hasUsdaResults && (
-            <span> ({results.length} from Open Food Facts, {usdaResults.length} from USDA)</span>
-          )}
-        </div>
-      )}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Search Results</h2>
+        
+        {/* Results count summary */}
+        {(hasOpenFoodResults || hasUsdaResults) && (
+          <Badge variant="outline" className="bg-background">
+            {results.length + usdaResults.length} found
+          </Badge>
+        )}
+      </div>
       
       {/* Open Food Facts results */}
       {hasOpenFoodResults && (
@@ -60,7 +60,10 @@ const FoodSearchResults = ({
       {hasUsdaResults && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 mt-4 mb-2">
-            <h3 className="text-md font-medium text-emerald-600">USDA Database Results</h3>
+            <h3 className="text-md font-medium text-emerald-500">USDA Database Results</h3>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+              {usdaResults.length} items
+            </Badge>
           </div>
           
           {usdaResults.map((foodItem, index) => (
@@ -78,9 +81,11 @@ const FoodSearchResults = ({
       
       {/* No results message */}
       {!hasOpenFoodResults && !hasUsdaResults && (
-        <p className="text-center text-muted-foreground py-4">
-          No results found. Try different search terms or check your spelling.
-        </p>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            No results found. Try different search terms or check your spelling.
+          </p>
+        </div>
       )}
     </motion.section>
   );
