@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +32,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   onClose,
   onSave
 }) => {
+  
   const [amount, setAmount] = useState(100);
   const [isNutrientsOpen, setIsNutrientsOpen] = useState(false);
   const { addFoodEntry } = useFoodLog();
@@ -108,6 +108,8 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   
   // Handle form submission
   const onSubmit = (data: any) => {
+    
+    
     // Prepare nutritional data
     const calories = source === 'openfoodfacts' 
       ? getNutrientValue('energy-kcal') || getNutrientValue('energy') / 4.184
@@ -157,25 +159,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   };
   
   // Extraction of product details with fallbacks
-  // Calories may be stored in different places depending on source
-  const getCalories = (): number => {
-    if (source === 'openfoodfacts') {
-      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
-                        food.nutriments?.['energy-kcal'] || 0;
-      
-      if (energyKcal) return energyKcal;
-      
-      // Convert kJ to kcal if only energy in kJ is available
-      const energyKj = food.nutriments?.['energy_100g'] || 
-                       food.nutriments?.energy || 0;
-      
-      return energyKj ? (energyKj / 4.184) : 0;
-    } else {
-      // For USDA
-      return food.nutrients?.find((n: any) => 
-        n.name.toLowerCase().includes('energy'))?.amount || 0;
-    }
-  };
+  
   
   // Calculate all nutrient values based on amount
   const calculateNutrients = () => {
@@ -238,6 +222,26 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const brandName = source === 'usda' 
     ? food.brandOwner || food.brandName || "USDA Database" 
     : food.brands || "Unknown Brand";
+  
+  // Extraction of getCalories function needed for calculateNutrients
+  const getCalories = (): number => {
+    if (source === 'openfoodfacts') {
+      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
+                        food.nutriments?.['energy-kcal'] || 0;
+      
+      if (energyKcal) return energyKcal;
+      
+      // Convert kJ to kcal if only energy in kJ is available
+      const energyKj = food.nutriments?.['energy_100g'] || 
+                       food.nutriments?.energy || 0;
+      
+      return energyKj ? (energyKj / 4.184) : 0;
+    } else {
+      // For USDA
+      return food.nutrients?.find((n: any) => 
+        n.name.toLowerCase().includes('energy'))?.amount || 0;
+    }
+  };
   
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
