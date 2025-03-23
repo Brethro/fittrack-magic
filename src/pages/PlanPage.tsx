@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,17 +35,18 @@ const PlanPage = () => {
     
     // Calculate estimated body fat at goal weight if we have current body fat
     if (userData.bodyFatPercentage && userData.weight && userData.goalValue) {
-      // Using the basic Navy Method formula relationship
-      // This assumes fat-free mass stays constant
+      // Using our updated body fat calculator that accounts for pace
       const currentWeight = userData.weight;
       const currentBodyFat = userData.bodyFatPercentage;
       const goalWeight = userData.goalValue;
       
-      // Calculate fat-free mass (remains constant)
-      const fatFreeMass = currentWeight * (1 - currentBodyFat / 100);
-      
-      // Calculate new body fat percentage at goal weight
-      const newBodyFat = 100 * (1 - (fatFreeMass / goalWeight));
+      // Calculate with the pace-aware function
+      const newBodyFat = calculateBodyFatPercentage(
+        currentWeight, 
+        currentBodyFat, 
+        goalWeight,
+        userData.goalPace // Pass the pace to get more accurate estimation
+      );
       
       // Round to 1 decimal place
       setEstimatedGoalBodyFat(Math.max(Math.round(newBodyFat * 10) / 10, 0));
@@ -55,7 +55,7 @@ const PlanPage = () => {
     }
     
     setInitialized(true);
-  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, navigate, toast, recalculateNutrition]);
+  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, navigate, toast, recalculateNutrition]);
 
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (
