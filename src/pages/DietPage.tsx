@@ -65,22 +65,33 @@ const DietPage = () => {
       const encodedQuery = encodeURIComponent(searchQuery.trim());
       
       /**
-       * IMPROVED API SEARCH:
-       * 1. Using the 'search_terms' parameter for full-text search
-       * 2. Adding 'tagtype_0=categories' and 'tag_contains_0=contains' to filter by food categories 
-       * 3. Adding search terms to tag_0 to prioritize matching items
-       * 4. Requesting relevant product fields we need to display
-       * 5. Sorting by popularity to get better quality results first
+       * COMPLETELY REVISED API SEARCH APPROACH:
+       * 
+       * 1. Based on deeper research into the Open Food Facts API:
+       * - Using direct search with clearer parameters
+       * - Using categories and keywords as separate filters
+       * - Focusing on food-related categories
+       * - Setting specific taxonomy tags to filter to food items
+       * - Using multiple tag filters to improve results
+       * - Requesting focused nutrition fields
        */
+      
+      // Build a more targeted search URL
       const searchUrl = 
-        `https://world.openfoodfacts.org/api/v2/search` +
+        `https://world.openfoodfacts.org/cgi/search.pl` +
         `?search_terms=${encodedQuery}` +
+        `&search_simple=1` +
+        `&action=process` +
+        `&json=true` +
         `&tagtype_0=categories` +
         `&tag_contains_0=contains` +
-        `&tag_0=${encodedQuery}` +
-        `&sort_by=popularity_key` +
-        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text` + 
-        `&page_size=50`;
+        `&tag_0=foods` +
+        `&tagtype_1=categories` +
+        `&tag_contains_1=contains` +
+        `&tag_1=${encodedQuery}` +
+        `&sort_by=unique_scans_n` + // Sort by popularity/scan count
+        `&page_size=50` +
+        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade`;
       
       console.log("Searching with URL:", searchUrl);
       
@@ -97,8 +108,34 @@ const DietPage = () => {
         // Convert search terms to lowercase for comparison
         const searchTerms = searchQuery.toLowerCase().split(' ');
         
-        // First pass: Score all products by relevance
-        const scoredResults = data.products.map(product => {
+        // First filter: Only keep products that have any match to search terms
+        // to eliminate completely irrelevant results
+        let filteredProducts = data.products.filter(product => {
+          const productName = (product.product_name || '').toLowerCase();
+          const brandName = (product.brands || '').toLowerCase();
+          const categories = (product.categories || '').toLowerCase();
+          const ingredients = (product.ingredients_text || '').toLowerCase();
+          
+          // Check if any of the search terms appear in any of the product fields
+          return searchTerms.some(term => 
+            productName.includes(term) || 
+            brandName.includes(term) || 
+            categories.includes(term) || 
+            ingredients.includes(term)
+          );
+        });
+        
+        // If we have no matches after filtering, use the original data (with a warning)
+        if (filteredProducts.length === 0) {
+          toast({
+            title: "No exact matches found",
+            description: "Showing general results. Try different search terms.",
+          });
+          filteredProducts = data.products.slice(0, 10); // Limit to top 10
+        }
+        
+        // Second pass: Score remaining products by relevance
+        const scoredResults = filteredProducts.map(product => {
           const productName = (product.product_name || '').toLowerCase();
           const brandName = (product.brands || '').toLowerCase();
           const categories = (product.categories || '').toLowerCase();
@@ -106,27 +143,29 @@ const DietPage = () => {
           
           let score = 0;
           
-          // Score based on exact match of specific search terms
+          // Score based on search terms
           searchTerms.forEach(term => {
             // Direct matches in product name (highest priority)
             if (productName === term) score += 100;
-            else if (productName.includes(term)) score += 50;
-            
-            // Brand matches
-            if (brandName.includes(term)) score += 20;
+            else if (productName.includes(` ${term} `)) score += 80;
+            else if (productName.includes(term)) score += 60;
             
             // Category matches (important for food types)
-            if (categories.includes(term)) score += 30;
+            if (categories.includes(term)) score += 50;
             
             // Ingredient matches (vital for foods)
             if (ingredients && ingredients.includes(term)) score += 40;
             
+            // Brand matches
+            if (brandName.includes(term)) score += 20;
+            
             // Extra points for having complete data
             if (product.nutriments) score += 5;
             if (product.image_url) score += 5;
+            if (product.ecoscore_grade) score += 2;
+            if (product.nutriscore_grade) score += 2;
           });
           
-          // Filter out items with zero relevance score
           return { product, score };
         });
         
@@ -135,19 +174,14 @@ const DietPage = () => {
           .sort((a, b) => b.score - a.score)
           .map(item => item.product);
         
-        // Get only the products with a positive relevance score
-        const relevantResults = sortedResults.filter((_, index) => 
-          scoredResults[index].score > 0);
+        setSearchResults(sortedResults);
         
-        if (relevantResults.length > 0) {
-          setSearchResults(relevantResults);
-        } else {
-          // If no relevant results, show a message and return a limited set of general results
+        if (sortedResults.length === 0) {
           toast({
-            title: "Limited relevant matches",
-            description: "Showing general results. Try different search terms for more specific items.",
+            title: "No results found",
+            description: "Try different search terms or check your spelling.",
+            variant: "destructive",
           });
-          setSearchResults(sortedResults.slice(0, 10));
         }
       } else {
         console.error("Unexpected API response format:", data);

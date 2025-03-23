@@ -28,14 +28,27 @@ const FoodItem = ({ product }: FoodItemProps) => {
   // Generate a name if the product name isn't available
   const productName = product.product_name || "Unnamed Product";
   const brand = product.brands || "Unknown Brand";
-  const servingSize = product.serving_size || "100g";
+  const servingSize = product.serving_size || product.quantity || "100g";
   
-  // Format categories for better readability
+  // Format categories into a list of food types
   const categories = product.categories
-    ? product.categories.split(',').slice(0, 3).join(', ')
+    ? product.categories
+        .split(',')
+        .filter((cat: string) => !cat.startsWith('fr:') && !cat.includes('-'))
+        .slice(0, 3)
+        .join(', ')
     : '';
   
-  // Add ingredients for more detailed product information
+  // Add nutrient scores if available
+  const nutriscoreGrade = product.nutriscore_grade 
+    ? `Nutriscore: ${product.nutriscore_grade.toUpperCase()}`
+    : '';
+  
+  const novaGroup = product.nova_group
+    ? `NOVA: ${product.nova_group}`
+    : '';
+  
+  // Format ingredients for better readability
   const ingredients = product.ingredients_text 
     ? product.ingredients_text.substring(0, 120) + (product.ingredients_text.length > 120 ? '...' : '')
     : '';
@@ -75,6 +88,17 @@ const FoodItem = ({ product }: FoodItemProps) => {
               F: {fat.toFixed(1)}g
             </span>
           </div>
+          
+          {(nutriscoreGrade || novaGroup) && (
+            <div className="flex gap-2 mt-1 text-xs">
+              {nutriscoreGrade && (
+                <span className="text-green-600 font-semibold">{nutriscoreGrade}</span>
+              )}
+              {novaGroup && (
+                <span className="text-blue-600 font-semibold">{novaGroup}</span>
+              )}
+            </div>
+          )}
           
           <p className="text-xs mt-1">Serving: {servingSize}</p>
         </div>
