@@ -27,8 +27,8 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <UserDataProvider>
-            <BrowserRouter>
+          <BrowserRouter>
+            <UserDataProvider>
               <FoodLogProvider>
                 <Toaster />
                 <Routes>
@@ -44,8 +44,8 @@ function App() {
                   </Route>
                 </Routes>
               </FoodLogProvider>
-            </BrowserRouter>
-          </UserDataProvider>
+            </UserDataProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
