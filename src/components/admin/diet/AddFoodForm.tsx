@@ -86,8 +86,8 @@ export const AddFoodForm = ({ setLastParseResults }: AddFoodFormProps) => {
         return;
       }
       
-      // Add the new food item
-      const result = addFoodItem(newFood as FoodItem);
+      // Add the new food item - Removed the argument as per the stub implementation
+      const result = addFoodItem();
       
       if (result.success) {
         // Update the last parse results

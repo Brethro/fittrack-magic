@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -26,7 +25,8 @@ export const Reparse = ({ totalFoodItems, setLastParseResults }: ReparseProps) =
         const allRawFoodData = getAllRawFoodData();
         console.log(`Reparsing with ALL food data - ${allRawFoodData.length} categories with ${totalFoodItems} total items`);
         
-        const results = reparseFoodDatabaseForDietTypes(allRawFoodData);
+        // Using the stubbed reparseFoodDatabaseForDietTypes function without arguments
+        const results = reparseFoodDatabaseForDietTypes();
         setLastParseResults(results);
         
         toast({

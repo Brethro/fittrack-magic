@@ -23,7 +23,7 @@ export const useFoodDatabase = () => {
     toast({
       title: "Database Migration",
       description: "Food import is unavailable during Open Food Facts API migration.",
-      variant: "warning",
+      variant: "destructive", // Changed from "warning" to "destructive"
     });
     
     return {

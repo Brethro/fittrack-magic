@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,8 +38,8 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
     setImportSuccess(null);
     
     try {
-      // Use the importFoodsFromJson function with category mappings
-      const result = importFoodsFromJson(jsonData, categoryMappings);
+      // Using the stubbed importFoodsFromJson function without arguments
+      const result = importFoodsFromJson();
       
       if (result.success) {
         // Update the last parse results
