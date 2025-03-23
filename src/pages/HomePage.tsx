@@ -38,9 +38,10 @@ const HomePage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-4xl font-bold mb-3 text-gradient-purple"
+              className="text-4xl font-bold mb-3"
             >
-              FitTrack
+              <span className="bg-gradient-to-r from-violet-400 via-purple-500 to-indigo-400 bg-clip-text text-transparent">Weara</span>
+              <span className="text-white"> Body</span>
             </motion.h1>
             
             <motion.p
