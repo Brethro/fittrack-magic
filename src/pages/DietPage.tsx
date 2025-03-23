@@ -120,7 +120,7 @@ const DietPage = () => {
                 setIncludeFreeMeal={setIncludeFreeMeal}
                 generateMealPlan={handleGenerateMealPlan}
                 dailyCalories={userData.dailyCalories || 2000}
-                // We've made the availableDiets optional in FoodPreferences, so we don't need to pass it here
+                availableDiets={availableDiets}
               />
             </TabsContent>
             

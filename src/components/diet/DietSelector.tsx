@@ -11,6 +11,7 @@ import {
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 
 const dietDescriptions: Record<string, string> = {
   all: "All foods available",
@@ -50,17 +51,20 @@ const formatDietName = (diet: string): string => {
 interface DietSelectorProps {
   selectedDiet: DietType;
   onDietChange: (diet: DietType) => void;
-  availableDiets: DietType[];
+  availableDiets?: DietType[];
 }
 
 export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
   // Changed default state to false to make it collapsed initially
   const [isOpen, setIsOpen] = React.useState(false);
   
+  // Use a fallback if availableDiets is undefined - fetch from utility function
+  const dietsToDisplay = availableDiets || getAvailableDietTypes() as DietType[];
+  
   // Debug what diets are actually available
   React.useEffect(() => {
-    console.log("Available diets in DietSelector:", availableDiets);
-  }, [availableDiets]);
+    console.log("Available diets in DietSelector:", dietsToDisplay);
+  }, [dietsToDisplay]);
 
   return (
     <Card className="mb-6">
@@ -98,7 +102,7 @@ export function DietSelector({ selectedDiet, onDietChange, availableDiets }: Die
             <ToggleGroup type="single" value={selectedDiet} onValueChange={(value) => {
               if (value) onDietChange(value as DietType);
             }} className="flex flex-wrap gap-2 justify-start">
-              {availableDiets.map((diet) => (
+              {dietsToDisplay.map((diet) => (
                 <ToggleGroupItem key={diet} value={diet} className="rounded-full">
                   {formatDietName(diet)}
                 </ToggleGroupItem>
