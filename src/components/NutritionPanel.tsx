@@ -1,3 +1,4 @@
+
 import { Flame, InfoIcon, AlertTriangle, HelpCircle } from "lucide-react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Progress } from "@/components/ui/progress";
@@ -32,26 +33,20 @@ export function NutritionPanel() {
   const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
   const deficitAmount = !isWeightGain ? tdee - totalCalories : 0;
   
-  // Calculate the exact surplus/deficit percentage with 2 decimal precision for display
+  // Calculate the exact surplus/deficit percentage with 1 decimal precision for display
   const exactPercentage = isWeightGain 
-    ? ((surplusAmount / tdee) * 100) 
-    : ((deficitAmount / tdee) * 100);
+    ? ((surplusAmount / tdee) * 100).toFixed(1)
+    : ((deficitAmount / tdee) * 100).toFixed(1);
   
-  // Display logic: if it's between 19.5% and 20%, show it as 20%
-  // This ensures values very close to 20% (like 19.99%) display as 20%
-  let displayPercent;
-  if (exactPercentage >= 19.5 && exactPercentage < 20.01) {
-    displayPercent = 20;
-  } else if (exactPercentage >= 24.5 && exactPercentage < 25.01) {
-    displayPercent = 25;
-  } else {
-    displayPercent = Math.floor(exactPercentage);
-  }
+  // For display in the summary section
+  const displayPercent = Number(exactPercentage);
 
   // Determine what deficit percentage is being applied based on goal pace
   const getPaceDeficitPercentage = () => {
     if (!userData.goalPace) return null;
     
+    // These are the target percentages that should be applied based on pace
+    // The actual calculation might be limited by body fat restrictions
     switch (userData.goalPace) {
       case "aggressive": return 25;
       case "moderate": return 20;
@@ -60,8 +55,15 @@ export function NutritionPanel() {
     }
   };
   
-  const pacePercentage = getPaceDeficitPercentage();
-
+  const targetPacePercentage = getPaceDeficitPercentage();
+  
+  // For low body fat individuals, we need to show if the deficit was limited
+  const wasDeficitLimited = !isWeightGain && 
+    userData.bodyFatPercentage && 
+    userData.bodyFatPercentage < 12 && 
+    userData.goalPace === "aggressive" && 
+    displayPercent < 25; // If target is 25% but actual is less
+  
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
@@ -145,11 +147,11 @@ export function NutritionPanel() {
         </Alert>
       )}
       
-      {!isWeightGain && userData.goalPace === "aggressive" && userData.bodyFatPercentage && userData.bodyFatPercentage < 12 && (
+      {!isWeightGain && userData.bodyFatPercentage && userData.bodyFatPercentage < 12 && (
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            With your low body fat of {userData.bodyFatPercentage}%, we've limited your deficit to 25% of TDEE. Larger deficits could risk muscle loss and metabolic slowdown.
+            With your low body fat of {userData.bodyFatPercentage}%, we've limited your maximum deficit to 20% of TDEE. When selecting aggressive pace, an additional 5% is added (total 25%).
           </AlertDescription>
         </Alert>
       )}
@@ -159,7 +161,11 @@ export function NutritionPanel() {
           <HelpCircle className="h-4 w-4" />
           <AlertTitle>Understanding your calorie target</AlertTitle>
           <AlertDescription>
-            Based on your selected pace ({userData.goalPace}), we've applied a {pacePercentage}% deficit to your TDEE. This creates a {deficitAmount} calorie daily deficit, which is {userData.goalPace === "aggressive" ? "at the maximum" : "within"} safe range for your body composition.
+            Based on your selected pace ({userData.goalPace}), we've applied a {targetPacePercentage}% target deficit to your TDEE. 
+            Your actual deficit is {exactPercentage}%, creating a {deficitAmount} calorie daily deficit.
+            {wasDeficitLimited ? 
+              " For your low body fat percentage, we've applied safety limits to protect muscle mass." : 
+              " This is within the safe range for your body composition."}
           </AlertDescription>
         </Alert>
       )}
@@ -170,7 +176,7 @@ export function NutritionPanel() {
         <p className="text-lg font-bold">{userData.dailyCalories}</p>
         <p className="text-xs text-muted-foreground">
           Calories
-          {isWeightGain ? ` (${displayPercent}% Surplus)` : ` (${displayPercent}% Deficit)`}
+          {isWeightGain ? ` (${exactPercentage}% Surplus)` : ` (${exactPercentage}% Deficit)`}
         </p>
       </div>
       

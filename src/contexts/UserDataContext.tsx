@@ -411,15 +411,25 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const finalSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
       
       // If somehow we're still over the max percentage, force it to max
-      if (finalSurplusPercentage > userData.maxSurplusPercentage) {
-        dailyCalories = Math.floor(tdee * (1 + (userData.maxSurplusPercentage / 100)));
-        console.log("Applied final correction to ensure exact max percentage:", userData.maxSurplusPercentage);
+      if (finalSurplusPercentage > maxAdjustPercent * 100) {
+        dailyCalories = Math.floor(tdee * (1 + maxAdjustPercent));
+        console.log("Applied final correction to ensure exact max percentage:", maxAdjustPercent * 100);
       }
     } else {
-      // Weight loss calculation (unchanged)
-      dailyCalories = Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), 1200);
+      // Weight loss calculation - BUGFIX: Ensure we're using the correct percentage
+      const minCalories = Math.max(1200, Math.round(tdee * (1 - maxAdjustPercent)));
+      dailyCalories = Math.max(Math.round(tdee * (1 - calculatedAdjustPercent)), minCalories);
+      
+      // Add debug logging to verify the deficit percentages being applied
+      console.log("Weight loss calculation - debug info:");
+      console.log("TDEE:", tdee);
+      console.log("Min adjust percent:", minAdjustPercent * 100, "%");
+      console.log("Max adjust percent:", maxAdjustPercent * 100, "%");
+      console.log("Calculated adjust percent:", calculatedAdjustPercent * 100, "%");
+      console.log("Calculated daily calories:", dailyCalories);
+      console.log("Actual deficit percentage:", ((tdee - dailyCalories) / tdee) * 100, "%");
     }
-    
+
     // Calculate exact surplus percentage for verification
     if (isWeightGain) {
       const exactSurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
