@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import FoodSearchResults, { FoodSearchResultsSkeleton } from "@/components/diet/FoodSearchResults";
 
 const DietPage = () => {
@@ -15,6 +22,7 @@ const DietPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<"idle" | "checking" | "connected" | "error">("checking");
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchType, setSearchType] = useState<"exact" | "broad">("exact");
 
   // Check API connection on component mount
   useEffect(() => {
@@ -65,21 +73,36 @@ const DietPage = () => {
       // Format the query for better results
       const encodedQuery = encodeURIComponent(searchQuery.trim());
       
-      /**
-       * REVISED SEARCH APPROACH: Using the basic search endpoint and standard parameters
-       * without overly complex filtering that could restrict results too much
-       */
+      // Extract search terms for matching
+      const searchTerms = searchQuery.toLowerCase().split(' ');
       
-      // Basic search approach
-      const basicSearchUrl = 
-        `https://world.openfoodfacts.org/api/v2/search` +
-        `?search_terms=${encodedQuery}` +
-        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade` +
-        `&page_size=50`;
+      // Determine search URL based on search type (exact or broad)
+      let searchUrl;
       
-      console.log("Searching with URL:", basicSearchUrl);
+      if (searchType === "exact") {
+        // For exact search, use more specific parameters and tags to narrow results
+        searchUrl = 
+          `https://world.openfoodfacts.org/api/v2/search` +
+          `?search_terms=${encodedQuery}` +
+          `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade,product_name_en` +
+          // Add tags to make search more precise for exact matches
+          `&tag_contains_0=contains` +
+          `&tag_0=${encodedQuery}` +
+          `&sort_by=popularity_key` +
+          `&page_size=100`; // Get more results to filter through
+      } else {
+        // Broad search with fewer restrictions
+        searchUrl = 
+          `https://world.openfoodfacts.org/api/v2/search` +
+          `?search_terms=${encodedQuery}` +
+          `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade,product_name_en` +
+          `&sort_by=popularity_key` +
+          `&page_size=50`;
+      }
       
-      const response = await fetch(basicSearchUrl);
+      console.log("Searching with URL:", searchUrl);
+      
+      const response = await fetch(searchUrl);
       
       if (!response.ok) {
         throw new Error(`Network response was not ok (${response.status})`);
@@ -89,72 +112,155 @@ const DietPage = () => {
       console.log("Search API response:", data);
       
       if (data.products && Array.isArray(data.products)) {
-        // Convert search terms to lowercase for comparison
-        const searchTerms = searchQuery.toLowerCase().split(' ');
-        
-        // Score and filter results for relevance
+        // Enhanced scoring system with precision boosting
         const scoredResults = data.products.map(product => {
           const productName = (product.product_name || '').toLowerCase();
+          const productNameEn = (product.product_name_en || '').toLowerCase();
           const brandName = (product.brands || '').toLowerCase();
           const categories = (product.categories || '').toLowerCase();
           const ingredients = (product.ingredients_text || '').toLowerCase();
           
           let score = 0;
-          let matches = false;
+          let exactMatch = false;
+          let partialMatch = false;
           
-          // Check for matches in any field
+          // Check for exact phrase match first
+          if (productName === searchQuery.toLowerCase() || 
+              productNameEn === searchQuery.toLowerCase()) {
+            score += 1000; // Huge boost for exact name match
+            exactMatch = true;
+          } else if (productName.includes(searchQuery.toLowerCase()) || 
+                     productNameEn.includes(searchQuery.toLowerCase())) {
+            score += 500; // Strong boost for full phrase inclusion
+            partialMatch = true;
+          }
+          
+          // Check for all search terms appearing in product name (in order)
+          let allTermsInOrder = true;
+          let lastIndex = -1;
+          
+          for (const term of searchTerms) {
+            const index = productName.indexOf(term, lastIndex + 1);
+            if (index <= lastIndex) {
+              allTermsInOrder = false;
+              break;
+            }
+            lastIndex = index;
+          }
+          
+          if (allTermsInOrder && lastIndex > -1) {
+            score += 300;
+            partialMatch = true;
+          }
+          
+          // Individual term matching with position awareness
+          let matchedTermCount = 0;
           searchTerms.forEach(term => {
             // Direct matches in product name (highest priority)
-            if (productName === term) {
-              score += 100;
-              matches = true;
-            } else if (productName.includes(` ${term} `)) {
-              score += 80;
-              matches = true;
-            } else if (productName.includes(term)) {
-              score += 60;
-              matches = true;
+            if (productName.includes(term)) {
+              // Give higher score to matches at the beginning
+              const position = productName.indexOf(term);
+              const positionBonus = Math.max(0, 30 - position); // Higher bonus for earlier position
+              
+              score += 80 + positionBonus;
+              matchedTermCount++;
+              partialMatch = true;
+            }
+            
+            // Match in English name if available
+            if (productNameEn && productNameEn.includes(term)) {
+              score += 70;
+              matchedTermCount++;
+              partialMatch = true;
             }
             
             // Category matches
             if (categories.includes(term)) {
               score += 50;
-              matches = true;
+              partialMatch = true;
             }
             
-            // Ingredient matches
-            if (ingredients && ingredients.includes(term)) {
-              score += 40;
-              matches = true;
+            // Ingredient matches with leading word boundary check
+            if (ingredients) {
+              // Better matching with word boundaries
+              const wordBoundaryRegex = new RegExp(`\\b${term}\\b`, 'i');
+              if (wordBoundaryRegex.test(ingredients)) {
+                score += 60;
+                partialMatch = true;
+              } else if (ingredients.includes(term)) {
+                score += 40;
+                partialMatch = true;
+              }
             }
             
             // Brand matches
             if (brandName.includes(term)) {
               score += 20;
-              matches = true;
+              partialMatch = true;
             }
           });
           
-          // Complete data quality bonus points
-          if (product.nutriments) score += 5;
-          if (product.image_url) score += 5;
+          // Boost for matching all search terms
+          if (matchedTermCount === searchTerms.length && searchTerms.length > 1) {
+            score += 100;
+          }
           
-          return { product, score, matches };
+          // Complete data quality bonus points
+          if (product.nutriments) score += 10;
+          if (product.image_url) score += 10;
+          
+          return { 
+            product, 
+            score, 
+            exactMatch,
+            partialMatch,
+            matchedTermCount
+          };
         });
         
-        // Filter to only include items with at least one match to any search term
-        const matchedResults = scoredResults.filter(item => item.matches);
+        // Filter based on search type
+        let filteredResults;
+        
+        if (searchType === "exact") {
+          // For exact search, prioritize exact matches and require at least partial matches
+          filteredResults = scoredResults.filter(item => 
+            item.exactMatch || (item.partialMatch && item.matchedTermCount >= Math.max(1, searchTerms.length - 1))
+          );
+        } else {
+          // For broad search, include anything with some relevance
+          filteredResults = scoredResults.filter(item => item.partialMatch);
+        }
         
         // Sort by score (high to low) and extract just the product data
-        const sortedResults = matchedResults
+        const sortedResults = filteredResults
           .sort((a, b) => b.score - a.score)
           .map(item => item.product);
         
         setSearchResults(sortedResults);
         
         if (sortedResults.length === 0) {
-          // If no matches, try a fallback approach with a different endpoint
-          await searchWithFallback(encodedQuery);
+          // If no matches with exact search, try the fallback approach
+          if (searchType === "exact") {
+            toast({
+              title: "No exact matches found",
+              description: "Trying broader search criteria...",
+            });
+            // Try with broader search
+            setSearchType("broad");
+            await searchWithFallback(encodedQuery);
+          } else {
+            // If broad search also failed, try the legacy endpoint
+            await searchWithFallback(encodedQuery);
+          }
+        } else if (sortedResults.length < 3 && searchType === "exact") {
+          // Few results with exact search, also try broad search to augment
+          const broadResults = await fetchBroadResults(encodedQuery);
+          
+          // Combine results, removing duplicates
+          const existingIds = new Set(sortedResults.map(p => p.id));
+          const uniqueBroadResults = broadResults.filter(p => !existingIds.has(p.id));
+          
+          setSearchResults([...sortedResults, ...uniqueBroadResults.slice(0, 10)]);
         }
       } else {
         console.error("Unexpected API response format:", data);
@@ -175,6 +281,34 @@ const DietPage = () => {
       setSearchResults([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to fetch broader results
+  const fetchBroadResults = async (encodedQuery: string): Promise<any[]> => {
+    try {
+      const broadSearchUrl = 
+        `https://world.openfoodfacts.org/api/v2/search` +
+        `?search_terms=${encodedQuery}` +
+        `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade` +
+        `&page_size=20`;
+      
+      const response = await fetch(broadSearchUrl);
+      
+      if (!response.ok) {
+        return [];
+      }
+      
+      const data = await response.json();
+      
+      if (data.products && Array.isArray(data.products)) {
+        return data.products;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Broad search error:", error);
+      return [];
     }
   };
 
@@ -223,6 +357,10 @@ const DietPage = () => {
     }
   };
 
+  const toggleSearchType = () => {
+    setSearchType(prev => prev === "exact" ? "broad" : "exact");
+  };
+
   return (
     <div className="container px-4 py-8 mx-auto">
       <motion.div
@@ -264,25 +402,40 @@ const DietPage = () => {
 
         <section className="glass-panel rounded-lg p-4 mb-6">
           <h2 className="text-lg font-semibold mb-3">Food Search</h2>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Search for a food (e.g., apple, yogurt, chicken)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="flex-1"
-            />
-            <Button onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...
-                </>
-              ) : (
-                <>
-                  <Search className="mr-2 h-4 w-4" /> Search
-                </>
-              )}
-            </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search for a food (e.g., apple, yogurt, chicken)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" /> Search
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-muted-foreground">
+                Search mode: <span className="font-medium">{searchType === "exact" ? "Exact match" : "Broad match"}</span>
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleSearchType} 
+                className="text-xs"
+              >
+                Switch to {searchType === "exact" ? "broad" : "exact"} search
+              </Button>
+            </div>
           </div>
         </section>
 

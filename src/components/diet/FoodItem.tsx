@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
+import { Info, Star } from "lucide-react";
 
 interface FoodItemProps {
   product: any;
@@ -26,15 +26,32 @@ const FoodItem = ({ product }: FoodItemProps) => {
              product.nutriments?.fat || 0;
   
   // Generate a name if the product name isn't available
-  const productName = product.product_name || "Unnamed Product";
+  const productName = product.product_name || product.product_name_en || "Unnamed Product";
   const brand = product.brands || "Unknown Brand";
   const servingSize = product.serving_size || product.quantity || "100g";
   
-  // Format categories into a list of food types
+  // Format categories into a list of food types - extract main food type
+  const mainCategory = product.categories
+    ? product.categories
+        .split(',')
+        .filter((cat: string) => 
+          !cat.startsWith('fr:') && 
+          !cat.includes('-') && 
+          !cat.includes(':') &&
+          cat.trim().length > 0
+        )[0]
+    : '';
+    
+  // Get all categories for display
   const categories = product.categories
     ? product.categories
         .split(',')
-        .filter((cat: string) => !cat.startsWith('fr:') && !cat.includes('-'))
+        .filter((cat: string) => 
+          !cat.startsWith('fr:') && 
+          !cat.includes('-') && 
+          !cat.includes(':') &&
+          cat.trim().length > 0
+        )
         .slice(0, 3)
         .join(', ')
     : '';
@@ -59,14 +76,67 @@ const FoodItem = ({ product }: FoodItemProps) => {
     // TODO: Navigate to food detail page or open modal with product details
   };
 
+  // Check if this likely appears to be an exact match to common search terms
+  const isLikelyExactMatch = (name: string): boolean => {
+    // Common food search terms to highlight
+    const exactMatchTerms = [
+      'chicken breast',
+      'grilled chicken',
+      'greek yogurt',
+      'apple',
+      'banana',
+      'orange',
+      'rice',
+      'brown rice',
+      'white rice',
+      'oatmeal',
+      'oats',
+      'egg',
+      'eggs',
+      'steak',
+      'beef',
+      'salmon',
+      'tuna',
+      'broccoli',
+      'spinach',
+      'kale',
+      'avocado',
+      'sweet potato',
+      'potato',
+    ];
+    
+    const nameLower = name.toLowerCase();
+    
+    // Check if the product name exactly matches or starts with any of the terms
+    return exactMatchTerms.some(term => 
+      nameLower === term || 
+      nameLower.startsWith(`${term} `) ||
+      nameLower.includes(` ${term}`)
+    );
+  };
+  
+  const highlighted = isLikelyExactMatch(productName);
+
   return (
-    <div className="glass-panel p-4 rounded-lg">
+    <div className={`glass-panel p-4 rounded-lg ${highlighted ? 'border-l-4 border-primary' : ''}`}>
       <div className="flex justify-between items-start">
         <div className="space-y-1 flex-1">
-          <h3 className="font-medium">{productName}</h3>
-          <p className="text-sm text-muted-foreground">{brand}</p>
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium">{productName}</h3>
+            {highlighted && <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />}
+          </div>
           
-          {categories && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <p className="text-sm text-muted-foreground">{brand}</p>
+            
+            {mainCategory && (
+              <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                {mainCategory}
+              </span>
+            )}
+          </div>
+          
+          {categories && categories !== mainCategory && (
             <p className="text-xs italic text-primary/70">{categories}</p>
           )}
           
