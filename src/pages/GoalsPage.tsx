@@ -262,39 +262,39 @@ const GoalsPage = () => {
               onValueChange={handlePaceChange}
               className="space-y-3"
             >
-              <div className="flex items-start space-x-2">
-                <RadioGroupItem value="conservative" id="conservative" className="mt-1" />
-                <div className="cursor-pointer" onClick={() => handlePaceChange("conservative")}>
-                  <Label htmlFor="conservative" className="font-normal cursor-pointer">
-                    <span className="font-medium">Conservative</span>
-                    <p className="text-sm text-muted-foreground">
-                      {isWeightGain() ? "0.25-0.5 lbs per week gain" : "0.25-0.5 lbs per week loss"}
-                    </p>
+              <div className="flex items-center gap-3" onClick={() => handlePaceChange("conservative")}>
+                <RadioGroupItem value="conservative" id="conservative" />
+                <div className="cursor-pointer flex flex-col">
+                  <Label htmlFor="conservative" className="font-medium cursor-pointer">
+                    Conservative
                   </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isWeightGain() ? "0.25-0.5 lbs per week gain" : "0.25-0.5 lbs per week loss"}
+                  </p>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-2">
-                <RadioGroupItem value="moderate" id="moderate" className="mt-1" />
-                <div className="cursor-pointer" onClick={() => handlePaceChange("moderate")}>
-                  <Label htmlFor="moderate" className="font-normal cursor-pointer">
-                    <span className="font-medium">Moderate</span>
-                    <p className="text-sm text-muted-foreground">
-                      {isWeightGain() ? "0.5-1 lbs per week gain" : "0.5-1 lbs per week loss"}
-                    </p>
+              <div className="flex items-center gap-3" onClick={() => handlePaceChange("moderate")}>
+                <RadioGroupItem value="moderate" id="moderate" />
+                <div className="cursor-pointer flex flex-col">
+                  <Label htmlFor="moderate" className="font-medium cursor-pointer">
+                    Moderate
                   </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isWeightGain() ? "0.5-1 lbs per week gain" : "0.5-1 lbs per week loss"}
+                  </p>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-2">
-                <RadioGroupItem value="aggressive" id="aggressive" className="mt-1" />
-                <div className="cursor-pointer" onClick={() => handlePaceChange("aggressive")}>
-                  <Label htmlFor="aggressive" className="font-normal cursor-pointer">
-                    <span className="font-medium">Aggressive</span>
-                    <p className="text-sm text-muted-foreground">
-                      {isWeightGain() ? "1-2 lbs per week gain" : "1-2 lbs per week loss"}
-                    </p>
+              <div className="flex items-center gap-3" onClick={() => handlePaceChange("aggressive")}>
+                <RadioGroupItem value="aggressive" id="aggressive" />
+                <div className="cursor-pointer flex flex-col">
+                  <Label htmlFor="aggressive" className="font-medium cursor-pointer">
+                    Aggressive
                   </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isWeightGain() ? "1-2 lbs per week gain" : "1-2 lbs per week loss"}
+                  </p>
                 </div>
               </div>
             </RadioGroup>
