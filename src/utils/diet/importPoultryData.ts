@@ -1,5 +1,6 @@
 
 import { importFoodsFromJson } from "./foodManagement";
+import { getCurrentFoodCategories } from "./foodManagement";
 
 export const importPoultryData = () => {
   // The JSON data for poultry
@@ -160,13 +161,27 @@ export const importPoultryData = () => {
     ]
   };
 
-  // Define the mapping for poultry category
+  // Debug: Log available categories before import
+  const categories = getCurrentFoodCategories();
+  console.log("Available categories for poultry import:", 
+    categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`).join(', '));
+
+  // Define the mapping for poultry category - use internal name, not display name
   const categoryMappings = {
-    'poultry': 'Meats & Poultry'
+    'poultry': 'meatsAndPoultry'  // Matching internal name from data/diet/index.ts
   };
 
   // Import the poultry data
   const result = importFoodsFromJson(poultryData, categoryMappings);
+  
+  // Log detailed results for debugging
+  if (!result.success) {
+    console.error("Poultry import failed:", result.message);
+    console.error("Failed items:", result.failedItems.slice(0, 3));
+  } else {
+    console.log("Poultry import successful:", 
+      `Added ${result.addedCount}, Updated ${result.updatedCount}, Failed ${result.failedCount}`);
+  }
   
   return result;
 };

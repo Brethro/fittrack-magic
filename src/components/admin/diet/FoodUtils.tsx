@@ -25,6 +25,7 @@ export const useFoodDatabase = () => {
   const { toast } = useToast();
   const [totalFoodItems, setTotalFoodItems] = useState<number>(0);
   const [lastParseResults, setLastParseResults] = useState<string[]>([]);
+  const [categoriesInitialized, setCategoriesInitialized] = useState<boolean>(false);
 
   // Get all raw food data (including categories that might be filtered out in foodCategoriesData)
   const getAllRawFoodData = () => {
@@ -67,9 +68,13 @@ export const useFoodDatabase = () => {
         return;
       }
 
-      // Add the category mapping for poultry to Meats & Poultry
+      // Log available categories for debugging
+      console.log("Available categories before poultry import:", 
+        foodCategoriesData.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`).join(', '));
+
+      // Add the category mapping for poultry to Meats & Poultry - use internal name, not display name
       const categoryMappings = {
-        'poultry': 'Meats & Poultry'
+        'poultry': 'meatsAndPoultry'  // Matching internal name from data/diet/index.ts
       };
 
       // Import the data
@@ -83,6 +88,7 @@ export const useFoodDatabase = () => {
           description: `Added ${result.addedCount} new poultry foods, updated ${result.updatedCount} existing foods`,
         });
       } else {
+        console.error("Poultry import failed:", result.message);
         toast({
           title: "Error Importing Poultry Foods",
           description: result.message.substring(0, 100) + "...",
@@ -102,7 +108,13 @@ export const useFoodDatabase = () => {
   // Initialize food categories on mount
   useEffect(() => {
     const allRawData = getAllRawFoodData();
-    initializeFoodCategories(foodCategoriesData);
+    
+    // Initialize food categories first with all raw data
+    const categories = initializeFoodCategories(foodCategoriesData);
+    console.log("Food categories initialized:", 
+      categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`));
+    
+    setCategoriesInitialized(true);
   }, []);
 
   return {
@@ -110,6 +122,7 @@ export const useFoodDatabase = () => {
     lastParseResults,
     setLastParseResults,
     getAllRawFoodData,
-    importPoultryData
+    importPoultryData,
+    categoriesInitialized
   };
 };

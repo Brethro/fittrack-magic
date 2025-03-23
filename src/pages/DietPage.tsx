@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,12 +13,35 @@ import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 import { importPoultryData } from "@/utils/diet/importPoultryData";
+import { initializeFoodCategories } from "@/utils/diet/foodManagement";
 
 const DietPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialize food categories and import poultry data
+  useEffect(() => {
+    // First, initialize food categories
+    const categories = initializeFoodCategories(foodCategoriesData);
+    console.log("DietPage: Food categories initialized:", 
+      categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`));
+    
+    // Then import poultry data
+    setTimeout(() => {
+      const result = importPoultryData();
+      if (result.success) {
+        console.log(`DietPage: Successfully imported poultry data: ${result.addedCount} added, ${result.updatedCount} updated`);
+      } else {
+        console.error("DietPage: Failed to import poultry data:", result.message);
+      }
+      
+      // Mark initialization as complete
+      setInitialized(true);
+    }, 500); // Short delay to ensure categories are fully initialized
+  }, []);
 
   // Check if user has required data
   useEffect(() => {
@@ -64,19 +86,13 @@ const DietPage = () => {
   // Get available diets for current food database
   const availableDiets = getAvailableDiets();
   
-  // Log available diets for debugging - now using both sources
+  // Log available diets for debugging
   useEffect(() => {
-    console.log("Diet types from central collection:", getAvailableDietTypes());
-    console.log("Available diets for selection:", availableDiets);
-    
-    // Import poultry data when component mounts
-    const result = importPoultryData();
-    if (result.success) {
-      console.log(`Successfully imported poultry data: ${result.addedCount} added, ${result.updatedCount} updated`);
-    } else {
-      console.error("Failed to import poultry data:", result.message);
+    if (initialized) {
+      console.log("Diet types from central collection:", getAvailableDietTypes());
+      console.log("Available diets for selection:", availableDiets);
     }
-  }, [availableDiets]);
+  }, [availableDiets, initialized]);
 
   // Generate meal plan function that passes selected food items and the diet type
   const handleGenerateMealPlan = () => {
