@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useForm, Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -325,15 +332,19 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     : food.brands || "Unknown Brand";
   
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-card border rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0" 
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}>
         {/* Header */}
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Food Details</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+        <DialogHeader className="px-4 py-3 border-b flex justify-between items-center space-y-0">
+          <DialogTitle className="text-xl">Food Details</DialogTitle>
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-3">
+              <X className="h-5 w-5" />
+            </Button>
+          </DialogClose>
+        </DialogHeader>
         
         {/* Content - scrollable */}
         <div className="flex-1 overflow-y-auto p-4">
@@ -527,7 +538,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
             >
               <div className="flex justify-between items-center">
                 <h4 className="font-medium mb-0">Detailed Nutrients</h4>
-                <CollapsibleTrigger>
+                <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-1 h-8">
                     {isNutrientsOpen ? (
                       <ChevronUp className="h-4 w-4" />
@@ -587,8 +598,8 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
