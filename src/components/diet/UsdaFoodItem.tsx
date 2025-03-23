@@ -6,6 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { type UsdaFoodItem as UsdaFoodItemType, extractNutritionInfo } from "@/utils/usdaApi";
 import FoodDetailView from "./FoodDetailView";
+import { useFoodLog } from "@/contexts/FoodLogContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface UsdaFoodItemProps {
   foodItem: UsdaFoodItemType;
@@ -15,9 +17,11 @@ interface UsdaFoodItemProps {
 const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   const isMobile = useIsMobile();
   const [showDetailView, setShowDetailView] = useState(false);
+  const { addFoodEntry } = useFoodLog();
+  const { toast } = useToast();
   
   // Extract nutritional information
-  const nutrition = extractNutritionInfo(foodItem);
+  const { nutritionValues, servingInfo } = extractNutritionInfo(foodItem);
   
   // Format description and category
   const description = foodItem.description || "Unnamed Food";
@@ -40,7 +44,23 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   
   const handleSaveFood = (food: any) => {
     console.log("Saving food from detail view:", food);
-    // Here you would implement saving to user's food log or diary
+    
+    // Create a new food log entry from the food data
+    addFoodEntry({
+      foodName: food.description || "Unnamed Food",
+      amount: food.customServing?.amount || 100,
+      unit: food.customServing?.unit || "g",
+      date: new Date(),
+      mealType: "breakfast", // Default meal type - user can edit later
+      nutrition: food.calculatedNutrition || nutritionValues,
+      source: "usda",
+      sourceId: food.fdcId
+    });
+    
+    toast({
+      title: "Food added",
+      description: `${food.description || "Food"} added to your log`
+    });
   };
 
   return (
@@ -85,16 +105,16 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             
             <div className="flex flex-wrap gap-2 mt-3">
               <Badge className="bg-secondary text-secondary-foreground">
-                {Math.round(nutrition.nutritionValues.calories)} kcal
+                {Math.round(nutritionValues.calories)} kcal
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                P: {nutrition.nutritionValues.protein.toFixed(1)}g
+                P: {nutritionValues.protein.toFixed(1)}g
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                C: {nutrition.nutritionValues.carbs.toFixed(1)}g
+                C: {nutritionValues.carbs.toFixed(1)}g
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                F: {nutrition.nutritionValues.fat.toFixed(1)}g
+                F: {nutritionValues.fat.toFixed(1)}g
               </Badge>
             </div>
             

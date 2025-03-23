@@ -12,6 +12,8 @@ import {
   searchUsdaDatabase, 
   searchWithFallback 
 } from "@/services/foodSearchService";
+import { FoodLogProvider } from "@/contexts/FoodLogContext";
+import FoodLog from "@/components/diet/FoodLog";
 
 const DietPage = () => {
   const { toast } = useToast();
@@ -90,38 +92,50 @@ const DietPage = () => {
   };
 
   return (
-    <div className="container px-4 py-8 mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-2xl font-bold mb-6 text-gradient-purple">
-          Diet Planner
-        </h1>
+    <FoodLogProvider>
+      <div className="container px-4 py-8 mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h1 className="text-2xl font-bold mb-6 text-gradient-purple">
+            Diet Planner
+          </h1>
 
-        {/* API Status Indicators */}
-        <ApiStatusIndicators 
-          apiStatus={apiStatus} 
-          usdaApiStatus={usdaApiStatus} 
-        />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left section: Food search */}
+            <div className="md:col-span-2 space-y-4">
+              {/* API Status Indicators */}
+              <ApiStatusIndicators 
+                apiStatus={apiStatus} 
+                usdaApiStatus={usdaApiStatus} 
+              />
 
-        {/* Search Form */}
-        <FoodSearchForm 
-          onSearch={handleSearch} 
-          isLoading={isLoading} 
-        />
+              {/* Search Form */}
+              <FoodSearchForm 
+                onSearch={handleSearch} 
+                isLoading={isLoading} 
+              />
 
-        {/* Search Results */}
-        {isLoading ? (
-          <FoodSearchResultsSkeleton />
-        ) : (
-          (searchResults.length > 0 || usdaResults.length > 0) && (
-            <FoodSearchResults results={searchResults} usdaResults={usdaResults} />
-          )
-        )}
-      </motion.div>
-    </div>
+              {/* Search Results */}
+              {isLoading ? (
+                <FoodSearchResultsSkeleton />
+              ) : (
+                (searchResults.length > 0 || usdaResults.length > 0) && (
+                  <FoodSearchResults results={searchResults} usdaResults={usdaResults} />
+                )
+              )}
+            </div>
+            
+            {/* Right section: Food log */}
+            <div className="md:col-span-1">
+              <FoodLog />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </FoodLogProvider>
   );
 };
 
