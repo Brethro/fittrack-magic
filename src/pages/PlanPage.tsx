@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,7 +15,9 @@ const PlanPage = () => {
   const { toast } = useToast();
   const { userData, recalculateNutrition } = useUserData();
   const [weightDialogOpen, setWeightDialogOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
+  // Only recalculate nutrition once when the page loads
   useEffect(() => {
     if (!userData.goalValue || !userData.goalDate) {
       toast({
@@ -24,11 +26,15 @@ const PlanPage = () => {
         variant: "destructive",
       });
       navigate("/goals");
-    } else {
-      // Ensure nutrition values are up-to-date when the plan page is loaded
-      recalculateNutrition();
+      return;
     }
-  }, [userData.goalValue, userData.goalDate, userData.goalPace, navigate, toast, recalculateNutrition]);
+    
+    // Only recalculate if not already initialized
+    if (!initialized) {
+      recalculateNutrition();
+      setInitialized(true);
+    }
+  }, [userData.goalValue, userData.goalDate, navigate, toast, recalculateNutrition, initialized]);
 
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (

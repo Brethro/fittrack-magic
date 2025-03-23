@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { differenceInCalendarDays } from "date-fns";
 
 export type WeightLogEntry = {
@@ -89,6 +90,9 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return initialUserData;
   });
+  
+  // Flag to track initial calculation
+  const [hasCalculated, setHasCalculated] = useState(false);
 
   // Save user data to localStorage whenever it changes
   useEffect(() => {
@@ -202,7 +206,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
     
-    // NEW: Calculate time until goal date to adjust deficit
+    // Calculate time until goal date to adjust deficit
     const today = new Date();
     const goalDate = new Date(userData.goalDate);
     const daysUntilGoal = Math.max(differenceInCalendarDays(goalDate, today), 1); // At least 1 day
@@ -320,20 +324,35 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     // Update the calculated values
-    setUserData(prev => ({
-      ...prev,
-      tdee,
-      dailyCalories,
-      macros: {
-        protein: proteinGrams,
-        carbs: carbGrams,
-        fats: fatGrams,
-      }
-    }));
-  }, [userData]);
+    // Only update if values have actually changed to prevent infinite loops
+    const hasChanged = 
+      userData.tdee !== tdee ||
+      userData.dailyCalories !== dailyCalories ||
+      userData.macros.protein !== proteinGrams ||
+      userData.macros.carbs !== carbGrams ||
+      userData.macros.fats !== fatGrams;
+      
+    if (hasChanged) {
+      setUserData(prev => ({
+        ...prev,
+        tdee,
+        dailyCalories,
+        macros: {
+          protein: proteinGrams,
+          carbs: carbGrams,
+          fats: fatGrams,
+        }
+      }));
+    }
+    
+    // Set flag to indicate calculation was performed
+    setHasCalculated(true);
+  }, [userData.age, userData.weight, userData.height, userData.activityLevel, 
+      userData.useMetric, userData.bodyFatPercentage, userData.gender, 
+      userData.goalType, userData.goalValue, userData.goalDate, userData.goalPace]);
 
   // Create a stable context value to prevent unnecessary re-renders
-  const contextValue = React.useMemo(() => ({
+  const contextValue = useMemo(() => ({
     userData, 
     updateUserData, 
     clearUserData, 

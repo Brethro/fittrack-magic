@@ -1,3 +1,4 @@
+
 // USDA Food Data Central API utilities
 const USDA_API_KEY = "1su4bvCoKYGVSnyCBgVCwQATKgRWw9uVHqWFTsw2";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";

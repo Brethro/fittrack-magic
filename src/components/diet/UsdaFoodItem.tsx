@@ -85,16 +85,16 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             
             <div className="flex flex-wrap gap-2 mt-3">
               <Badge className="bg-secondary text-secondary-foreground">
-                {Math.round(nutrition.calories)} kcal
+                {Math.round(nutrition.nutritionValues.calories)} kcal
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                P: {nutrition.protein.toFixed(1)}g
+                P: {nutrition.nutritionValues.protein.toFixed(1)}g
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                C: {nutrition.carbs.toFixed(1)}g
+                C: {nutrition.nutritionValues.carbs.toFixed(1)}g
               </Badge>
               <Badge className="bg-secondary text-secondary-foreground">
-                F: {nutrition.fat.toFixed(1)}g
+                F: {nutrition.nutritionValues.fat.toFixed(1)}g
               </Badge>
             </div>
             
