@@ -94,15 +94,26 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
     }
     
     const data: OpenFoodFactsResponse = await response.json();
-    const foodItems = data.products.map(mapProductToFoodItem);
+    
+    // Track seen product codes to avoid duplicates
+    const seenProductCodes = new Set<string>();
+    const uniqueFoodItems: FoodItem[] = [];
+    
+    // Filter out duplicates based on product code
+    data.products.forEach(product => {
+      if (!seenProductCodes.has(product.code)) {
+        seenProductCodes.add(product.code);
+        uniqueFoodItems.push(mapProductToFoodItem(product));
+      }
+    });
     
     // Cache the results
     foodSearchCache[cacheKey] = {
       timestamp: now,
-      results: foodItems
+      results: uniqueFoodItems
     };
     
-    return foodItems;
+    return uniqueFoodItems;
   } catch (error) {
     console.error("Error searching Open Food Facts:", error);
     // Return empty array but don't throw - let calling code handle gracefully
@@ -253,9 +264,12 @@ const mapProductToFoodItem = (product: OpenFoodFactsProduct): FoodItem => {
     diets.push("high-protein");
   }
   
+  // Ensure the ID is truly unique by adding a random suffix if needed
+  const uniqueId = `off_${product.code}_${Math.floor(Math.random() * 1000)}`;
+  
   // Create and return the FoodItem
   return {
-    id: `off_${product.code}`,
+    id: uniqueId,
     name,
     protein: nutriments.proteins_100g || 0,
     carbs: nutriments.carbohydrates_100g || 0,

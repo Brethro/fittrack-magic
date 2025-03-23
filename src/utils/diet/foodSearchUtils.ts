@@ -1,64 +1,96 @@
 
 import { FoodCategory, FoodItem } from "@/types/diet";
-import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
+import { categoryDisplayNames } from "./categoryDisplayNames";
 
-// Function to search food items using fuzzy matching
-export const searchFoodItems = (query: string, foodCategories: FoodCategory[]): FoodItem[] => {
+interface HighlightedFoodItem extends FoodItem {
+  highlighted?: boolean;
+}
+
+interface SearchResults {
+  items: HighlightedFoodItem[];
+  categories: string[];
+}
+
+/**
+ * Searches for foods matching the query across all food categories
+ * and returns items with a highlighted flag
+ */
+export const searchAndHighlightFoods = (
+  query: string,
+  categories: FoodCategory[]
+): SearchResults => {
   if (!query || query.length < 2) {
-    return [];
+    return { items: [], categories: [] };
   }
   
-  // Use the fuzzy matching utility with a more prominently displayed result
-  const results = fuzzyFindFood(query, foodCategories);
+  const matchedCategories = new Set<string>();
+  const matchedItems: HighlightedFoodItem[] = [];
   
-  // Sort results by relevance (exact name matches first)
-  return results.sort((a, b) => {
-    // Exact matches at the top
-    const aExact = a.name.toLowerCase() === query.toLowerCase();
-    const bExact = b.name.toLowerCase() === query.toLowerCase();
-    if (aExact && !bExact) return -1;
-    if (!aExact && bExact) return 1;
-    
-    // Starts with at second position
-    const aStartsWith = a.name.toLowerCase().startsWith(query.toLowerCase());
-    const bStartsWith = b.name.toLowerCase().startsWith(query.toLowerCase());
-    if (aStartsWith && !bStartsWith) return -1;
-    if (!aStartsWith && bStartsWith) return 1;
-    
-    // Default sorting by name
-    return a.name.localeCompare(b.name);
+  // Normalize query for case-insensitive matching
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  // Search through all categories and their items
+  categories.forEach(category => {
+    // Search through items in this category
+    category.items.forEach(item => {
+      if (itemMatchesQuery(item, normalizedQuery)) {
+        // Clone the item and add highlighted flag
+        const highlightedItem: HighlightedFoodItem = {
+          ...item,
+          highlighted: true
+        };
+        
+        matchedItems.push(highlightedItem);
+        matchedCategories.add(category.name);
+        
+        // Also add the primary category if it exists
+        if (item.primaryCategory) {
+          matchedCategories.add(item.primaryCategory);
+        }
+      }
+    });
   });
+  
+  return {
+    items: matchedItems,
+    categories: Array.from(matchedCategories)
+  };
 };
 
-// Function to search with highlighting
-export const searchAndHighlightFoods = (
-  query: string, 
-  foodCategories: FoodCategory[]
-): { items: FoodItem[], query: string } => {
-  const items = searchFoodItems(query, foodCategories);
-  
-  // Mark items that match the search query for highlighting
-  const markedItems = items.map(item => ({
-    ...item,
-    isHighlighted: true,
-    showSearchIcon: true
-  }));
-  
-  return { items: markedItems, query };
-};
-
-// Helper function to determine if a food item matches the search query
+/**
+ * Determines if a food item matches a search query by checking various fields
+ */
 export const itemMatchesQuery = (item: FoodItem, query: string): boolean => {
-  if (!query || query.length < 2) return false;
+  // Convert to lowercase for case-insensitive comparison
+  const name = item.name.toLowerCase();
+  const primaryCategory = item.primaryCategory ? item.primaryCategory.toLowerCase() : '';
+  const diets = item.diets ? item.diets.map(d => d.toLowerCase()) : [];
   
-  const lowerQuery = query.toLowerCase();
-  const lowerName = item.name.toLowerCase();
-  
-  // Check multiple properties for a match, removing the 'description' property
+  // Check if query matches any of the relevant fields
   return (
-    lowerName.includes(lowerQuery) || 
-    item.primaryCategory?.toLowerCase().includes(lowerQuery) ||
-    item.diets?.some(diet => diet.toLowerCase().includes(lowerQuery)) ||
-    false
+    name.includes(query) ||
+    primaryCategory.includes(query) ||
+    diets.some(diet => diet.includes(query))
   );
+};
+
+/**
+ * Get cached filtered items or filter them fresh if not cached
+ */
+export const getCachedFilteredItems = (
+  items: FoodItem[],
+  query: string,
+  dietType: string
+): FoodItem[] => {
+  // Filter by search query
+  const matchingItems = query.length >= 2
+    ? items.filter(item => itemMatchesQuery(item, query.toLowerCase()))
+    : items;
+  
+  // Additional filter by diet type if not 'all'
+  return dietType === 'all' 
+    ? matchingItems 
+    : matchingItems.filter(item => 
+        item.diets?.includes(dietType) || false
+      );
 };
