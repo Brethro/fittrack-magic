@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -251,24 +252,24 @@ const GoalsPage = () => {
               onValueChange={handlePaceChange}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="conservative" id="conservative" />
+              <div className="flex items-start space-x-2">
+                <RadioGroupItem value="conservative" id="conservative" className="mt-1" />
                 <Label htmlFor="conservative" className="font-normal cursor-pointer">
                   <span className="font-medium">Conservative</span>
                   <p className="text-sm text-muted-foreground">0.25-0.5 lbs per week</p>
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="moderate" id="moderate" />
+              <div className="flex items-start space-x-2">
+                <RadioGroupItem value="moderate" id="moderate" className="mt-1" />
                 <Label htmlFor="moderate" className="font-normal cursor-pointer">
                   <span className="font-medium">Moderate</span>
                   <p className="text-sm text-muted-foreground">0.5-1 lbs per week</p>
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="aggressive" id="aggressive" />
+              <div className="flex items-start space-x-2">
+                <RadioGroupItem value="aggressive" id="aggressive" className="mt-1" />
                 <Label htmlFor="aggressive" className="font-normal cursor-pointer">
                   <span className="font-medium">Aggressive</span>
                   <p className="text-sm text-muted-foreground">1-2 lbs per week</p>
