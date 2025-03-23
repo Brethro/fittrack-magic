@@ -1,9 +1,30 @@
-
 import { FoodItem, DietType } from "@/types/diet";
 
 // Cache for filtered items to improve performance
 const filterCache = new Map<string, FoodItem[]>();
 const CACHE_MAX_SIZE = 50;
+
+// Keep track of seen item IDs to prevent duplicates 
+const seenItemIds = new Set<string>();
+
+/**
+ * Deduplicates food items based on their ID
+ */
+export const deduplicateFoodItems = (items: FoodItem[]): FoodItem[] => {
+  // Clear the set before each run to avoid growing too large
+  seenItemIds.clear();
+  
+  return items.filter(item => {
+    // If we've seen this ID before, skip it
+    if (seenItemIds.has(item.id)) {
+      return false;
+    }
+    
+    // Otherwise, add it to our set and keep it
+    seenItemIds.add(item.id);
+    return true;
+  });
+};
 
 // Filter food items based on search query and selected diet
 export const getFilteredItems = (
@@ -19,8 +40,8 @@ export const getFilteredItems = (
     return filterCache.get(cacheKey) || [];
   }
   
-  // Start with all items
-  let filteredItems = [...items];
+  // Start with all items and deduplicate
+  let filteredItems = deduplicateFoodItems([...items]);
   
   // Filter by diet if not "all"
   if (selectedDiet !== "all") {

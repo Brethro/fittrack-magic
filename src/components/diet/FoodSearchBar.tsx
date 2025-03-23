@@ -21,7 +21,7 @@ export function FoodSearchBar({
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const isSearching = useRef(false);
   
-  // Sync input value with searchQuery prop
+  // Sync input value with searchQuery prop only when not actively searching
   useEffect(() => {
     if (searchQuery !== inputValue && !isSearching.current) {
       setInputValue(searchQuery);
@@ -54,11 +54,11 @@ export function FoodSearchBar({
         onSearch(value);
       }
       
-      // Reset the searching flag
+      // Reset the searching flag after a short delay
       setTimeout(() => {
         isSearching.current = false;
-      }, 100);
-    }, 600); // Increased debounce delay
+      }, 150);
+    }, 800); // Increased debounce delay further to prevent rapid API calls
   }, [onSearch, setSearchQuery]);
   
   // Clean up on unmount

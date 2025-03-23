@@ -54,6 +54,8 @@ export function FoodSubcategoryList({
   const subcategoryFoodIds = subcategoryItems.map(food => food.id);
   const allSubcategorySelected = subcategoryFoodIds.every(id => selectedFoods[id] !== false);
   const someSubcategorySelected = subcategoryFoodIds.some(id => selectedFoods[id] !== false);
+  
+  // Format the subcategory name for display (convert camelCase to Title Case)
   const displayName = getCategoryDisplayName(subcategoryName);
   
   return (
@@ -104,7 +106,7 @@ export function FoodSubcategoryList({
         <div className="grid grid-cols-1 gap-2">
           {filteredSubItems.map((food) => (
             <FoodListItem
-              key={food.id}
+              key={`${categoryName}-${food.id}`}
               food={food}
               isChecked={selectedFoods[food.id] !== false}
               onToggleSelection={() => toggleFoodSelection(food.id)}
