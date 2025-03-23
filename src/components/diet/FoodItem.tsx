@@ -10,16 +10,28 @@ interface FoodItemProps {
 const FoodItem = ({ product }: FoodItemProps) => {
   const navigate = useNavigate();
 
-  // Extract and format nutritional information from the product
-  const calories = product.nutriments?.["energy-kcal_100g"] || 0;
-  const protein = product.nutriments?.proteins_100g || 0;
-  const carbs = product.nutriments?.carbohydrates_100g || 0;
-  const fat = product.nutriments?.fat_100g || 0;
+  // Extract and format nutritional information with better fallbacks
+  const calories = product.nutriments?.["energy-kcal_100g"] || 
+                  product.nutriments?.["energy-kcal"] || 
+                  product.nutriments?.energy_100g || 
+                  product.nutriments?.energy || 0;
+  
+  const protein = product.nutriments?.proteins_100g || 
+                 product.nutriments?.proteins || 0;
+  
+  const carbs = product.nutriments?.carbohydrates_100g || 
+               product.nutriments?.carbohydrates || 0;
+  
+  const fat = product.nutriments?.fat_100g || 
+             product.nutriments?.fat || 0;
   
   // Generate a name if the product name isn't available
   const productName = product.product_name || "Unnamed Product";
   const brand = product.brands || "Unknown Brand";
   const servingSize = product.serving_size || "100g";
+  
+  // Add categories for additional context about the food
+  const categories = product.categories?.split(',').slice(0, 2).join(', ') || '';
 
   const handleSelectFood = () => {
     // For now, just log the selection - we'll implement the details page later
@@ -33,6 +45,9 @@ const FoodItem = ({ product }: FoodItemProps) => {
         <div className="space-y-1 flex-1">
           <h3 className="font-medium">{productName}</h3>
           <p className="text-sm text-muted-foreground">{brand}</p>
+          {categories && (
+            <p className="text-xs italic text-muted-foreground">{categories}</p>
+          )}
           <div className="flex flex-wrap gap-3 mt-2 text-xs">
             <span className="bg-accent/30 rounded-full px-2 py-1">
               {Math.round(calories)} kcal

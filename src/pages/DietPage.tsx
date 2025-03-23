@@ -62,13 +62,15 @@ const DietPage = () => {
 
     setIsLoading(true);
     try {
-      // Use more specific search parameters to improve relevance
-      // Adding tags to filter for food categories and using product_name to prioritize matches in names
-      const response = await fetch(
-        `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(
-          searchQuery
-        )}&tagtype_0=categories&tag_contains_0=contains&tag_0=foods&sort_by=popularity_key&fields=product_name,brands,serving_size,nutriments,image_url&page_size=20`
-      );
+      // Improved search parameters using more specific fields to match against 
+      // and dropping the category filter that might have been too restrictive
+      const searchUrl = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(
+        searchQuery
+      )}&sort_by=popularity_key&fields=product_name,brands,serving_size,nutriments,image_url,categories&page_size=30`;
+      
+      console.log("Searching with URL:", searchUrl);
+      
+      const response = await fetch(searchUrl);
       
       if (!response.ok) {
         throw new Error(`Network response was not ok (${response.status})`);
@@ -78,25 +80,46 @@ const DietPage = () => {
       console.log("Search API response:", data); // Debug log
       
       if (data.products && Array.isArray(data.products)) {
-        // Filter results to prioritize items that actually match the search query in their name
-        const filteredResults = data.products.filter(product => {
+        // Process and score results based on relevance to search terms
+        const scoredResults = data.products.map(product => {
           const productName = product.product_name?.toLowerCase() || '';
           const brandName = product.brands?.toLowerCase() || '';
+          const categories = product.categories?.toLowerCase() || '';
           const searchTerms = searchQuery.toLowerCase().split(' ');
           
-          // Check if any search term is found in product name or brand
-          return searchTerms.some(term => 
-            productName.includes(term) || brandName.includes(term)
-          );
+          // Calculate a relevance score based on where matches are found
+          let score = 0;
+          searchTerms.forEach(term => {
+            // Prioritize exact name matches
+            if (productName.includes(term)) score += 10;
+            // Brand matches are also valuable
+            if (brandName.includes(term)) score += 5;
+            // Category matches are helpful
+            if (categories.includes(term)) score += 3;
+          });
+          
+          return { product, score };
         });
         
-        if (filteredResults.length > 0) {
-          setSearchResults(filteredResults);
+        // Filter out items with zero relevance and sort by score
+        const relevantResults = scoredResults
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(item => item.product);
+        
+        if (relevantResults.length > 0) {
+          setSearchResults(relevantResults);
         } else {
-          // Fall back to original results if filtering removed everything
-          setSearchResults(data.products);
+          // If our filtering was too strict, use original results
+          setSearchResults(data.products.slice(0, 10)); // Limit to top 10
           
-          if (data.products.length === 0) {
+          // Notify user that exact matches weren't found
+          if (data.products.length > 0) {
+            toast({
+              title: "Limited relevant results",
+              description: "Showing available products that might not exactly match your search",
+            });
+          } else {
             toast({
               title: "No results found",
               description: "Try a different search term",
