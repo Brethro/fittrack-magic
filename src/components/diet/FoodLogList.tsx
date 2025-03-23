@@ -3,12 +3,12 @@ import { useState } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Utensils } from "lucide-react";
-import { useFoodLog } from "@/contexts/FoodLogContext";
+import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
 import FoodLogEntry from "./FoodLogEntry";
 import { Card } from "@/components/ui/card";
 
 interface FoodLogListProps {
-  onEditEntry?: (entry: any) => void;
+  onEditEntry?: (entry: FoodLogEntry) => void;
 }
 
 const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
@@ -37,7 +37,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   // Handle editing a log entry
-  const handleEdit = (entry: any) => {
+  const handleEdit = (entry: FoodLogEntry) => {
     if (onEditEntry) {
       onEditEntry(entry);
     }

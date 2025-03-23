@@ -5,10 +5,12 @@ import FoodLogSummary from "./FoodLogSummary";
 import FoodLogList from "./FoodLogList";
 import QuickFoodEntry from "./QuickFoodEntry";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type FoodLogEntry } from "@/contexts/FoodLogContext";
 
 const FoodLog = () => {
-  const { currentDate, setCurrentDate } = useFoodLog();
+  const { currentDate, setCurrentDate, updateFoodEntry } = useFoodLog();
   const [activeTab, setActiveTab] = useState("log");
+  const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
   
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
@@ -17,6 +19,12 @@ const FoodLog = () => {
   // This function will be passed to QuickFoodEntry to switch tabs after adding food
   const handleFoodAdded = () => {
     setActiveTab("log");
+  };
+  
+  // Handle editing a food entry
+  const handleEditEntry = (entry: FoodLogEntry) => {
+    setEditingEntry(entry);
+    setActiveTab("add");
   };
   
   return (
@@ -41,7 +49,7 @@ const FoodLog = () => {
             value="log" 
             className="flex-1 m-0 h-full data-[state=active]:flex data-[state=active]:flex-col w-full"
           >
-            <FoodLogList />
+            <FoodLogList onEditEntry={handleEditEntry} />
           </TabsContent>
           
           <TabsContent 
@@ -49,7 +57,14 @@ const FoodLog = () => {
             className="flex-1 m-0 h-full"
           >
             <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <QuickFoodEntry onAddSuccess={handleFoodAdded} />
+              <QuickFoodEntry 
+                onAddSuccess={handleFoodAdded} 
+                editingEntry={editingEntry}
+                onEditSuccess={() => {
+                  setEditingEntry(null);
+                  setActiveTab("log");
+                }}
+              />
             </div>
           </TabsContent>
         </div>

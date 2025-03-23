@@ -1,180 +1,294 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useFoodLog } from "@/contexts/FoodLogContext";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import MealTypeSelector from "./MealTypeSelector";
 
-interface QuickFoodEntryFormData {
-  foodName: string;
+interface QuickFoodEntryProps {
+  onAddSuccess?: () => void;
+  editingEntry?: FoodLogEntry | null;
+  onEditSuccess?: () => void;
+}
+
+interface NutritionInputs {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  amount: number;
-  unit: string;
+  fiber: number;
+  sugars: number;
 }
 
-interface QuickFoodEntryProps {
-  onAddSuccess?: () => void;
-}
-
-const QuickFoodEntry = ({ onAddSuccess }: QuickFoodEntryProps) => {
-  const { toast } = useToast();
-  const { addFoodEntry } = useFoodLog();
-  const [selectedMeal, setSelectedMeal] = useState<"breakfast" | "lunch" | "dinner" | "snack">("breakfast");
+const QuickFoodEntry = ({ 
+  onAddSuccess, 
+  editingEntry = null,
+  onEditSuccess
+}: QuickFoodEntryProps) => {
+  const { addFoodEntry, currentDate, updateFoodEntry } = useFoodLog();
+  const [foodName, setFoodName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [unit, setUnit] = useState("g");
+  const [mealType, setMealType] = useState<"breakfast" | "lunch" | "dinner" | "snack">("snack");
+  const [nutrition, setNutrition] = useState<NutritionInputs>({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0,
+    sugars: 0
+  });
+  const [isEditing, setIsEditing] = useState(false);
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<QuickFoodEntryFormData>({
-    defaultValues: {
-      foodName: "",
+  // Load editing entry data if present
+  useEffect(() => {
+    if (editingEntry) {
+      setFoodName(editingEntry.foodName);
+      setAmount(editingEntry.amount.toString());
+      setUnit(editingEntry.unit);
+      setMealType(editingEntry.mealType);
+      setNutrition({
+        calories: editingEntry.nutrition.calories || 0,
+        protein: editingEntry.nutrition.protein || 0,
+        carbs: editingEntry.nutrition.carbs || 0,
+        fat: editingEntry.nutrition.fat || 0,
+        fiber: editingEntry.nutrition.fiber || 0,
+        sugars: editingEntry.nutrition.sugars || 0
+      });
+      setIsEditing(true);
+    } else {
+      resetForm();
+      setIsEditing(false);
+    }
+  }, [editingEntry]);
+  
+  const resetForm = () => {
+    setFoodName("");
+    setAmount("");
+    setUnit("g");
+    setMealType("snack");
+    setNutrition({
       calories: 0,
       protein: 0,
       carbs: 0,
       fat: 0,
-      amount: 100,
-      unit: "g"
-    }
-  });
+      fiber: 0,
+      sugars: 0
+    });
+  };
   
-  const onSubmit = (data: QuickFoodEntryFormData) => {
-    // Create a new food log entry
-    const newEntry = {
-      foodName: data.foodName,
-      amount: data.amount,
-      unit: data.unit,
-      date: new Date(),
-      mealType: selectedMeal,
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!foodName.trim() || !amount || isNaN(Number(amount))) {
+      return;
+    }
+    
+    const entry = {
+      foodName: foodName.trim(),
+      amount: Number(amount),
+      unit,
+      date: currentDate,
+      mealType,
       nutrition: {
-        calories: data.calories,
-        protein: data.protein,
-        carbs: data.carbs,
-        fat: data.fat
+        calories: Number(nutrition.calories),
+        protein: Number(nutrition.protein),
+        carbs: Number(nutrition.carbs),
+        fat: Number(nutrition.fat),
+        fiber: Number(nutrition.fiber),
+        sugars: Number(nutrition.sugars)
       },
       source: "custom" as const
     };
     
-    // Add to food log
-    addFoodEntry(newEntry);
-    
-    // Show success toast
-    toast({
-      title: "Food added",
-      description: `${data.foodName} added to your ${selectedMeal}`
-    });
-    
-    // Reset form
-    reset();
-    
-    // Call onAddSuccess callback if provided
-    if (onAddSuccess) {
-      onAddSuccess();
+    if (isEditing && editingEntry) {
+      // Update existing entry
+      updateFoodEntry({
+        ...entry,
+        id: editingEntry.id,
+        sourceId: editingEntry.sourceId
+      });
+      
+      if (onEditSuccess) {
+        onEditSuccess();
+      }
+    } else {
+      // Add new entry
+      addFoodEntry(entry);
+      
+      if (onAddSuccess) {
+        onAddSuccess();
+      }
     }
+    
+    resetForm();
+  };
+  
+  const handleNutritionChange = (field: keyof NutritionInputs, value: string) => {
+    setNutrition(prev => ({
+      ...prev,
+      [field]: value === "" ? 0 : Number(value)
+    }));
   };
   
   return (
-    <div className="glass-panel p-4 rounded-lg">
-      <h3 className="text-base font-medium mb-3">Quick Add Food</h3>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h3 className="text-lg font-semibold mb-2">
+        {isEditing ? "Edit Food Entry" : "Quick Add Food"}
+      </h3>
       
-      <MealTypeSelector 
-        selectedMeal={selectedMeal} 
-        onChange={setSelectedMeal} 
-      />
+      {/* Food name */}
+      <div>
+        <Label htmlFor="food-name">Food Name</Label>
+        <Input
+          id="food-name"
+          value={foodName}
+          onChange={(e) => setFoodName(e.target.value)}
+          placeholder="E.g., Apple, Chicken Breast"
+          required
+        />
+      </div>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        {/* Food Name */}
+      {/* Amount and unit */}
+      <div className="grid grid-cols-2 gap-3">
         <div>
+          <Label htmlFor="amount">Amount</Label>
           <Input
-            placeholder="Food name"
-            {...register("foodName", { required: "Food name is required" })}
-            className={errors.foodName ? "border-destructive" : ""}
+            id="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="100"
+            required
           />
-          {errors.foodName && (
-            <p className="text-destructive text-xs mt-1">{errors.foodName.message}</p>
-          )}
         </div>
-        
-        {/* Amount and Unit */}
-        <div className="flex gap-2">
-          <div className="w-1/2">
-            <Input
-              type="number"
-              placeholder="Amount"
-              {...register("amount", { 
-                required: "Required", 
-                min: { value: 0, message: "Must be positive" } 
-              })}
-              className={errors.amount ? "border-destructive" : ""}
-            />
-          </div>
-          <div className="w-1/2">
-            <Input
-              placeholder="Unit (g, ml, oz)"
-              {...register("unit", { required: "Required" })}
-              className={errors.unit ? "border-destructive" : ""}
-            />
-          </div>
+        <div>
+          <Label htmlFor="unit">Unit</Label>
+          <Select value={unit} onValueChange={setUnit}>
+            <SelectTrigger id="unit">
+              <SelectValue placeholder="g" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="g">grams (g)</SelectItem>
+              <SelectItem value="oz">ounces (oz)</SelectItem>
+              <SelectItem value="ml">milliliters (ml)</SelectItem>
+              <SelectItem value="cup">cup</SelectItem>
+              <SelectItem value="tbsp">tablespoon</SelectItem>
+              <SelectItem value="tsp">teaspoon</SelectItem>
+              <SelectItem value="serving">serving</SelectItem>
+              <SelectItem value="piece">piece</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+      
+      {/* Meal type */}
+      <div>
+        <Label className="mb-2 block">Meal Type</Label>
+        <MealTypeSelector 
+          selectedMeal={mealType} 
+          onChange={setMealType as (value: string) => void} 
+        />
+      </div>
+      
+      <Separator className="my-4" />
+      
+      {/* Nutrition information */}
+      <div>
+        <h4 className="text-md font-medium mb-3">Nutrition Information</h4>
         
-        {/* Nutritional Values */}
         <div className="grid grid-cols-2 gap-3">
           <div>
+            <Label htmlFor="calories">Calories</Label>
             <Input
+              id="calories"
               type="number"
-              placeholder="Calories"
-              {...register("calories", { 
-                required: "Required", 
-                min: { value: 0, message: "Must be positive" } 
-              })}
-              className={errors.calories ? "border-destructive" : ""}
+              min="0"
+              step="1"
+              value={nutrition.calories || ""}
+              onChange={(e) => handleNutritionChange("calories", e.target.value)}
+              placeholder="0"
             />
           </div>
           <div>
+            <Label htmlFor="protein">Protein (g)</Label>
             <Input
+              id="protein"
               type="number"
+              min="0"
               step="0.1"
-              placeholder="Protein (g)"
-              {...register("protein", { 
-                required: "Required", 
-                min: { value: 0, message: "Must be positive" } 
-              })}
-              className={errors.protein ? "border-destructive" : ""}
+              value={nutrition.protein || ""}
+              onChange={(e) => handleNutritionChange("protein", e.target.value)}
+              placeholder="0"
             />
           </div>
           <div>
+            <Label htmlFor="carbs">Carbs (g)</Label>
             <Input
+              id="carbs"
               type="number"
+              min="0"
               step="0.1"
-              placeholder="Carbs (g)"
-              {...register("carbs", { 
-                required: "Required", 
-                min: { value: 0, message: "Must be positive" } 
-              })}
-              className={errors.carbs ? "border-destructive" : ""}
+              value={nutrition.carbs || ""}
+              onChange={(e) => handleNutritionChange("carbs", e.target.value)}
+              placeholder="0"
             />
           </div>
           <div>
+            <Label htmlFor="fat">Fat (g)</Label>
             <Input
+              id="fat"
               type="number"
+              min="0"
               step="0.1"
-              placeholder="Fat (g)"
-              {...register("fat", { 
-                required: "Required", 
-                min: { value: 0, message: "Must be positive" } 
-              })}
-              className={errors.fat ? "border-destructive" : ""}
+              value={nutrition.fat || ""}
+              onChange={(e) => handleNutritionChange("fat", e.target.value)}
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <Label htmlFor="fiber">Fiber (g)</Label>
+            <Input
+              id="fiber"
+              type="number"
+              min="0"
+              step="0.1"
+              value={nutrition.fiber || ""}
+              onChange={(e) => handleNutritionChange("fiber", e.target.value)}
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <Label htmlFor="sugars">Sugars (g)</Label>
+            <Input
+              id="sugars"
+              type="number"
+              min="0"
+              step="0.1"
+              value={nutrition.sugars || ""}
+              onChange={(e) => handleNutritionChange("sugars", e.target.value)}
+              placeholder="0"
             />
           </div>
         </div>
-        
-        <Button type="submit" className="w-full">
-          <Plus className="h-4 w-4 mr-2" />
-          Add to Log
-        </Button>
-      </form>
-    </div>
+      </div>
+      
+      {/* Submit button */}
+      <Button type="submit" className="w-full mt-4">
+        {isEditing ? "Update Food Entry" : "Add to Food Log"}
+      </Button>
+    </form>
   );
 };
 
