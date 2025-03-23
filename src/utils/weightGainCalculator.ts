@@ -15,7 +15,7 @@ export const calculateMaxSurplusPercentage = (
   let maxAdjustPercent: number;
   
   if (goalPace === "aggressive") {
-    maxAdjustPercent = 19.99; // Exactly 19.99% for aggressive pace
+    maxAdjustPercent = 19.99; // Exactly 19.99% for aggressive pace (displays as 20%)
   } else if (goalPace === "moderate") {
     maxAdjustPercent = 15.0; // 15% for moderate pace
   } else {
@@ -80,7 +80,8 @@ export const calculateWeightGainCalories = (
 ): {
   dailyCalories: number,
   surplusPercentage: number,
-  highSurplusWarning: boolean
+  highSurplusWarning: boolean,
+  isTimelineDriven: boolean  // New flag to indicate if timeline is driving the surplus
 } => {
   // Calculate weight change needed and caloric adjustment
   const weightDifference = Math.abs(targetWeight - startWeight);
@@ -114,14 +115,28 @@ export const calculateWeightGainCalories = (
     calculatedAdjustPercent = dailySurplusFloor / tdee;
   }
   
-  // NEW: Allow higher surpluses than recommended if required by timeline
+  // Allow higher surpluses than recommended if required by timeline
   // but set a hard cap at 50% to prevent unreasonable values
   const absoluteMaxSurplus = 0.50; // 50% maximum surplus
-  let finalAdjustPercentage = Math.max(0.05, Math.min(absoluteMaxSurplus, calculatedAdjustPercent));
   
-  // Special case for aggressive pace - use recommended 19.99% if no higher value is needed
-  if (goalPace === "aggressive" && calculatedAdjustPercent <= (recommendedSurplusPercentage / 100)) {
-    finalAdjustPercentage = recommendedSurplusPercentage / 100;
+  // Flag to track if we're using the timeline-driven adjustment or the pace-based adjustment
+  let isTimelineDriven = false;
+  let finalAdjustPercentage: number;
+  
+  // If timeline requires more aggressive surplus than the recommended pace percentage
+  if (calculatedAdjustPercent > (recommendedSurplusPercentage / 100)) {
+    // Timeline requires more calories than standard pace recommendation
+    isTimelineDriven = true;
+    finalAdjustPercentage = Math.min(absoluteMaxSurplus, calculatedAdjustPercent);
+  } else {
+    // Use the pace-based recommendation since timeline doesn't require more
+    // For aggressive pace, always use exactly 19.99% for consistent UI display as 20%
+    if (goalPace === "aggressive") {
+      finalAdjustPercentage = recommendedSurplusPercentage / 100;
+    } else {
+      // For other paces, use the timeline calculation if it's close to pace recommendation
+      finalAdjustPercentage = calculatedAdjustPercent;
+    }
   }
   
   // Calculate daily calories with the percentage-based adjustment
@@ -133,7 +148,7 @@ export const calculateWeightGainCalories = (
   // Set warning if surplus exceeds recommended amount
   let highSurplusWarning = false;
   
-  // For aggressive pace, if we're using exactly 19.99%, show as 20%
+  // For aggressive pace with 19.99%, show as 20%
   if (Math.abs(displaySurplusPercentage - 19.99) < 0.1) {
     displaySurplusPercentage = 20.0;
   }
@@ -146,6 +161,7 @@ export const calculateWeightGainCalories = (
   return {
     dailyCalories,
     surplusPercentage: displaySurplusPercentage,
-    highSurplusWarning
+    highSurplusWarning,
+    isTimelineDriven
   };
 };

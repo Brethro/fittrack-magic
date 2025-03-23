@@ -19,6 +19,7 @@ export function NutritionPanel() {
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
   const highSurplusWarning = userData.highSurplusWarning || false;
+  const isTimelineDriven = userData.isTimelineDriven || false;
 
   // Calculate macro calorie contributions using our utility
   const macroCalories = calculateMacroCalories({
@@ -93,6 +94,20 @@ export function NutritionPanel() {
   
   // Final maximum deficit including any aggressive bonus
   const finalMaxDeficit = maxAllowedDeficitBasic + aggressiveBonusApplied;
+  
+  // Get the standard surplus for the selected pace (for comparison in warning)
+  const getStandardSurplusForPace = () => {
+    if (!userData.goalPace) return 10;
+    
+    switch (userData.goalPace) {
+      case "aggressive": return 20;
+      case "moderate": return 15;
+      case "conservative": return 10;
+      default: return 10;
+    }
+  };
+  
+  const standardSurplus = getStandardSurplusForPace();
   
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -173,7 +188,18 @@ export function NutritionPanel() {
         </Popover>
       </div>
       
-      {isWeightGain && highSurplusWarning && displayPercent > 20 && (
+      {isWeightGain && isTimelineDriven && displayPercent > standardSurplus && (
+        <Alert variant="warning" className="mb-3">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Your {displayPercent}% caloric surplus exceeds the standard {standardSurplus}% for {userData.goalPace} pace. 
+            This higher surplus is needed to reach your goal weight by your target date, but may lead to more fat gain.
+            Consider extending your timeline for better muscle-to-fat ratio.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isWeightGain && highSurplusWarning && !isTimelineDriven && displayPercent > 20 && (
         <Alert variant="warning" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>

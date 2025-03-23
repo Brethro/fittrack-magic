@@ -91,6 +91,7 @@ export const useNutritionCalculator = (
     let dailyCalories: number;
     let calculatedAdjustPercent: number = 0;
     let highSurplusWarning = false;
+    let isTimelineDriven = false;
     
     if (isWeightGain) {
       // Use our refactored weight gain calculator
@@ -108,6 +109,7 @@ export const useNutritionCalculator = (
       dailyCalories = result.dailyCalories;
       highSurplusWarning = result.highSurplusWarning;
       calculatedAdjustPercent = result.surplusPercentage;
+      isTimelineDriven = result.isTimelineDriven;
       
       console.log("Weight gain calculation result:", result);
     } else {
@@ -147,6 +149,7 @@ export const useNutritionCalculator = (
       dailyCalories,
       isWeightGain,
       highSurplusWarning,
+      isTimelineDriven,
       macros,
       calculatedAdjustPercent
     });
@@ -157,6 +160,7 @@ export const useNutritionCalculator = (
       dailyCalories,
       isWeightGain,
       highSurplusWarning,
+      isTimelineDriven,
       macros,
       // Store the actual calculated percentage for display purposes
       calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent

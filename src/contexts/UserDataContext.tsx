@@ -32,6 +32,7 @@ export type UserData = {
   weightLog: WeightLogEntry[];
   isWeightGain?: boolean;
   highSurplusWarning?: boolean;
+  isTimelineDriven?: boolean;
   maxSurplusPercentage?: number;
   calculatedDeficitPercentage?: number;
 };
