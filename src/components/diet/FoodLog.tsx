@@ -14,18 +14,18 @@ const FoodLog = () => {
   };
   
   return (
-    <div className="flex flex-col h-full space-y-4 overflow-hidden">
+    <div className="flex flex-col h-full space-y-4">
       <h2 className="text-xl font-semibold">Food Log</h2>
       
       <FoodLogSummary onDateChange={handleDateChange} />
       
-      <Tabs defaultValue="log" className="w-full flex-1 flex flex-col overflow-hidden">
+      <Tabs defaultValue="log" className="w-full flex-1 flex flex-col">
         <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="log">Food Log</TabsTrigger>
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="log" className="mt-4 flex-1 overflow-hidden h-[calc(100%-3rem)]">
+        <TabsContent value="log" className="mt-4 flex-1">
           <FoodLogList />
         </TabsContent>
         

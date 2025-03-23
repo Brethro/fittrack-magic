@@ -92,18 +92,18 @@ const DietPage = () => {
   };
 
   return (
-    <div className="container px-4 py-6 mx-auto max-h-screen overflow-hidden">
+    <div className="container px-4 py-6 mx-auto h-screen overflow-auto">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="h-[calc(100vh-8rem)] flex flex-col overflow-hidden"
+        className="h-full pb-20 flex flex-col"
       >
         <h1 className="text-2xl font-bold mb-4 text-center text-gradient-purple">
           Diet Planner
         </h1>
 
-        <div className="flex flex-col space-y-4 max-w-4xl mx-auto h-full overflow-hidden">
+        <div className="flex flex-col space-y-4 max-w-4xl mx-auto flex-1">
           {/* API Status Indicators */}
           <ApiStatusIndicators 
             apiStatus={apiStatus} 
@@ -128,8 +128,8 @@ const DietPage = () => {
             )}
           </div>
           
-          {/* Food Log Section - with flex-1 to allow it to take available space and overflow-hidden */}
-          <div className="flex-1 overflow-hidden min-h-0">
+          {/* Food Log Section */}
+          <div className="flex-1 min-h-[500px]">
             <FoodLog />
           </div>
         </div>

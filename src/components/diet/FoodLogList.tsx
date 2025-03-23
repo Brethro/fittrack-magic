@@ -48,14 +48,14 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   return (
-    <div className="glass-panel rounded-lg flex flex-col overflow-hidden h-full">
+    <div className="glass-panel rounded-lg flex flex-col h-[420px]">
       <div className="px-4 py-3 border-b border-border">
         <h3 className="font-medium">Food Log: {getDateHeader()}</h3>
       </div>
       
-      <ScrollArea className="flex-1 h-[calc(100%-3rem)]">
+      <ScrollArea className="flex-1 px-4 py-2">
         {dailyEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[200px] text-center px-4">
+          <div className="flex flex-col items-center justify-center h-[200px] text-center">
             <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
             <p className="text-base font-medium">No foods logged yet</p>
             <p className="text-xs text-muted-foreground max-w-[220px] mt-1">
@@ -63,15 +63,15 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             </p>
           </div>
         ) : (
-          <div className="p-4 space-y-5">
+          <div className="space-y-5">
             {/* Breakfast */}
             {mealGroups.breakfast.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-amber-500 mb-2">Breakfast</h4>
                 <div className="space-y-2">
-                  {mealGroups.breakfast.map(entry => (
-                    <FoodLogEntry 
-                      key={entry.id}
+                  {mealGroups.breakfast.map((entry) => (
+                    <FoodLogEntry
+                      key={entry.id} 
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -86,8 +86,8 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
               <div>
                 <h4 className="text-xs font-medium text-green-500 mb-2">Lunch</h4>
                 <div className="space-y-2">
-                  {mealGroups.lunch.map(entry => (
-                    <FoodLogEntry 
+                  {mealGroups.lunch.map((entry) => (
+                    <FoodLogEntry
                       key={entry.id}
                       entry={entry}
                       onEdit={handleEdit}
@@ -103,8 +103,8 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
               <div>
                 <h4 className="text-xs font-medium text-indigo-500 mb-2">Dinner</h4>
                 <div className="space-y-2">
-                  {mealGroups.dinner.map(entry => (
-                    <FoodLogEntry 
+                  {mealGroups.dinner.map((entry) => (
+                    <FoodLogEntry
                       key={entry.id}
                       entry={entry}
                       onEdit={handleEdit}
@@ -120,8 +120,8 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
               <div>
                 <h4 className="text-xs font-medium text-purple-500 mb-2">Snacks</h4>
                 <div className="space-y-2">
-                  {mealGroups.snack.map(entry => (
-                    <FoodLogEntry 
+                  {mealGroups.snack.map((entry) => (
+                    <FoodLogEntry
                       key={entry.id}
                       entry={entry}
                       onEdit={handleEdit}
