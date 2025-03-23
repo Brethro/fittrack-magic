@@ -247,13 +247,26 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("Total calorie adjustment needed:", totalCalorieAdjustment);
     console.log("Daily calorie adjustment needed:", dailyCalorieAdjustment);
     
+    // For weight gain goals, establish minimum practical surplus values based on pace
+    let minDailySurplus = 0;
+    if (isWeightGain) {
+      switch (userData.goalPace) {
+        case "aggressive": minDailySurplus = 500; break;
+        case "moderate": minDailySurplus = 300; break;
+        case "conservative": minDailySurplus = 150; break;
+        default: minDailySurplus = 200; // default to a modest surplus
+      }
+      console.log("Minimum daily surplus based on pace:", minDailySurplus);
+    }
+    
     // Determine appropriate adjustment percentage based on goal type
     let minAdjustPercent, maxAdjustPercent;
     
     if (isWeightGain) {
-      // For weight gain, we want a surplus
-      minAdjustPercent = 0.1; // 10% surplus minimum
-      maxAdjustPercent = 0.2; // 20% surplus maximum for clean bulk
+      // For weight gain, we don't use flat percentages anymore
+      // Instead, we'll rely on the calculated daily adjustment with a minimum floor
+      minAdjustPercent = 0.05; // 5% minimum for very small goals
+      maxAdjustPercent = 0.2; // 20% maximum for clean bulk
       
       // Adjust based on body fat percentage and gender for weight gain
       const bodyFatPercentage = userData.bodyFatPercentage || 15; // Default if not available
@@ -277,7 +290,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     } else {
-      // For weight loss, we want a deficit
+      // Keep existing weight loss logic
       minAdjustPercent = 0.1; // 10% deficit minimum
       maxAdjustPercent = 0.25; // 25% deficit maximum
       
@@ -301,7 +314,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     
     // Adjust based on goal pace if available
-    if (userData.goalPace) {
+    if (userData.goalPace && !isWeightGain) {
+      // Only apply this adjustment to weight loss, for weight gain we use minDailySurplus
       switch (userData.goalPace) {
         case "aggressive": 
           minAdjustPercent += 0.05; // Increase minimum adjustment
@@ -319,6 +333,31 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Calculate adjustment percentage based on required daily adjustment
     let calculatedAdjustPercent = dailyCalorieAdjustment / tdee;
+    
+    if (isWeightGain) {
+      // For weight gain, apply minimum practical surplus
+      const calculatedSurplus = tdee * calculatedAdjustPercent;
+      
+      console.log("Calculated daily surplus:", calculatedSurplus);
+      console.log("Minimum required surplus:", minDailySurplus);
+      
+      // If calculated surplus is less than minimum, adjust the percentage
+      if (calculatedSurplus < minDailySurplus) {
+        calculatedAdjustPercent = minDailySurplus / tdee;
+        console.log("Adjusting to minimum practical surplus percentage:", calculatedAdjustPercent);
+      }
+      
+      // Handle edge case where goal is extremely close to current weight
+      if (weightDifference < 0.5) { // less than 0.5 pounds/kg difference
+        console.log("Edge case: very small weight difference detected");
+        // Even for tiny goals, ensure some minimal progress
+        const modestSurplus = tdee * 0.05; // 5% surplus
+        const dailySurplusFloor = Math.min(minDailySurplus, modestSurplus);
+        
+        calculatedAdjustPercent = dailySurplusFloor / tdee;
+        console.log("Adjusted to modest surplus for small goal:", dailySurplusFloor);
+      }
+    }
     
     // Ensure the adjustment stays within safe bounds
     calculatedAdjustPercent = Math.max(minAdjustPercent, 
@@ -397,10 +436,18 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const carbCalories = dailyCalories - proteinCalories - fatCalories;
     const carbGrams = Math.round(carbCalories / 4);
 
+    // Calculate estimated time to reach goal based on actual daily surplus/deficit
+    const actualDailyCalorieAdjustment = isWeightGain ? 
+      (dailyCalories - tdee) : (tdee - dailyCalories);
+    
+    const estimatedDaysToGoal = Math.ceil(totalCalorieAdjustment / actualDailyCalorieAdjustment);
+    
     console.log("Updated nutrition values:", {
       tdee,
       dailyCalories,
       isWeightGain,
+      actualDailyCalorieAdjustment,
+      estimatedDaysToGoal,
       macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams }
     });
 
