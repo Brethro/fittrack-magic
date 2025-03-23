@@ -164,17 +164,12 @@ const DietPage = () => {
             usdaApiStatus={usdaApiStatus} 
           />
           
-          {/* Daily Summary - Now at the top */}
+          {/* 1. Daily Summary - at the top */}
           <div className="glass-panel p-4 rounded-lg">
             <FoodLogSummary onDateChange={handleDateChange} />
           </div>
           
-          {/* Food Log Section */}
-          <div className="glass-panel p-4 rounded-lg flex-1 max-h-[500px] min-h-[400px] overflow-hidden">
-            <FoodLog />
-          </div>
-
-          {/* Food Search Section */}
+          {/* 2. Food Search Section - in the middle */}
           <div className="glass-panel p-4 rounded-lg">
             {/* Search Form */}
             <FoodSearchForm 
@@ -206,6 +201,11 @@ const DietPage = () => {
                 />
               )
             )}
+          </div>
+
+          {/* 3. Food Log Section - at the bottom */}
+          <div className="glass-panel p-4 rounded-lg flex-1 max-h-[500px] min-h-[400px] overflow-hidden">
+            <FoodLog />
           </div>
         </div>
       </motion.div>
