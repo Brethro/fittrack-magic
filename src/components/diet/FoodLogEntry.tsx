@@ -29,6 +29,16 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
     snack: "bg-purple-500/10 text-purple-500 border-purple-300/20",
   };
   
+  // Ensure default nutrition values if any are missing
+  const nutrition = {
+    calories: entry.nutrition?.calories || 0,
+    protein: entry.nutrition?.protein || 0,
+    carbs: entry.nutrition?.carbs || 0,
+    fat: entry.nutrition?.fat || 0,
+    fiber: entry.nutrition?.fiber || 0,
+    sugars: entry.nutrition?.sugars || 0,
+  };
+  
   return (
     <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2">
       <div className="flex-1 min-w-0">
@@ -48,16 +58,16 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
         
         <div className="flex flex-wrap gap-1.5 mt-1.5">
           <Badge variant="secondary" className="text-xs py-0 h-5">
-            {Math.round(entry.nutrition.calories)} kcal
+            {Math.round(nutrition.calories)} kcal
           </Badge>
           <Badge variant="secondary" className="text-xs py-0 h-5">
-            P: {entry.nutrition.protein.toFixed(1)}g
+            P: {nutrition.protein.toFixed(1)}g
           </Badge>
           <Badge variant="secondary" className="text-xs py-0 h-5">
-            C: {entry.nutrition.carbs.toFixed(1)}g
+            C: {nutrition.carbs.toFixed(1)}g
           </Badge>
           <Badge variant="secondary" className="text-xs py-0 h-5">
-            F: {entry.nutrition.fat.toFixed(1)}g
+            F: {nutrition.fat.toFixed(1)}g
           </Badge>
         </div>
       </div>

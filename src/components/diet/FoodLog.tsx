@@ -25,7 +25,7 @@ const FoodLog = () => {
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="log" className="mt-4 flex-1 overflow-hidden">
+        <TabsContent value="log" className="mt-4 flex-1 overflow-hidden h-[calc(100%-3rem)]">
           <FoodLogList />
         </TabsContent>
         
