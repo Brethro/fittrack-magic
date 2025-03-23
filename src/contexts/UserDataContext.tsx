@@ -377,7 +377,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           toast({
             title: "High Caloric Surplus",
             description: "This goal requires a very high caloric surplus which may result in significant fat gain.",
-            variant: "warning"
+            variant: "destructive"  // Change from "warning" to "destructive"
           });
         }
       }
