@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FoodPreferences } from "@/components/diet/FoodPreferences";
 import { MealPlanDisplay } from "@/components/diet/MealPlanDisplay";
 import { EmptyStateMessage } from "@/components/diet/EmptyStateMessage";
+import { DietSelector } from "@/components/diet/DietSelector"; // Add import for DietSelector
 import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";

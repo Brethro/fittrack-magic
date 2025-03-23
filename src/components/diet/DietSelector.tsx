@@ -54,6 +54,7 @@ interface DietSelectorProps {
 }
 
 export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
+  // Changed default state to false to make it collapsed initially
   const [isOpen, setIsOpen] = React.useState(false);
   
   // Debug what diets are actually available
