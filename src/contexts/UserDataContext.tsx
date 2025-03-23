@@ -31,6 +31,7 @@ export type UserData = {
   isWeightGain?: boolean; // Added isWeightGain flag
   highSurplusWarning?: boolean; // Flag to indicate if the surplus is unusually high
   maxSurplusPercentage?: number; // Store the maximum surplus percentage based on pace
+  calculatedDeficitPercentage?: number; // Added to store the actual deficit percentage
 };
 
 const initialUserData: UserData = {
