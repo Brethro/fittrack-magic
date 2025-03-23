@@ -1,4 +1,3 @@
-
 // USDA Food Data Central API utilities
 const USDA_API_KEY = "4ESFMuftyo6ZdzIa6QtFG6VUKU5SWijTjcnklsxQ";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
@@ -73,12 +72,11 @@ export async function searchUsdaFoods(
   
   const searchParams = { ...defaultParams, ...params };
   
-  const queryParams = new URLSearchParams({
-    api_key: USDA_API_KEY,
-  });
-  
   try {
-    const response = await fetch(`${USDA_BASE_URL}/foods/search`, {
+    // Add API key to the URL as a query parameter
+    const url = `${USDA_BASE_URL}/foods/search?api_key=${USDA_API_KEY}`;
+    
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -166,4 +164,3 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
     serving: "100g",
   };
 }
-

@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Info, Database } from "lucide-react";
-import { UsdaFoodItem, extractNutritionInfo } from "@/utils/usdaApi";
+import { type UsdaFoodItem as UsdaFoodItemType, extractNutritionInfo } from "@/utils/usdaApi";
 
 interface UsdaFoodItemProps {
-  foodItem: UsdaFoodItem;
+  foodItem: UsdaFoodItemType;
 }
 
 const UsdaFoodItem = ({ foodItem }: UsdaFoodItemProps) => {
