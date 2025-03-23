@@ -21,85 +21,65 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   // Format time for display
   const formattedTime = format(new Date(entry.date), "h:mm a");
   
-  // Color mapping for meal types
-  const mealColors: Record<string, string> = {
-    breakfast: "bg-amber-500/10 text-amber-500 border-amber-300/20",
-    lunch: "bg-green-500/10 text-green-500 border-green-300/20",
-    dinner: "bg-indigo-500/10 text-indigo-500 border-indigo-300/20",
-    snack: "bg-purple-500/10 text-purple-500 border-purple-300/20",
-  };
-  
   // Ensure default nutrition values if any are missing
   const nutrition = {
     calories: entry.nutrition?.calories || 0,
     protein: entry.nutrition?.protein || 0,
     carbs: entry.nutrition?.carbs || 0,
     fat: entry.nutrition?.fat || 0,
-    fiber: entry.nutrition?.fiber || 0,
-    sugars: entry.nutrition?.sugars || 0,
   };
   
   return (
-    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2 max-w-full">
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="flex items-center justify-between gap-2 w-full">
-          <h4 className="font-medium text-sm truncate max-w-[60%]">{entry.foodName}</h4>
-          <div className="flex items-center gap-1 shrink-0">
-            <Badge variant="outline" className={`text-xs py-0 px-1.5 h-5 ${mealColors[entry.mealType]}`}>
-              {entry.mealType.charAt(0).toUpperCase()}
-            </Badge>
+    <div className="w-full bg-background/50 border border-border/40 rounded-md p-3 hover:shadow-sm transition-shadow">
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1 min-w-0">
+          {/* Food name and time */}
+          <div className="flex justify-between items-center gap-2 mb-1">
+            <h4 className="font-medium text-sm truncate pr-2">{entry.foodName}</h4>
             <span className="text-xs text-muted-foreground whitespace-nowrap">{formattedTime}</span>
+          </div>
+          
+          {/* Amount and unit */}
+          <div className="text-xs text-muted-foreground mb-2">
+            {entry.amount} {entry.unit}
+          </div>
+          
+          {/* Nutrition badges */}
+          <div className="flex flex-wrap gap-1.5">
+            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
+              {Math.round(nutrition.calories)} kcal
+            </Badge>
+            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-blue-500/10 text-blue-500 border-blue-300/20">
+              P: {nutrition.protein.toFixed(1)}g
+            </Badge>
+            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-amber-500/10 text-amber-500 border-amber-300/20">
+              C: {nutrition.carbs.toFixed(1)}g
+            </Badge>
+            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-green-500/10 text-green-500 border-green-300/20">
+              F: {nutrition.fat.toFixed(1)}g
+            </Badge>
           </div>
         </div>
         
-        <div className="text-xs text-muted-foreground mt-0.5 truncate">
-          {entry.amount} {entry.unit}
+        {/* Action buttons */}
+        <div className="flex gap-1 shrink-0">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-muted-foreground"
+            onClick={() => onEdit(entry)}
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-destructive"
+            onClick={() => onDelete(entry.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
-        
-        <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-full overflow-hidden">
-          <Badge variant="secondary" className="text-xs py-0 h-5">
-            {Math.round(nutrition.calories)} kcal
-          </Badge>
-          <Badge variant="secondary" className="text-xs py-0 h-5">
-            P: {nutrition.protein.toFixed(1)}g
-          </Badge>
-          <Badge variant="secondary" className="text-xs py-0 h-5">
-            C: {nutrition.carbs.toFixed(1)}g
-          </Badge>
-          <Badge variant="secondary" className="text-xs py-0 h-5">
-            F: {nutrition.fat.toFixed(1)}g
-          </Badge>
-        </div>
-      </div>
-      
-      <div className="flex items-start gap-1 shrink-0">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" 
-          onClick={() => onDelete(entry.id)}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <MoreVertical className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[130px]">
-            <DropdownMenuItem className="cursor-pointer" onClick={() => onEdit(entry)}>
-              <Edit className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="cursor-pointer text-destructive" 
-              onClick={() => onDelete(entry.id)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   );
