@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -146,65 +147,65 @@ const DietPage = () => {
   };
   
   return (
-    <div className="container px-4 py-6 mx-auto h-screen overflow-auto">
+    <div className="container px-4 py-6 mx-auto h-screen">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="h-full pb-20 flex flex-col"
+        className="flex flex-col space-y-4 max-w-4xl mx-auto w-full"
       >
-        <h1 className="text-2xl font-bold mb-4 text-center text-gradient-purple">
+        <h1 className="text-2xl font-bold mb-2 text-center text-gradient-purple">
           Diet Planner
         </h1>
 
-        <div className="flex flex-col space-y-4 max-w-4xl mx-auto w-full flex-1">
-          {/* API Status Indicators */}
-          <ApiStatusIndicators 
-            apiStatus={apiStatus} 
-            usdaApiStatus={usdaApiStatus} 
+        {/* API Status Indicators */}
+        <ApiStatusIndicators 
+          apiStatus={apiStatus} 
+          usdaApiStatus={usdaApiStatus} 
+        />
+        
+        {/* 1. Daily Summary - at the top */}
+        <div className="glass-panel p-4 rounded-lg">
+          <FoodLogSummary onDateChange={handleDateChange} />
+        </div>
+        
+        {/* 2. Food Search Section - in the middle */}
+        <div className="glass-panel p-4 rounded-lg">
+          {/* Search Form */}
+          <FoodSearchForm 
+            onSearch={handleSearch} 
+            isLoading={isLoading} 
           />
           
-          {/* 1. Daily Summary - at the top */}
-          <div className="glass-panel p-4 rounded-lg">
-            <FoodLogSummary onDateChange={handleDateChange} />
-          </div>
+          {/* Show warning about rate limiting */}
+          {usdaApiStatus === "rate_limited" && (
+            <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
+              <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
+              The rate limit typically resets after a few minutes.</p>
+            </div>
+          )}
           
-          {/* 2. Food Search Section - in the middle */}
-          <div className="glass-panel p-4 rounded-lg">
-            {/* Search Form */}
-            <FoodSearchForm 
-              onSearch={handleSearch} 
-              isLoading={isLoading} 
-            />
-            
-            {/* Show warning about rate limiting */}
-            {usdaApiStatus === "rate_limited" && (
-              <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
-                <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
-                The rate limit typically resets after a few minutes.</p>
-              </div>
-            )}
-            
-            {/* Recent Foods - improved layout */}
-            <RecentFoods />
-            
-            {/* Search Results */}
-            {isLoading ? (
-              <FoodSearchResultsSkeleton />
-            ) : (
-              (searchResults.length > 0 || usdaResults.length > 0) && (
-                <FoodSearchResults 
-                  results={searchResults} 
-                  usdaResults={usdaResults}
-                  onSelectFood={handleSelectFood}
-                  onSelectUsdaFood={handleSelectUsdaFood}
-                />
-              )
-            )}
-          </div>
+          {/* Recent Foods - improved layout */}
+          <RecentFoods />
+          
+          {/* Search Results */}
+          {isLoading ? (
+            <FoodSearchResultsSkeleton />
+          ) : (
+            (searchResults.length > 0 || usdaResults.length > 0) && (
+              <FoodSearchResults 
+                results={searchResults} 
+                usdaResults={usdaResults}
+                onSelectFood={handleSelectFood}
+                onSelectUsdaFood={handleSelectUsdaFood}
+              />
+            )
+          )}
+        </div>
 
-          {/* 3. Food Log Section - at the bottom */}
-          <div className="glass-panel p-4 rounded-lg flex-1 max-h-[500px] min-h-[400px] overflow-hidden">
+        {/* 3. Food Log Section - at the bottom */}
+        <div className="glass-panel p-4 rounded-lg">
+          <div className="h-[500px]">
             <FoodLog />
           </div>
         </div>

@@ -23,10 +23,10 @@ const FoodLog = () => {
   };
   
   return (
-    <div className="flex flex-col space-y-3 w-full h-full">
+    <div className="flex flex-col w-full h-full">
       <Tabs 
         defaultValue="log" 
-        className="w-full flex flex-col flex-1"
+        className="w-full flex flex-col h-full"
         value={activeTab}
         onValueChange={setActiveTab}
       >
@@ -35,17 +35,17 @@ const FoodLog = () => {
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 overflow-hidden h-[calc(100%-42px)]">
           <TabsContent 
             value="log" 
-            className="flex-1 m-0 h-full data-[state=active]:flex data-[state=active]:flex-col w-full"
+            className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col overflow-hidden"
           >
             <FoodLogList onEditEntry={handleEditEntry} />
           </TabsContent>
           
           <TabsContent 
             value="add" 
-            className="flex-1 m-0 h-full"
+            className="m-0 h-full"
           >
             <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
               <QuickFoodEntry 
