@@ -1,4 +1,5 @@
 
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,29 +24,31 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <UserDataProvider>
-          <FoodLogProvider>
-            <BrowserRouter>
-              <Toaster />
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<HomePage />} />
-                  <Route path="onboarding" element={<OnboardingPage />} />
-                  <Route path="goals" element={<GoalsPage />} />
-                  <Route path="plan" element={<PlanPage />} />
-                  <Route path="diet" element={<DietPage />} />
-                  <Route path="profile" element={<ProfilePage />} />
-                  <Route path="admin" element={<AdminPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </FoodLogProvider>
-        </UserDataProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <UserDataProvider>
+            <FoodLogProvider>
+              <BrowserRouter>
+                <Toaster />
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<HomePage />} />
+                    <Route path="onboarding" element={<OnboardingPage />} />
+                    <Route path="goals" element={<GoalsPage />} />
+                    <Route path="plan" element={<PlanPage />} />
+                    <Route path="diet" element={<DietPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                    <Route path="admin" element={<AdminPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </BrowserRouter>
+            </FoodLogProvider>
+          </UserDataProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 

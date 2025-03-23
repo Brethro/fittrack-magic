@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -147,7 +146,7 @@ const DietPage = () => {
   };
   
   return (
-    <div className="container px-4 py-6 mx-auto h-screen">
+    <div className="container px-4 py-6 mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -204,10 +203,8 @@ const DietPage = () => {
         </div>
 
         {/* 3. Food Log Section - at the bottom */}
-        <div className="glass-panel p-4 rounded-lg">
-          <div className="h-[500px]">
-            <FoodLog />
-          </div>
+        <div className="glass-panel p-4 rounded-lg h-[500px]">
+          <FoodLog />
         </div>
       </motion.div>
     </div>
