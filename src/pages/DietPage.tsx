@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useApiConnection } from "@/hooks/useApiConnection";
-import FoodSearchForm from "@/components/diet/FoodSearchForm";
+import FoodSearchForm, { UserPreferences } from "@/components/diet/FoodSearchForm";
 import ApiStatusIndicators from "@/components/diet/ApiStatusIndicators";
 import FoodSearchResults, { FoodSearchResultsSkeleton } from "@/components/diet/FoodSearchResults";
 import RecentFoods from "@/components/diet/RecentFoods";
@@ -11,7 +11,8 @@ import { UsdaFoodItem } from "@/utils/usdaApi";
 import { 
   searchOpenFoodFacts, 
   searchUsdaDatabase, 
-  searchWithFallback 
+  searchWithFallback,
+  trackFoodSelection
 } from "@/services/foodSearchService";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import FoodLog from "@/components/diet/FoodLog";
@@ -22,7 +23,7 @@ const DietPage = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { foodEntries } = useFoodLog();
+  const { foodEntries, addFoodEntry } = useFoodLog();
 
   // Clear search results when a new food entry is added
   useEffect(() => {
@@ -35,11 +36,17 @@ const DietPage = () => {
   useEffect(() => {
     checkUsdaApiConnection();
   }, [checkUsdaApiConnection]);
+  
+  // Track selected food to improve future search results
+  const handleFoodSelection = useCallback((foodName: string) => {
+    trackFoodSelection(foodName);
+  }, []);
 
   const handleSearch = async (
     searchQuery: string, 
     searchType: "exact" | "broad", 
-    searchSource: "both" | "openfoods" | "usda"
+    searchSource: "both" | "openfoods" | "usda",
+    userPreferences?: UserPreferences
   ) => {
     setIsLoading(true);
     setSearchResults([]);
@@ -48,7 +55,7 @@ const DietPage = () => {
     try {
       // Search in Open Food Facts if selected
       if (searchSource === "openfoods" || searchSource === "both") {
-        const offResults = await searchOpenFoodFacts(searchQuery, searchType);
+        const offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
         setSearchResults(offResults);
         
         if (offResults.length === 0 && searchType === "exact" && searchSource === "openfoods") {
@@ -77,7 +84,7 @@ const DietPage = () => {
       // Search in USDA if selected and not rate limited
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
-          const usdaSearchResults = await searchUsdaDatabase(searchQuery);
+          const usdaSearchResults = await searchUsdaDatabase(searchQuery, userPreferences);
           setUsdaResults(usdaSearchResults);
         } catch (error) {
           console.error("USDA search error:", error);
@@ -116,6 +123,20 @@ const DietPage = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handler for selecting food from search results
+  const handleSelectFood = (food: any) => {
+    if (food && food.product_name) {
+      handleFoodSelection(food.product_name);
+    }
+  };
+  
+  // Handler for selecting USDA food
+  const handleSelectUsdaFood = (food: UsdaFoodItem) => {
+    if (food && food.description) {
+      handleFoodSelection(food.description);
     }
   };
 
@@ -159,7 +180,12 @@ const DietPage = () => {
               <FoodSearchResultsSkeleton />
             ) : (
               (searchResults.length > 0 || usdaResults.length > 0) && (
-                <FoodSearchResults results={searchResults} usdaResults={usdaResults} />
+                <FoodSearchResults 
+                  results={searchResults} 
+                  usdaResults={usdaResults}
+                  onSelectFood={handleSelectFood}
+                  onSelectUsdaFood={handleSelectUsdaFood}
+                />
               )
             )}
             

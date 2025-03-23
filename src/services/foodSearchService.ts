@@ -1,11 +1,53 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { searchUsdaFoods, UsdaFoodItem } from "@/utils/usdaApi";
+import { useFoodLog } from "@/contexts/FoodLogContext";
+
+// Keep track of user selections to improve search rankings
+const userSelections: Record<string, number> = {};
+
+/**
+ * Update selection frequency for a food item
+ * @param foodName The name of the selected food
+ */
+export function trackFoodSelection(foodName: string): void {
+  const normalizedName = foodName.toLowerCase().trim();
+  userSelections[normalizedName] = (userSelections[normalizedName] || 0) + 1;
+  
+  // Store in localStorage for persistence across sessions
+  try {
+    localStorage.setItem('foodSelections', JSON.stringify(userSelections));
+  } catch (e) {
+    console.warn('Could not save food selections to localStorage', e);
+  }
+}
+
+/**
+ * Load user food selections from localStorage on module load
+ */
+function loadUserSelections(): void {
+  try {
+    const saved = localStorage.getItem('foodSelections');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(userSelections, parsed);
+    }
+  } catch (e) {
+    console.warn('Could not load food selections from localStorage', e);
+  }
+}
+
+// Load saved selections when module initializes
+loadUserSelections();
 
 // Search Open Food Facts database
 export async function searchOpenFoodFacts(
   searchQuery: string, 
-  searchType: "exact" | "broad"
+  searchType: "exact" | "broad",
+  userPreferences?: {
+    dietary?: string[];
+    excludeIngredients?: string[];
+    preferHighProtein?: boolean;
+  }
 ): Promise<any[]> {
   // Format the query for better results
   const encodedQuery = encodeURIComponent(searchQuery.trim());
@@ -37,6 +79,13 @@ export async function searchOpenFoodFacts(
       `&page_size=50`;
   }
   
+  // Add dietary preference filters if provided
+  if (userPreferences?.dietary && userPreferences.dietary.length > 0) {
+    userPreferences.dietary.forEach((diet, index) => {
+      searchUrl += `&tagtype_${index + 1}=labels&tag_contains_${index + 1}=contains&tag_${index + 1}=${encodeURIComponent(diet)}`;
+    });
+  }
+  
   console.log("Searching Open Food Facts with URL:", searchUrl);
   
   const response = await fetch(searchUrl);
@@ -49,29 +98,35 @@ export async function searchOpenFoodFacts(
   console.log("Open Food Facts API response:", data);
   
   if (data.products && Array.isArray(data.products)) {
-    // Enhanced scoring system with precision boosting
+    // Enhanced scoring system with improved weighting and preference factors
     const scoredResults = data.products.map(product => {
       const productName = (product.product_name || '').toLowerCase();
       const productNameEn = (product.product_name_en || '').toLowerCase();
       const brandName = (product.brands || '').toLowerCase();
       const categories = (product.categories || '').toLowerCase();
       const ingredients = (product.ingredients_text || '').toLowerCase();
+      const labels = (product.labels || '').toLowerCase();
+      
+      // Normalized product identifiers for frequency matching
+      const normalizedProductName = productName.trim();
       
       let score = 0;
       let exactMatch = false;
       let partialMatch = false;
       
-      // Check for exact phrase match first
+      // ===== EXACT MATCH SCORING =====
+      // Check for exact phrase match first (highest priority)
       if (productName === searchQuery.toLowerCase() || 
           productNameEn === searchQuery.toLowerCase()) {
-        score += 1000; // Huge boost for exact name match
+        score += 1200; // Increased from 1000 to give even higher priority to exact matches
         exactMatch = true;
       } else if (productName.includes(searchQuery.toLowerCase()) || 
                  productNameEn.includes(searchQuery.toLowerCase())) {
-        score += 500; // Strong boost for full phrase inclusion
+        score += 600; // Increased from 500 for full phrase inclusion
         partialMatch = true;
       }
       
+      // ===== SEQUENTIAL TERMS SCORING =====
       // Check for all search terms appearing in product name (in order)
       let allTermsInOrder = true;
       let lastIndex = -1;
@@ -86,34 +141,34 @@ export async function searchOpenFoodFacts(
       }
       
       if (allTermsInOrder && lastIndex > -1) {
-        score += 300;
+        score += 400; // Increased from 300
         partialMatch = true;
       }
       
-      // Individual term matching with position awareness
+      // ===== INDIVIDUAL TERM MATCHING =====
       let matchedTermCount = 0;
       searchTerms.forEach(term => {
         // Direct matches in product name (highest priority)
         if (productName.includes(term)) {
           // Give higher score to matches at the beginning
           const position = productName.indexOf(term);
-          const positionBonus = Math.max(0, 30 - position); // Higher bonus for earlier position
+          const positionBonus = Math.max(0, 35 - position); // Higher bonus for earlier position
           
-          score += 80 + positionBonus;
+          score += 90 + positionBonus; // Increased from 80
           matchedTermCount++;
           partialMatch = true;
         }
         
         // Match in English name if available
         if (productNameEn && productNameEn.includes(term)) {
-          score += 70;
+          score += 80; // Increased from 70
           matchedTermCount++;
           partialMatch = true;
         }
         
         // Category matches
         if (categories.includes(term)) {
-          score += 50;
+          score += 60; // Increased from 50
           partialMatch = true;
         }
         
@@ -122,36 +177,103 @@ export async function searchOpenFoodFacts(
           // Better matching with word boundaries
           const wordBoundaryRegex = new RegExp(`\\b${term}\\b`, 'i');
           if (wordBoundaryRegex.test(ingredients)) {
-            score += 60;
+            score += 70; // Increased from 60
             partialMatch = true;
           } else if (ingredients.includes(term)) {
-            score += 40;
+            score += 45; // Increased from 40
             partialMatch = true;
           }
         }
         
         // Brand matches
         if (brandName.includes(term)) {
-          score += 20;
+          score += 30; // Increased from 20
           partialMatch = true;
         }
       });
       
-      // Boost for matching all search terms
-      if (matchedTermCount === searchTerms.length && searchTerms.length > 1) {
+      // ===== NUTRITIONAL COMPLETENESS SCORING =====
+      // Boost score based on completeness of nutritional information
+      let nutritionalCompletenessScore = 0;
+      
+      if (product.nutriments) {
+        const nutrients = [
+          'energy-kcal', 'proteins', 'carbohydrates', 'fat', 
+          'fiber', 'sugars', 'sodium', 'salt', 'calcium', 'iron'
+        ];
+        
+        // Count how many important nutrients are present
+        nutrients.forEach(nutrient => {
+          if (product.nutriments[nutrient] !== undefined) {
+            nutritionalCompletenessScore += 4; // 4 points per nutrient (max 40)
+          }
+        });
+        
+        // Boost for having serving size information
+        if (product.serving_size) {
+          nutritionalCompletenessScore += 20;
+        }
+      }
+      
+      score += nutritionalCompletenessScore;
+      
+      // ===== USER PREFERENCE SCORING =====
+      // Apply user preference filtering penalty for excluded ingredients
+      if (userPreferences?.excludeIngredients && ingredients) {
+        const excludedFound = userPreferences.excludeIngredients.some(
+          ingredient => ingredients.includes(ingredient.toLowerCase())
+        );
+        
+        if (excludedFound) {
+          score -= 2000; // Major penalty to push to bottom or filter out
+        }
+      }
+      
+      // Boost for high protein (if user preference is set)
+      if (userPreferences?.preferHighProtein && 
+          product.nutriments && 
+          product.nutriments.proteins && 
+          product.nutriments.proteins > 15) { // 15g per 100g is relatively high protein
         score += 100;
       }
       
+      // Boost for dietary preferences matching
+      if (userPreferences?.dietary && labels) {
+        userPreferences.dietary.forEach(diet => {
+          if (labels.includes(diet.toLowerCase())) {
+            score += 150;
+          }
+        });
+      }
+      
+      // ===== PREVIOUS SELECTIONS SCORING =====
+      // Major boost based on how often the user has selected this item before
+      if (userSelections[normalizedProductName]) {
+        // Logarithmic scaling to prevent super-popular items from dominating
+        const frequencyBoost = Math.log10(1 + userSelections[normalizedProductName]) * 400;
+        score += frequencyBoost;
+      }
+      
+      // ===== ALL TERMS MATCH BONUS =====
+      // Boost for matching all search terms
+      if (matchedTermCount === searchTerms.length && searchTerms.length > 1) {
+        score += 150; // Increased from 100
+      }
+      
+      // ===== DATA QUALITY BONUS =====
       // Complete data quality bonus points
-      if (product.nutriments) score += 10;
-      if (product.image_url) score += 10;
+      if (product.nutriments) score += 15; // Increased from 10
+      if (product.image_url) score += 15;  // Increased from 10
+      if (product.ingredients_text) score += 15; // New bonus for having ingredients
+      if (product.nutriscore_grade) score += 10; // New bonus for having nutrition score
       
       return { 
         product, 
         score, 
         exactMatch,
         partialMatch,
-        matchedTermCount
+        matchedTermCount,
+        nutritionalCompleteness: nutritionalCompletenessScore
       };
     });
     
@@ -165,13 +287,22 @@ export async function searchOpenFoodFacts(
       );
     } else {
       // For broad search, include anything with some relevance
-      filteredResults = scoredResults.filter(item => item.partialMatch);
+      filteredResults = scoredResults.filter(item => 
+        item.partialMatch || item.score > 0
+      );
     }
     
     // Sort by score (high to low) and extract just the product data
     const sortedResults = filteredResults
       .sort((a, b) => b.score - a.score)
-      .map(item => item.product);
+      .map(item => {
+        // Add a debug field to see the score in development
+        if (process.env.NODE_ENV === 'development') {
+          item.product._searchScore = item.score;
+          item.product._nutritionalCompleteness = item.nutritionalCompleteness;
+        }
+        return item.product;
+      });
     
     return sortedResults;
   }
@@ -179,15 +310,20 @@ export async function searchOpenFoodFacts(
   return [];
 }
 
-// Search USDA database
-export async function searchUsdaDatabase(searchQuery: string): Promise<UsdaFoodItem[]> {
+// Search USDA database with enhanced ranking
+export async function searchUsdaDatabase(
+  searchQuery: string,
+  userPreferences?: {
+    preferHighProtein?: boolean;
+  }
+): Promise<UsdaFoodItem[]> {
   console.log("Searching USDA database for:", searchQuery);
   
   // Configure USDA search parameters
   const searchParams = {
     query: searchQuery,
     dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"], // Focus on standard reference foods
-    pageSize: 10,
+    pageSize: 15, // Increased from 10 to get more results to rank
     sortBy: "dataType.keyword",
     sortOrder: "asc" as const
   };
@@ -196,38 +332,107 @@ export async function searchUsdaDatabase(searchQuery: string): Promise<UsdaFoodI
   console.log("USDA API response:", response);
   
   if (response && response.foods && Array.isArray(response.foods)) {
-    // Sort by relevance and quality of data
-    const sortedResults = response.foods
-      .filter(item => 
-        // Filter out items without key nutritional data
-        item.foodNutrients && 
-        item.foodNutrients.length > 0 &&
-        // Make sure description actually contains the search terms
-        searchQuery.toLowerCase().split(' ').some(term => 
-          item.description.toLowerCase().includes(term)
-        )
-      )
-      .sort((a, b) => {
-        // Prioritize Foundation and SR Legacy (high quality data)
-        if (a.dataType !== b.dataType) {
-          if (a.dataType === "Foundation") return -1;
-          if (b.dataType === "Foundation") return 1;
-          if (a.dataType === "SR Legacy") return -1;
-          if (b.dataType === "SR Legacy") return 1;
+    // Extract search terms for better matching
+    const searchTerms = searchQuery.toLowerCase().split(' ');
+    
+    // Enhanced scoring system for USDA results
+    const scoredResults = response.foods.map(item => {
+      const description = item.description.toLowerCase();
+      const category = (item.foodCategory || '').toLowerCase();
+      
+      // Normalized food name for user selection lookup
+      const normalizedName = description.trim();
+      
+      let score = 0;
+      
+      // Exact match in description (highest priority)
+      if (description === searchQuery.toLowerCase()) {
+        score += 1000;
+      } else if (description.includes(searchQuery.toLowerCase())) {
+        score += 500;
+      }
+      
+      // Check for terms in description
+      let matchCount = 0;
+      searchTerms.forEach(term => {
+        if (description.includes(term)) {
+          // Position bonus (terms at start of description get higher scores)
+          const position = description.indexOf(term);
+          const positionBonus = Math.max(0, 30 - position);
+          
+          score += 80 + positionBonus;
+          matchCount++;
         }
         
-        // Then sort by exact match in name
-        const aExactMatch = a.description.toLowerCase() === searchQuery.toLowerCase();
-        const bExactMatch = b.description.toLowerCase() === searchQuery.toLowerCase();
+        // Check for terms in food category
+        if (category && category.includes(term)) {
+          score += 40;
+        }
+      });
+      
+      // Bonus for matching all terms
+      if (matchCount === searchTerms.length && searchTerms.length > 1) {
+        score += 200;
+      }
+      
+      // Quality score based on data types (Foundation data is higher quality)
+      switch (item.dataType) {
+        case "Foundation":
+          score += 150;
+          break;
+        case "SR Legacy":
+          score += 100;
+          break;
+        case "Survey (FNDDS)":
+          score += 50;
+          break;
+        default:
+          score += 0;
+      }
+      
+      // Bonus for completeness of nutrient data
+      if (item.foodNutrients) {
+        score += Math.min(100, item.foodNutrients.length * 2);
+      }
+      
+      // High protein preference bonus
+      if (userPreferences?.preferHighProtein) {
+        const proteinNutrient = item.foodNutrients?.find(n => 
+          (n.nutrientName?.toLowerCase().includes('protein') || n.nutrientId === 1003)
+        );
         
-        if (aExactMatch && !bExactMatch) return -1;
-        if (!aExactMatch && bExactMatch) return 1;
-        
-        // Then by number of nutrients (more data is better)
-        return (b.foodNutrients?.length || 0) - (a.foodNutrients?.length || 0);
+        if (proteinNutrient && proteinNutrient.value > 15) {
+          score += 150;
+        }
+      }
+      
+      // Previous selection frequency bonus
+      if (userSelections[normalizedName]) {
+        const frequencyBoost = Math.log10(1 + userSelections[normalizedName]) * 300;
+        score += frequencyBoost;
+      }
+      
+      return {
+        item,
+        score,
+        matchCount
+      };
+    });
+    
+    // Filter and sort results
+    const filteredResults = scoredResults
+      .filter(result => result.matchCount > 0 || result.score > 250)
+      .sort((a, b) => b.score - a.score)
+      .map(result => {
+        // Add debug score for development
+        if (process.env.NODE_ENV === 'development') {
+          const item = result.item as any;
+          item._searchScore = result.score;
+        }
+        return result.item;
       });
     
-    return sortedResults;
+    return filteredResults;
   }
   
   return [];

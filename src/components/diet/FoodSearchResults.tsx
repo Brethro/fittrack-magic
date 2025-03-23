@@ -22,6 +22,9 @@ const FoodSearchResults = ({
   const hasOpenFoodResults = results.length > 0;
   const hasUsdaResults = usdaResults.length > 0;
   
+  // Debug display for search scores in development mode only
+  const showDebugScores = process.env.NODE_ENV === 'development';
+  
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -50,7 +53,20 @@ const FoodSearchResults = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <FoodItem product={product} onSelect={onSelectFood} />
+              <FoodItem 
+                product={product} 
+                onSelect={(food) => {
+                  if (onSelectFood) onSelectFood(food);
+                }} 
+              />
+              {/* Debug score display */}
+              {showDebugScores && product._searchScore !== undefined && (
+                <div className="text-xs text-muted-foreground mt-1 pl-2">
+                  Score: {Math.round(product._searchScore)}
+                  {product._nutritionalCompleteness && 
+                    ` | Nutrition data: ${product._nutritionalCompleteness}`}
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -73,7 +89,18 @@ const FoodSearchResults = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <UsdaFoodItem foodItem={foodItem} onSelect={onSelectUsdaFood} />
+              <UsdaFoodItem 
+                foodItem={foodItem} 
+                onSelect={(food) => {
+                  if (onSelectUsdaFood) onSelectUsdaFood(food);
+                }}
+              />
+              {/* Debug score display */}
+              {showDebugScores && (foodItem as any)._searchScore !== undefined && (
+                <div className="text-xs text-muted-foreground mt-1 pl-2">
+                  Score: {Math.round((foodItem as any)._searchScore)}
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
