@@ -4,7 +4,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Utensils } from "lucide-react";
 import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
-import FoodLogEntry from "./FoodLogEntry";
+import FoodLogEntryComponent from "./FoodLogEntry";
 import { Card } from "@/components/ui/card";
 
 interface FoodLogListProps {
@@ -81,7 +81,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 </h4>
                 <div className="w-full">
                   {mealGroups.breakfast.map((entry) => (
-                    <FoodLogEntry
+                    <FoodLogEntryComponent
                       key={`breakfast-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
@@ -100,7 +100,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 </h4>
                 <div className="w-full">
                   {mealGroups.lunch.map((entry) => (
-                    <FoodLogEntry
+                    <FoodLogEntryComponent
                       key={`lunch-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
@@ -119,7 +119,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 </h4>
                 <div className="w-full">
                   {mealGroups.dinner.map((entry) => (
-                    <FoodLogEntry
+                    <FoodLogEntryComponent
                       key={`dinner-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
@@ -138,7 +138,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 </h4>
                 <div className="w-full">
                   {mealGroups.snack.map((entry) => (
-                    <FoodLogEntry
+                    <FoodLogEntryComponent
                       key={`snack-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
