@@ -47,19 +47,19 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
     
     // Create a new food log entry from the food data
     addFoodEntry({
-      foodName: food.description || "Unnamed Food",
-      amount: food.customServing?.amount || 100,
-      unit: food.customServing?.unit || "g",
-      date: new Date(),
-      mealType: "breakfast", // Default meal type - user can edit later
-      nutrition: food.calculatedNutrition || nutritionValues,
+      foodName: food.foodName || description,
+      amount: food.amount || 100,
+      unit: food.unit || "g",
+      date: food.date || new Date(),
+      mealType: food.mealType || "breakfast", // Default meal type - user can edit later
+      nutrition: food.nutrition || nutritionValues,
       source: "usda",
-      sourceId: food.fdcId
+      sourceId: food.sourceId || foodItem.fdcId.toString()
     });
     
     toast({
       title: "Food added",
-      description: `${food.description || "Food"} added to your log`
+      description: `${food.foodName || description} added to your log`
     });
   };
 
@@ -129,7 +129,14 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
       {/* Food Detail Modal */}
       {showDetailView && (
         <FoodDetailView 
-          food={foodItem}
+          food={{
+            ...foodItem,
+            nutrients: foodItem.foodNutrients?.map(n => ({
+              name: n.nutrientName,
+              amount: n.value,
+              unitName: n.unitName
+            }))
+          }}
           source="usda"
           onClose={() => setShowDetailView(false)}
           onSave={handleSaveFood}

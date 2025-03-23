@@ -39,7 +39,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const { addFoodEntry } = useFoodLog();
   const { toast } = useToast();
   
-  // Get calories with safety checks - Define this before it's used
+  // Get calories with safety checks
   const getCalories = (): number => {
     if (source === 'openfoodfacts') {
       const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
@@ -240,6 +240,13 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Nutrients for display
   const nutrients = calculateNutrients();
   
+  // This is the ChevronIcon component to make sure we have only one child in the Button
+  const ChevronIcon = () => {
+    return isNutrientsOpen ? 
+      <ChevronUp className="h-4 w-4" /> : 
+      <ChevronDown className="h-4 w-4" />;
+  };
+  
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0" 
@@ -417,10 +424,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                     <h4 className="font-medium mb-0">Detailed Nutrients</h4>
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="p-1 h-8">
-                        {isNutrientsOpen ? 
-                          <span><ChevronUp className="h-4 w-4" /></span> : 
-                          <span><ChevronDown className="h-4 w-4" /></span>
-                        }
+                        <ChevronIcon />
                       </Button>
                     </CollapsibleTrigger>
                   </div>

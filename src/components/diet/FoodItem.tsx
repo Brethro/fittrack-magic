@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Info, Star, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FoodDetailView from "./FoodDetailView";
+import { useToast } from "@/hooks/use-toast";
+import { useFoodLog } from "@/contexts/FoodLogContext";
 
 interface FoodItemProps {
   product: any;
@@ -14,6 +16,8 @@ interface FoodItemProps {
 const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const isMobile = useIsMobile();
   const [showDetailView, setShowDetailView] = useState(false);
+  const { toast } = useToast();
+  const { addFoodEntry } = useFoodLog();
 
   // Extract and format nutritional information with better fallbacks
   const calories = product.nutriments?.["energy-kcal_100g"] || 
@@ -100,7 +104,25 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   
   const handleSaveFood = (food: any) => {
     console.log("Saving food from detail view:", food);
-    // Here you would implement saving to user's food log or diary
+    
+    // Add food to the food log
+    if (food) {
+      addFoodEntry({
+        foodName: food.foodName,
+        amount: food.amount,
+        unit: food.unit,
+        date: food.date,
+        mealType: food.mealType,
+        nutrition: food.nutrition,
+        source: food.source || "openfoodfacts",
+        sourceId: food.sourceId || product.code || product.id
+      });
+      
+      toast({
+        title: "Food added",
+        description: `${food.foodName} added to your food log`
+      });
+    }
   };
 
   return (
