@@ -72,6 +72,26 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
            !isNaN(value);
   };
   
+  // Get calories with safety checks - Define this before it's used
+  const getCalories = (): number => {
+    if (source === 'openfoodfacts') {
+      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
+                        food.nutriments?.['energy-kcal'] || 0;
+      
+      if (energyKcal) return energyKcal;
+      
+      // Convert kJ to kcal if only energy in kJ is available
+      const energyKj = food.nutriments?.['energy_100g'] || 
+                       food.nutriments?.energy || 0;
+      
+      return energyKj ? (energyKj / 4.184) : 0;
+    } else {
+      // For USDA
+      return food.nutrients?.find((n: any) => 
+        n.name.toLowerCase().includes('energy'))?.amount || 0;
+    }
+  };
+  
   // Format nutrient value to 1 decimal place
   const formatNutrient = (value: number | undefined, multiplier = 1): string => {
     if (value === undefined || value === null || isNaN(value)) return '0';
@@ -105,32 +125,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     }
     
     return (value * multiplier / 100) * amount;
-  };
-  
-  // Extract product details with fallbacks
-  const productName = food.product_name || food.description || "Unnamed Food";
-  const brandName = source === 'usda' 
-    ? food.brandOwner || food.brandName || "USDA Database" 
-    : food.brands || "Unknown Brand";
-  
-  // Extraction of getCalories function needed for calculateNutrients
-  const getCalories = (): number => {
-    if (source === 'openfoodfacts') {
-      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
-                        food.nutriments?.['energy-kcal'] || 0;
-      
-      if (energyKcal) return energyKcal;
-      
-      // Convert kJ to kcal if only energy in kJ is available
-      const energyKj = food.nutriments?.['energy_100g'] || 
-                       food.nutriments?.energy || 0;
-      
-      return energyKj ? (energyKj / 4.184) : 0;
-    } else {
-      // For USDA
-      return food.nutrients?.find((n: any) => 
-        n.name.toLowerCase().includes('energy'))?.amount || 0;
-    }
   };
   
   // Calculate all nutrient values based on amount
@@ -185,6 +179,12 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     
     return nutrients;
   };
+  
+  // Extract product details with fallbacks
+  const productName = food.product_name || food.description || "Unnamed Food";
+  const brandName = source === 'usda' 
+    ? food.brandOwner || food.brandName || "USDA Database" 
+    : food.brands || "Unknown Brand";
   
   // Handle form submission
   const onSubmit = (data: any) => {
