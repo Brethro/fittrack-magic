@@ -1,20 +1,15 @@
 
 import { useState } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
-import FoodLogSummary from "./FoodLogSummary";
 import FoodLogList from "./FoodLogList";
 import QuickFoodEntry from "./QuickFoodEntry";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type FoodLogEntry } from "@/contexts/FoodLogContext";
 
 const FoodLog = () => {
-  const { currentDate, setCurrentDate, updateFoodEntry } = useFoodLog();
+  const { updateFoodEntry } = useFoodLog();
   const [activeTab, setActiveTab] = useState("log");
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
-  
-  const handleDateChange = (date: Date) => {
-    setCurrentDate(date);
-  };
   
   // This function will be passed to QuickFoodEntry to switch tabs after adding food
   const handleFoodAdded = () => {
@@ -29,10 +24,6 @@ const FoodLog = () => {
   
   return (
     <div className="flex flex-col space-y-3 w-full h-full">
-      <div className="mb-1">
-        <FoodLogSummary onDateChange={handleDateChange} />
-      </div>
-      
       <Tabs 
         defaultValue="log" 
         className="w-full flex flex-col flex-1"

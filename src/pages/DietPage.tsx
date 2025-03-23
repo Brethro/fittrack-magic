@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ import {
   trackFoodSelection
 } from "@/services/foodSearchService";
 import { useFoodLog } from "@/contexts/FoodLogContext";
+import FoodLogSummary from "@/components/diet/FoodLogSummary";
 import FoodLog from "@/components/diet/FoodLog";
 
 const DietPage = () => {
@@ -22,7 +24,7 @@ const DietPage = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { foodEntries, addFoodEntry } = useFoodLog();
+  const { foodEntries, addFoodEntry, currentDate, setCurrentDate } = useFoodLog();
 
   // Clear search results when a new food entry is added
   useEffect(() => {
@@ -138,6 +140,11 @@ const DietPage = () => {
       handleFoodSelection(food.description);
     }
   };
+
+  // Handler for date changes in the summary
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(date);
+  };
   
   return (
     <div className="container px-4 py-6 mx-auto h-screen overflow-auto">
@@ -158,12 +165,17 @@ const DietPage = () => {
             usdaApiStatus={usdaApiStatus} 
           />
           
-          {/* Food Log Section - Moved to the top */}
-          <div className="flex-1 max-h-[600px] min-h-[500px]">
+          {/* Daily Summary - Now at the top */}
+          <div className="glass-panel p-4 rounded-lg">
+            <FoodLogSummary onDateChange={handleDateChange} />
+          </div>
+          
+          {/* Food Log Section */}
+          <div className="flex-1 max-h-[500px] min-h-[400px]">
             <FoodLog />
           </div>
 
-          {/* Food Search Section - Now below the Food Log */}
+          {/* Food Search Section */}
           <div className="glass-panel p-4 rounded-lg">
             {/* Search Form */}
             <FoodSearchForm 
