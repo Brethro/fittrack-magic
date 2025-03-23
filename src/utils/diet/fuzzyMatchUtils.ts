@@ -1,5 +1,5 @@
 
-import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
+import { FoodItem, FoodPrimaryCategory, FoodCategory } from "@/types/diet";
 
 // Cache for fuzzy matching results to improve performance
 const fuzzyMatchCache = new Map<string, any>();
@@ -73,6 +73,7 @@ export const identifyPotentialMiscategorizations = (foods: FoodItem[]): FoodItem
   const result: FoodItem[] = [];
   const categoryKeywords: Record<FoodPrimaryCategory, string[]> = {
     meat: ["beef", "pork", "lamb", "steak", "ham"],
+    redMeat: ["beef", "lamb", "venison", "bison", "steak"],
     poultry: ["chicken", "turkey", "duck", "goose"],
     fish: ["salmon", "tuna", "cod", "fish"],
     seafood: ["shrimp", "lobster", "crab", "oyster", "clam"],
@@ -122,4 +123,44 @@ export const identifyPotentialMiscategorizations = (foods: FoodItem[]): FoodItem
   });
   
   return result;
+};
+
+// Export the fuzzyFindFood function
+export const fuzzyFindFood = (query: string, categories: FoodCategory[]): FoodItem[] => {
+  // Return empty array for very short queries
+  if (query.length < 2) return [];
+  
+  const results: FoodItem[] = [];
+  const queryLower = query.toLowerCase();
+  
+  // Get all food items from all categories
+  const allFoods: FoodItem[] = categories.flatMap(category => category.items);
+  
+  // First pass: exact matches in name
+  const exactMatches = allFoods.filter(food => 
+    food.name.toLowerCase().includes(queryLower)
+  );
+  
+  if (exactMatches.length > 0) {
+    return exactMatches;
+  }
+  
+  // Second pass: fuzzy matches based on similarity score
+  const SIMILARITY_THRESHOLD = 0.6;
+  
+  allFoods.forEach(food => {
+    const similarity = getSimilarityScore(food.name, query);
+    if (similarity >= SIMILARITY_THRESHOLD) {
+      results.push(food);
+    }
+  });
+  
+  // Sort by similarity (most similar first)
+  results.sort((a, b) => {
+    const scoreA = getSimilarityScore(a.name, query);
+    const scoreB = getSimilarityScore(b.name, query);
+    return scoreB - scoreA;
+  });
+  
+  return results;
 };

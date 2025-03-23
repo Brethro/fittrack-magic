@@ -1,61 +1,59 @@
-// Simple logging utility for diet-related functions
 
-// Keep a log of monitoring events
-const monitoringLog: string[] = [];
+// Simple logging utilities for development and testing purposes
 
-// Add a log entry
-export const addMonitorLog = (message: string): void => {
-  monitoringLog.push(`${new Date().toISOString()}: ${message}`);
-  console.log(`[Diet Monitor] ${message}`);
+// Log with timestamp
+export const logWithTime = (message: string, data?: any): void => {
+  const timestamp = new Date().toISOString();
+  if (data) {
+    console.log(`[${timestamp}] ${message}`, data);
+  } else {
+    console.log(`[${timestamp}] ${message}`);
+  }
 };
 
-// Get the complete log
-export const getMonitorLog = (): string[] => {
-  return [...monitoringLog];
+// Performance monitoring
+export const startPerformanceTimer = (label: string): void => {
+  console.time(label);
 };
 
-// Clear the log
-export const clearMonitorLog = (): void => {
-  monitoringLog.length = 0;
+export const endPerformanceTimer = (label: string): void => {
+  console.timeEnd(label);
 };
 
-// Log performance metrics
-export const logPerformance = (functionName: string, startTime: number): void => {
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-  addMonitorLog(`${functionName} executed in ${duration.toFixed(2)}ms`);
+// Data validation utilities
+export const validateFoodData = (food: any): string[] => {
+  const errors: string[] = [];
+  
+  if (!food.id) errors.push("Missing ID");
+  if (!food.name) errors.push("Missing name");
+  if (!food.primaryCategory) errors.push("Missing primary category");
+  
+  return errors;
 };
 
-// Monitor function execution
-export const monitorFunction = <T extends any[], R>(
-  fn: (...args: T) => R,
-  functionName: string
-): ((...args: T) => R) => {
-  return (...args: T): R => {
-    const startTime = performance.now();
-    addMonitorLog(`Executing ${functionName}`);
-    
-    try {
-      const result = fn(...args);
-      
-      // Handle promises
-      if (result instanceof Promise) {
-        return result
-          .then(value => {
-            logPerformance(functionName, startTime);
-            return value;
-          })
-          .catch(error => {
-            addMonitorLog(`Error in ${functionName}: ${error}`);
-            throw error;
-          }) as unknown as R;
-      }
-      
-      logPerformance(functionName, startTime);
-      return result;
-    } catch (error) {
-      addMonitorLog(`Error in ${functionName}: ${error}`);
-      throw error;
-    }
-  };
+// Monitor API calls
+export const logApiCall = (endpoint: string, params: any): void => {
+  console.log(`API call to ${endpoint}`, params);
+};
+
+// Count instances for statistics
+const counters: Record<string, number> = {};
+
+export const incrementCounter = (counterName: string): void => {
+  if (!counters[counterName]) {
+    counters[counterName] = 0;
+  }
+  counters[counterName]++;
+};
+
+export const getCounter = (counterName: string): number => {
+  return counters[counterName] || 0;
+};
+
+export const resetCounter = (counterName: string): void => {
+  counters[counterName] = 0;
+};
+
+export const getAllCounters = (): Record<string, number> => {
+  return { ...counters };
 };

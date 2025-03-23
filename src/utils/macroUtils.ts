@@ -1,3 +1,4 @@
+
 // Calculate servings for a specific food to hit macro targets
 export const calculateServings = (
   food: any,
@@ -39,4 +40,53 @@ export const recalculateFoodWithServings = (food: any, servings: number): any =>
   result.netCarbs = Math.max(0, (result.carbs || 0) - (result.fiber || 0));
   
   return result;
+};
+
+// Calculate meal totals, adding the netCarbs property
+export const calculateMealTotals = (foods: any[]): any => {
+  const totals = {
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFats: 0,
+    totalFiber: 0,
+    totalSugars: 0,
+    totalSaturatedFat: 0,
+    totalTransFat: 0,
+    totalCholesterol: 0,
+    totalSodium: 0,
+    totalCalcium: 0,
+    totalIron: 0,
+    totalPotassium: 0,
+    netCarbs: 0
+  };
+  
+  foods.forEach(food => {
+    // Use caloriesPerServing * servings or just calories if available
+    if (food.caloriesPerServing && food.servings) {
+      totals.totalCalories += food.caloriesPerServing * food.servings;
+    } else if (food.calories) {
+      totals.totalCalories += food.calories;
+    }
+    
+    // Sum other nutrients
+    if (food.protein) totals.totalProtein += food.protein;
+    if (food.carbs) totals.totalCarbs += food.carbs;
+    if (food.fats) totals.totalFats += food.fats;
+    if (food.fiber) totals.totalFiber += food.fiber;
+    if (food.sugars) totals.totalSugars += food.sugars;
+    if (food.saturatedFat) totals.totalSaturatedFat += food.saturatedFat;
+    if (food.transFat) totals.totalTransFat += food.transFat;
+    if (food.cholesterol) totals.totalCholesterol += food.cholesterol;
+    if (food.sodium) totals.totalSodium += food.sodium;
+    if (food.calcium) totals.totalCalcium += food.calcium;
+    if (food.iron) totals.totalIron += food.iron;
+    if (food.potassium) totals.totalPotassium += food.potassium;
+    
+    // Calculate netCarbs as carbs - fiber
+    const foodNetCarbs = Math.max(0, (food.carbs || 0) - (food.fiber || 0));
+    totals.netCarbs += foodNetCarbs;
+  });
+  
+  return totals;
 };

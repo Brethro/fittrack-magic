@@ -1,9 +1,10 @@
 
-import { FoodPrimaryCategory } from "@/types/diet";
+import { FoodPrimaryCategory, FoodItem } from "@/types/diet";
 
 // Define the food category hierarchy
 export const foodCategoryHierarchy: Record<FoodPrimaryCategory, string[]> = {
   meat: ["beef", "pork", "lamb", "game"],
+  redMeat: ["beef", "lamb", "venison", "bison"],
   poultry: ["chicken", "turkey", "duck", "goose"],
   fish: ["salmon", "tuna", "cod", "tilapia"],
   seafood: ["shrimp", "crab", "lobster", "mussels"],
@@ -26,4 +27,27 @@ export const foodCategoryHierarchy: Record<FoodPrimaryCategory, string[]> = {
 // Helper function to get subcategories for a primary category
 export const getCategorySubcategories = (category: FoodPrimaryCategory): string[] => {
   return foodCategoryHierarchy[category] || [];
+};
+
+// Helper function to determine if a food belongs to a specific category
+export const foodBelongsToCategory = (
+  food: FoodItem, 
+  category: FoodPrimaryCategory
+): boolean => {
+  // Check primary category match
+  if (food.primaryCategory === category) {
+    return true;
+  }
+  
+  // Check secondary categories if they exist
+  if (food.secondaryCategories && food.secondaryCategories.includes(category)) {
+    return true;
+  }
+  
+  // Special case for meat category including red meat
+  if (category === 'meat' && food.primaryCategory === 'redMeat') {
+    return true;
+  }
+  
+  return false;
 };
