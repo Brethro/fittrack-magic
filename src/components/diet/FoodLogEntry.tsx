@@ -23,9 +23,9 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   return (
     <div className="w-full py-4 px-3 border-b border-border/20 last:border-0">
       <div className="flex flex-col w-full gap-1.5">
-        {/* Food Name */}
-        <div className="flex justify-between items-start w-full">
-          <h4 className="font-medium text-base text-foreground max-w-[85%] truncate">{entry.foodName}</h4>
+        {/* Food Name and Actions */}
+        <div className="flex justify-between items-start w-full gap-1">
+          <h4 className="font-medium text-base text-foreground break-words overflow-hidden max-w-[80%]">{entry.foodName}</h4>
           <div className="flex gap-1 shrink-0">
             <Button 
               variant="ghost" 

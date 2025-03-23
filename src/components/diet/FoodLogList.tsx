@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Utensils } from "lucide-react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import FoodLogEntry from "./FoodLogEntry";
+import { Card } from "@/components/ui/card";
 
 interface FoodLogListProps {
   onEditEntry?: (entry: any) => void;
@@ -56,9 +57,9 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   return (
-    <div className="h-full flex flex-col border rounded-lg overflow-hidden bg-card">
-      <div className="px-4 py-3 border-b bg-muted/30">
-        <h3 className="text-base font-medium text-left">Food Log: {getDateHeader()}</h3>
+    <Card className="h-full flex flex-col overflow-hidden bg-card">
+      <div className="px-4 py-3 border-b bg-muted/30 text-center">
+        <h3 className="text-lg font-medium">Food Log: {getDateHeader()}</h3>
       </div>
       
       {dailyEntries.length === 0 ? (
@@ -71,15 +72,17 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
         </div>
       ) : (
         <ScrollArea className="flex-1 w-full">
-          <div className="w-full">
+          <div className="w-full max-w-full">
             {/* Breakfast */}
             {mealGroups.breakfast.length > 0 && (
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-xl border-b border-border/20`}>Breakfast</h4>
-                <div className="w-full divide-y divide-border/20">
+                <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                  Breakfast
+                </h4>
+                <div className="w-full">
                   {mealGroups.breakfast.map((entry) => (
                     <FoodLogEntry
-                      key={entry.id} 
+                      key={entry.id}
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -92,8 +95,10 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {/* Lunch */}
             {mealGroups.lunch.length > 0 && (
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-xl border-b border-border/20`}>Lunch</h4>
-                <div className="w-full divide-y divide-border/20">
+                <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                  Lunch
+                </h4>
+                <div className="w-full">
                   {mealGroups.lunch.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -109,8 +114,10 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {/* Dinner */}
             {mealGroups.dinner.length > 0 && (
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-xl border-b border-border/20`}>Dinner</h4>
-                <div className="w-full divide-y divide-border/20">
+                <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                  Dinner
+                </h4>
+                <div className="w-full">
                   {mealGroups.dinner.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -126,8 +133,10 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {/* Snacks */}
             {mealGroups.snack.length > 0 && (
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-xl border-b border-border/20`}>Snacks</h4>
-                <div className="w-full divide-y divide-border/20">
+                <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                  Snacks
+                </h4>
+                <div className="w-full">
                   {mealGroups.snack.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -142,7 +151,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
           </div>
         </ScrollArea>
       )}
-    </div>
+    </Card>
   );
 };
 

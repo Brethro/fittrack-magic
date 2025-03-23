@@ -14,6 +14,11 @@ const FoodLog = () => {
     setCurrentDate(date);
   };
   
+  // This function will be passed to QuickFoodEntry to switch tabs after adding food
+  const handleFoodAdded = () => {
+    setActiveTab("log");
+  };
+  
   return (
     <div className="flex flex-col space-y-3 w-full h-full">
       <h2 className="text-xl font-semibold">Food Log</h2>
@@ -46,7 +51,7 @@ const FoodLog = () => {
             className="flex-1 m-0 h-full"
           >
             <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <QuickFoodEntry onSuccess={() => setActiveTab("log")} />
+              <QuickFoodEntry onAddSuccess={handleFoodAdded} />
             </div>
           </TabsContent>
         </div>
