@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 
 const Index = () => {
   const { userData } = useUserData();
@@ -109,15 +108,6 @@ const Index = () => {
             )}
           </motion.div>
         </motion.div>
-        
-        {/* Separator and disclaimer */}
-        <Separator className="mt-4 mb-4 opacity-30" />
-        
-        <div className="w-full py-2 relative z-10">
-          <p className="text-xs text-muted-foreground/80 text-center mx-auto max-w-[90%]">
-            This application is intended as a fitness tracking tool only and not as a substitute for professional medical or nutritional advice. Consult healthcare professionals before starting any fitness or nutrition program.
-          </p>
-        </div>
       </div>
     </div>
   );
