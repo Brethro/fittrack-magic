@@ -42,7 +42,16 @@ const DailyStats = () => {
     if (userData.isWeightGain) {
       // For weight gain, show surplus percentage
       const surplusAmount = userData.dailyCalories - userData.tdee;
-      const surplusPercentage = (surplusAmount / userData.tdee) * 100;
+      
+      // Ensure we don't exceed 20% for aggressive pace by applying a hard cap
+      // This is to ensure consistency with the maxSurplusPercentage from GoalsPage
+      let surplusPercentage = (surplusAmount / userData.tdee) * 100;
+      
+      // If user has selected aggressive pace, cap at 19.99% to avoid floating point issues
+      if (userData.goalPace === 'aggressive' && surplusPercentage > 19.99) {
+        surplusPercentage = 19.99;
+      }
+      
       calorieAdjustmentText = `(${surplusPercentage.toFixed(1)}% surplus)`;
     } else if (userData.calculatedDeficitPercentage) {
       // For weight loss, use the pre-calculated percentage if available
