@@ -100,20 +100,6 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
       console.log("Selected product:", product);
     }
   };
-  
-  const handleSaveFood = (food: any) => {
-    console.log("Saving food from detail view:", food);
-    
-    // FoodDetailView already adds to food log, so we only need to show the toast
-    // and close the detail view to prevent duplicates
-    toast({
-      title: "Food added",
-      description: `${food.foodName} added to your food log`
-    });
-    
-    // Close the detail view
-    setShowDetailView(false);
-  };
 
   return (
     <>
@@ -194,10 +180,9 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
       {/* Food Detail Modal */}
       {showDetailView && (
         <FoodDetailView 
-          food={product}
+          food={product} // Pass the original product directly
           source="openfoodfacts"
           onClose={() => setShowDetailView(false)}
-          onSave={handleSaveFood}
         />
       )}
     </>

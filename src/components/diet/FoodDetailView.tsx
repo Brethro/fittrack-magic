@@ -18,7 +18,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import MealTypeSelector from "./MealTypeSelector";
 import { FoodLogEntry } from "@/contexts/FoodLogContext";
-import { extractNutritionInfo } from "@/utils/usdaApi";
+import { extractNutritionInfo, UsdaFoodItem } from "@/utils/usdaApi";
 
 interface FoodDetailViewProps {
   food: any;
@@ -42,8 +42,8 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Get nutrition values based on source
   const getNutritionValues = () => {
     if (source === 'usda') {
-      // Use the utility function for USDA format
-      const { nutritionValues } = extractNutritionInfo(food);
+      // For USDA foods, directly use the extractNutritionInfo function
+      const { nutritionValues } = extractNutritionInfo(food as UsdaFoodItem);
       return nutritionValues;
     } else if (source === 'openfoodfacts') {
       // OpenFoodFacts format
@@ -218,11 +218,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
       description: `Added ${foodEntry.foodName} to your food log`,
     });
     
-    // Call custom onSave handler if provided
-    if (onSave) {
-      onSave(foodEntry);
-    }
-    
     // Close modal
     onClose();
   };
@@ -232,6 +227,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      
       <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0" 
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}>
@@ -323,6 +319,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
             
             {/* Add to log form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              
               <h4 className="font-medium">Add to Food Log</h4>
               
               {/* Meal type selector */}
@@ -402,6 +399,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 onOpenChange={setIsNutrientsOpen}
                 className="border rounded-md overflow-hidden"
               >
+                
                 <div className="p-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium mb-0">Detailed Nutrients</h4>

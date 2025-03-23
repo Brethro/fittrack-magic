@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Info, Plus } from "lucide-react";
@@ -39,22 +40,6 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
     } else {
       console.log("Selected USDA food:", foodItem);
     }
-  };
-  
-  const handleSaveFood = (food: any) => {
-    console.log("Saving food from detail view:", food);
-    
-    // Create a new food log entry from the food data
-    // We're not calling addFoodEntry here since FoodDetailView already does that
-    // This prevents duplicate entries
-    
-    toast({
-      title: "Food added",
-      description: `${food.foodName || description} added to your log`
-    });
-    
-    // Close the detail view after saving
-    setShowDetailView(false);
   };
   
   return (
@@ -123,17 +108,9 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
       {/* Food Detail Modal */}
       {showDetailView && (
         <FoodDetailView 
-          food={{
-            ...foodItem,
-            nutrients: foodItem.foodNutrients?.map(n => ({
-              name: n.nutrientName,
-              amount: n.value,
-              unitName: n.unitName
-            }))
-          }}
+          food={foodItem}  // Pass the original foodItem directly without transformations
           source="usda"
           onClose={() => setShowDetailView(false)}
-          onSave={handleSaveFood}
         />
       )}
     </>
