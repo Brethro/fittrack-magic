@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { Badge } from "@/components/ui/badge";
@@ -342,8 +341,8 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                   control={control}
                   render={({ field }) => (
                     <MealTypeSelector 
-                      selectedMealType={field.value}
-                      onMealTypeChange={field.onChange} 
+                      selectedMeal={field.value}
+                      onChange={field.onChange} 
                     />
                   )}
                 />
