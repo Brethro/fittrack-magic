@@ -1,5 +1,5 @@
 
-import { Coffee, Sun, CloudSun, Moon, CookingPot } from "lucide-react";
+import { Coffee, Sun, Moon, CookingPot } from "lucide-react";
 
 interface MealTypeSelectorProps {
   selectedMeal: "breakfast" | "lunch" | "dinner" | "snack";
@@ -15,18 +15,18 @@ const MealTypeSelector = ({ selectedMeal, onChange }: MealTypeSelectorProps) => 
   ] as const;
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center mb-4">
+    <div className="grid grid-cols-4 gap-1.5 mb-4 w-full">
       {mealTypes.map((meal) => (
         <button
           key={meal.id}
           onClick={() => onChange(meal.id)}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm 
+          className={`flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md text-sm transition-all
             ${selectedMeal === meal.id 
               ? "bg-primary text-primary-foreground" 
               : "bg-secondary hover:bg-secondary/80"}`}
         >
           {meal.icon}
-          <span>{meal.name}</span>
+          <span className="text-xs">{meal.name}</span>
         </button>
       ))}
     </div>

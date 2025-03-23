@@ -67,14 +67,14 @@ const QuickFoodEntry = () => {
   
   return (
     <div className="glass-panel p-4 rounded-lg">
-      <h3 className="text-lg font-medium mb-3">Quick Add Food</h3>
+      <h3 className="text-base font-medium mb-3">Quick Add Food</h3>
       
       <MealTypeSelector 
         selectedMeal={selectedMeal} 
         onChange={setSelectedMeal} 
       />
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         {/* Food Name */}
         <div>
           <Input

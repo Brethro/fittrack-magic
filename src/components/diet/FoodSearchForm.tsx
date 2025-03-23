@@ -46,16 +46,16 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           <Input
-            placeholder="Search for a food (e.g., apple, yogurt, chicken breast)"
+            placeholder="Search for a food (e.g., apple, yogurt)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="flex-1"
           />
-          <Button onClick={handleSearch} disabled={isLoading}>
+          <Button onClick={handleSearch} disabled={isLoading} className="px-6">
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching
               </>
             ) : (
               <>
@@ -74,7 +74,7 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
               variant="ghost" 
               size="sm" 
               onClick={toggleSearchType} 
-              className="text-xs"
+              className="text-xs h-7"
             >
               Switch to {searchType === "exact" ? "broad" : "exact"} search
             </Button>
@@ -88,7 +88,7 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
               value={searchSource} 
               onValueChange={(value) => setSearchSource(value as "both" | "openfoods" | "usda")}
             >
-              <SelectTrigger className="h-8 w-[180px]">
+              <SelectTrigger className="h-8 w-[160px]">
                 <SelectValue placeholder="Select data source" />
               </SelectTrigger>
               <SelectContent>

@@ -1,6 +1,6 @@
 
 import { useMemo } from "react";
-import { CalendarDays, Pizza, Salad } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -44,6 +44,14 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
   // Calculate macro distribution
   const macroCalories = useMemo(() => calculateMacroCalories(dailyTotals), [dailyTotals]);
   
+  // Calculate macro percentages and handle NaN
+  const proteinPercent = isNaN(macroCalories.protein / macroCalories.total) ? 0 : 
+    Math.round((macroCalories.protein / macroCalories.total) * 100);
+  const carbsPercent = isNaN(macroCalories.carbs / macroCalories.total) ? 0 : 
+    Math.round((macroCalories.carbs / macroCalories.total) * 100);
+  const fatPercent = isNaN(macroCalories.fat / macroCalories.total) ? 0 : 
+    Math.round((macroCalories.fat / macroCalories.total) * 100);
+  
   // Format the current date for display
   const formattedDate = format(currentDate, "EEEE, MMMM d, yyyy");
   
@@ -68,19 +76,18 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
   
   return (
     <div className="glass-panel p-4 rounded-lg">
-      {/* Date selector */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-medium">Daily Summary</h3>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToPreviousDay}>
-            &lt;
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="icon" onClick={goToPreviousDay} className="h-8 w-8">
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" className="flex items-center gap-1" onClick={goToToday}>
-            <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline">Today</span>
+          <Button variant="outline" size="sm" onClick={goToToday}>
+            <CalendarDays className="h-4 w-4 mr-1.5" />
+            <span>Today</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={goToNextDay}>
-            &gt;
+          <Button variant="outline" size="icon" onClick={goToNextDay} className="h-8 w-8">
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -108,7 +115,7 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
       </div>
       
       {/* Macros grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         {/* Protein */}
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -162,26 +169,26 @@ const FoodLogSummary = ({ onDateChange }: FoodLogSummaryProps) => {
       </div>
       
       {/* Macro distribution */}
-      <div className="mt-4 pt-4 border-t border-border">
+      <div className="mt-2 pt-3 border-t border-border">
         <p className="text-sm mb-2">Macro Distribution</p>
         <div className="w-full h-4 rounded-full overflow-hidden flex">
           <div 
             className="bg-blue-400" 
-            style={{ width: `${(macroCalories.protein / macroCalories.total) * 100}%` }}
+            style={{ width: `${proteinPercent || 0}%` }}
           ></div>
           <div 
             className="bg-amber-400" 
-            style={{ width: `${(macroCalories.carbs / macroCalories.total) * 100}%` }}
+            style={{ width: `${carbsPercent || 0}%` }}
           ></div>
           <div 
             className="bg-pink-400" 
-            style={{ width: `${(macroCalories.fat / macroCalories.total) * 100}%` }}
+            style={{ width: `${fatPercent || 0}%` }}
           ></div>
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span>P: {Math.round((macroCalories.protein / macroCalories.total) * 100)}%</span>
-          <span>C: {Math.round((macroCalories.carbs / macroCalories.total) * 100)}%</span>
-          <span>F: {Math.round((macroCalories.fat / macroCalories.total) * 100)}%</span>
+          <span>P: {proteinPercent || 0}%</span>
+          <span>C: {carbsPercent || 0}%</span>
+          <span>F: {fatPercent || 0}%</span>
         </div>
       </div>
     </div>
