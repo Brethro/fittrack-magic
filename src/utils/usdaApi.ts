@@ -1,5 +1,6 @@
+
 // USDA Food Data Central API utilities
-const USDA_API_KEY = "4ESFMuftyo6ZdzIa6QtFG6VUKU5SWijTjcnklsxQ";
+const USDA_API_KEY = "1su4bvCoKYGVSnyCBgVCwQATKgRWw9uVHqWFTsw2";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
 
 export interface UsdaFoodItem {
