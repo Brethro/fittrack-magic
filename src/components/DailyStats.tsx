@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { 
@@ -44,7 +43,6 @@ const DailyStats = () => {
     if (userData.isWeightGain) {
       // For weight gain scenarios - use pre-calculated value
       if (userData.calculatedSurplusPercentage !== undefined && userData.calculatedSurplusPercentage !== null) {
-        // Use the pre-calculated percentage
         // For aggressive pace without timeline-driven adjustments, always show EXACTLY 20%
         if (userData.goalPace === 'aggressive' && !userData.isTimelineDriven) {
           calorieAdjustmentText = `(20.0% surplus)`;

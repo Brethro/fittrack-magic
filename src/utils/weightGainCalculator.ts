@@ -149,14 +149,14 @@ export const calculateWeightGainCalories = (
     }
   }
   
-  // FIX: For aggressive pace that's NOT timeline-driven, guarantee EXACTLY 20%
+  // Calculate daily calories and display percentage
   let dailyCalories: number;
   let displaySurplusPercentage: number;
   
   if (goalPace === "aggressive" && !isTimelineDriven) {
     // Calculate exact 20% surplus calories
-    // Use Math.ceil to avoid rounding down and getting 19.x%
-    dailyCalories = Math.ceil(tdee * 1.20);
+    // Use Math.floor to ensure we NEVER exceed 20% surplus
+    dailyCalories = Math.floor(tdee * 1.20);
     
     // Hard-code exactly 20.0%
     displaySurplusPercentage = 20.0;

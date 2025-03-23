@@ -1,4 +1,3 @@
-
 /**
  * Utilities for calculating and working with macronutrients
  */
@@ -60,34 +59,37 @@ export const calculateMacroDistribution = (
   const bf = bodyFatPercentage || (gender === 'female' ? 25 : 18);
   const isMale = gender !== 'female';
   
-  // Calculate protein based on lean body mass and goal
+  // Calculate protein based on lean body mass - use 2.2g/kg for aggressive bulking
   let proteinPerKgLBM: number;
   
   if (isWeightGain) {
-    // UPDATED: Higher protein recommendations for muscle building
+    // Use 2.2g/kg as base for muscle building
+    proteinPerKgLBM = 2.2;
+    
+    // Adjust based on body fat levels
     if (isMale) {
       if (bf > 20) {
-        proteinPerKgLBM = 2.4; // Increased from 2.2
+        proteinPerKgLBM = 2.2; // Base level for higher body fat
       } else if (bf > 12) {
-        proteinPerKgLBM = 2.6; // Increased from 2.4
+        proteinPerKgLBM = 2.3; // Slightly higher for moderate body fat
       } else {
-        proteinPerKgLBM = 2.8; // Increased from 2.6
+        proteinPerKgLBM = 2.4; // Higher for low body fat
       }
     } else {
       if (bf > 28) {
-        proteinPerKgLBM = 2.4; // Increased from 2.2
+        proteinPerKgLBM = 2.2; // Base level for higher body fat
       } else if (bf > 20) {
-        proteinPerKgLBM = 2.6; // Increased from 2.4
+        proteinPerKgLBM = 2.3; // Slightly higher for moderate body fat
       } else {
-        proteinPerKgLBM = 2.8; // Increased from 2.6
+        proteinPerKgLBM = 2.4; // Higher for low body fat
       }
     }
     
-    // For aggressive bulks, provide even more protein
+    // For aggressive bulks, provide slightly more protein
     if (goalPace === "aggressive") {
-      proteinPerKgLBM += 0.3; // Increased from 0.2
+      proteinPerKgLBM += 0.2;
     } else if (goalPace === "moderate") {
-      proteinPerKgLBM += 0.1; // Added moderate pace bonus
+      proteinPerKgLBM += 0.1;
     }
   } else {
     // For weight loss (slightly increased for muscle preservation)
@@ -114,14 +116,8 @@ export const calculateMacroDistribution = (
   const proteinGrams = Math.round(leanBodyMass * proteinPerKgLBM);
   const proteinCalories = proteinGrams * 4;
   
-  // Fat calculation (different for weight gain vs loss)
-  let fatPercentage: number;
-  if (isWeightGain) {
-    fatPercentage = 0.25; // Reduced from 0.30 to allocate more calories to protein
-  } else {
-    fatPercentage = 0.25; // Unchanged for weight loss
-  }
-  
+  // Fat calculation - set to exactly 25% of daily calories
+  const fatPercentage = 0.25; // Exactly 25% of calories from fat
   const fatCalories = Math.round(dailyCalories * fatPercentage);
   const fatGrams = Math.round(fatCalories / 9);
   
