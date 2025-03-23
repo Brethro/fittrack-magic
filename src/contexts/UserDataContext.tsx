@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { differenceInCalendarDays } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
 export type WeightLogEntry = {
   id: string;
@@ -28,6 +29,7 @@ export type UserData = {
   };
   weightLog: WeightLogEntry[];
   isWeightGain?: boolean; // Added isWeightGain flag
+  highSurplusWarning?: boolean; // Flag to indicate if the surplus is unusually high
 };
 
 const initialUserData: UserData = {
@@ -142,7 +144,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   }, []);
 
-  // Function to recalculate nutrition values based on current user data
+  // Calculate macro calorie contributions using our utility
   const recalculateNutrition = useCallback(() => {
     console.log("Recalculating nutrition with data:", userData);
     
@@ -249,12 +251,21 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // For weight gain goals, establish minimum practical surplus values based on pace
     let minDailySurplus = 0;
+    let highSurplusWarning = false;
+    
     if (isWeightGain) {
       switch (userData.goalPace) {
-        case "aggressive": minDailySurplus = 500; break;
-        case "moderate": minDailySurplus = 300; break;
-        case "conservative": minDailySurplus = 150; break;
-        default: minDailySurplus = 200; // default to a modest surplus
+        case "aggressive": 
+          minDailySurplus = 500; 
+          break;
+        case "moderate": 
+          minDailySurplus = 300; 
+          break;
+        case "conservative": 
+          minDailySurplus = 150; 
+          break;
+        default: 
+          minDailySurplus = 200; // default to a modest surplus
       }
       console.log("Minimum daily surplus based on pace:", minDailySurplus);
     }
@@ -263,10 +274,19 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let minAdjustPercent, maxAdjustPercent;
     
     if (isWeightGain) {
-      // For weight gain, we don't use flat percentages anymore
-      // Instead, we'll rely on the calculated daily adjustment with a minimum floor
+      // For weight gain, the maximum allowed percentage depends on the pace
       minAdjustPercent = 0.05; // 5% minimum for very small goals
-      maxAdjustPercent = 0.2; // 20% maximum for clean bulk
+      
+      // Set maximum percentage based on pace
+      if (userData.goalPace === "aggressive") {
+        maxAdjustPercent = 0.35; // 35% for aggressive pace
+      } else if (userData.goalPace === "moderate") {
+        maxAdjustPercent = 0.25; // 25% for moderate pace
+      } else {
+        maxAdjustPercent = 0.15; // 15% for conservative pace
+      }
+      
+      console.log("Using max adjustment percentage for weight gain:", maxAdjustPercent);
       
       // Adjust based on body fat percentage and gender for weight gain
       const bodyFatPercentage = userData.bodyFatPercentage || 15; // Default if not available
@@ -275,18 +295,18 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (isMale) {
         if (bodyFatPercentage > 20) {
           // Higher body fat - more conservative with surplus
-          maxAdjustPercent = 0.15; 
+          maxAdjustPercent = Math.min(maxAdjustPercent, 0.20); 
         } else if (bodyFatPercentage < 10) {
           // Lower body fat - can be more aggressive with surplus
-          maxAdjustPercent = 0.20;
+          maxAdjustPercent = Math.min(maxAdjustPercent + 0.05, 0.35);
         }
       } else {
         if (bodyFatPercentage > 28) {
           // Higher body fat - more conservative with surplus
-          maxAdjustPercent = 0.15;
+          maxAdjustPercent = Math.min(maxAdjustPercent, 0.20);
         } else if (bodyFatPercentage < 18) {
           // Lower body fat - can be more aggressive with surplus
-          maxAdjustPercent = 0.20;
+          maxAdjustPercent = Math.min(maxAdjustPercent + 0.05, 0.35);
         }
       }
     } else {
@@ -347,6 +367,21 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Adjusting to minimum practical surplus percentage:", calculatedAdjustPercent);
       }
       
+      // Check if this is a high surplus (over 20%)
+      if (calculatedAdjustPercent > 0.20) {
+        highSurplusWarning = true;
+        console.log("High surplus warning triggered:", calculatedAdjustPercent);
+        
+        // If the surplus is extremely high (over 35%), show a toast warning
+        if (calculatedAdjustPercent > 0.35) {
+          toast({
+            title: "High Caloric Surplus",
+            description: "This goal requires a very high caloric surplus which may result in significant fat gain.",
+            variant: "warning"
+          });
+        }
+      }
+      
       // Handle edge case where goal is extremely close to current weight
       if (weightDifference < 0.5) { // less than 0.5 pounds/kg difference
         console.log("Edge case: very small weight difference detected");
@@ -361,9 +396,10 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Ensure the adjustment stays within safe bounds
     calculatedAdjustPercent = Math.max(minAdjustPercent, 
-                              Math.min(maxAdjustPercent, calculatedAdjustPercent));
+                               Math.min(maxAdjustPercent, calculatedAdjustPercent));
     
     console.log(`Calculated ${isWeightGain ? 'surplus' : 'deficit'} percentage:`, calculatedAdjustPercent);
+    console.log(`Final adjustment range: ${minAdjustPercent} to ${maxAdjustPercent}`);
     
     // Calculate daily calories with the percentage-based adjustment
     const dailyCalories = isWeightGain 
@@ -446,6 +482,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       tdee,
       dailyCalories,
       isWeightGain,
+      highSurplusWarning,
       actualDailyCalorieAdjustment,
       estimatedDaysToGoal,
       macros: { protein: proteinGrams, carbs: carbGrams, fats: fatGrams }
@@ -459,7 +496,8 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       userData.macros.protein !== proteinGrams ||
       userData.macros.carbs !== carbGrams ||
       userData.macros.fats !== fatGrams ||
-      userData.isWeightGain !== isWeightGain;
+      userData.isWeightGain !== isWeightGain ||
+      userData.highSurplusWarning !== highSurplusWarning;
       
     if (hasChanged) {
       setUserData(prev => ({
@@ -467,6 +505,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         tdee,
         dailyCalories,
         isWeightGain,
+        highSurplusWarning,
         macros: {
           protein: proteinGrams,
           carbs: carbGrams,
@@ -479,7 +518,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setHasCalculated(true);
   }, [userData.age, userData.weight, userData.height, userData.activityLevel, 
       userData.useMetric, userData.bodyFatPercentage, userData.gender, 
-      userData.goalType, userData.goalValue, userData.goalDate, userData.goalPace]);
+      userData.goalType, userData.goalValue, userData.goalDate, userData.goalPace, setUserData]);
 
   // Create a stable context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({

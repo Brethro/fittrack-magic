@@ -3,16 +3,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format, addMonths, addWeeks } from "date-fns";
-import { ArrowLeft, ArrowRight, Calendar as CalendarIcon, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar as CalendarIcon, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Popover,
   PopoverContent,
@@ -114,6 +115,31 @@ const GoalsPage = () => {
       return `${recommendedGoal}%`;
     }
   };
+
+  // Calculate if the weight goal is potentially unrealistic
+  const calculateWeightGainWarning = () => {
+    if (!isWeightGain() || !userData.weight || !form.weightGoal) return null;
+    
+    const weightDiff = parseFloat(form.weightGoal) - userData.weight;
+    const daysUntilGoal = Math.max(
+      (form.goalDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+      1
+    );
+    
+    // Calculate pounds per week (or kg if metric)
+    const poundsPerWeek = (weightDiff / daysUntilGoal) * 7;
+    
+    if (form.goalPace === "aggressive" && poundsPerWeek > 1) {
+      return {
+        show: true,
+        message: `This goal may result in gaining over 1 ${userData.useMetric ? 'kg' : 'lb'} per week, which could lead to more fat gain than muscle. Consider a longer timeframe for a better muscle-to-fat ratio.`
+      };
+    }
+    
+    return { show: false, message: "" };
+  };
+
+  const weightGainWarning = calculateWeightGainWarning();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -321,6 +347,25 @@ const GoalsPage = () => {
                 </Card>
               </div>
             </RadioGroup>
+            
+            {isWeightGain() && form.goalPace === "aggressive" && (
+              <Alert variant="warning" className="mt-3">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Higher Fat Gain Likely</AlertTitle>
+                <AlertDescription>
+                  Aggressive bulking may lead to more fat gain alongside muscle. For optimal results, consider a longer timeframe.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {weightGainWarning?.show && (
+              <Alert variant="warning" className="mt-3">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  {weightGainWarning.message}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
           
           <div className="glass-panel rounded-lg p-4">

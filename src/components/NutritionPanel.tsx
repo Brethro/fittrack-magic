@@ -1,7 +1,8 @@
 
-import { Flame, InfoIcon } from "lucide-react";
+import { Flame, InfoIcon, AlertTriangle } from "lucide-react";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +18,7 @@ import { calculateMacroCalories } from "@/utils/nutritionCalculator";
 export function NutritionPanel() {
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
+  const highSurplusWarning = userData.highSurplusWarning || false;
 
   // Calculate macro calorie contributions using our utility
   const macroCalories = calculateMacroCalories({
@@ -27,6 +29,9 @@ export function NutritionPanel() {
   });
   
   const totalCalories = userData.dailyCalories || 0;
+  const tdee = userData.tdee || 0;
+  const surplusAmount = isWeightGain ? totalCalories - tdee : 0;
+  const surplusPercent = isWeightGain ? Math.round((surplusAmount / tdee) * 100) : 0;
 
   return (
     <div className="glass-panel rounded-lg p-4 mb-4">
@@ -47,7 +52,7 @@ export function NutritionPanel() {
                 // Weight Gain Explanation
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with an appropriate surplus 
+                    Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {surplusPercent}% surplus 
                     to help you gain muscle with minimal fat accumulation by your target date.
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -90,11 +95,23 @@ export function NutritionPanel() {
         </Popover>
       </div>
       
+      {isWeightGain && highSurplusWarning && (
+        <Alert variant="warning" className="mb-3">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Your {surplusPercent}% caloric surplus ({surplusAmount} calories above maintenance) is high and may lead to increased fat gain. Consider a longer timeframe for optimal muscle-to-fat ratio.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Calories (full width) */}
       <div className="glass-card rounded-lg p-3 text-center mb-3">
         <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
         <p className="text-lg font-bold">{userData.dailyCalories}</p>
-        <p className="text-xs text-muted-foreground">Calories{isWeightGain ? ' (Surplus)' : ' (Deficit)'}</p>
+        <p className="text-xs text-muted-foreground">
+          Calories
+          {isWeightGain ? ` (${surplusPercent}% Surplus)` : ' (Deficit)'}
+        </p>
       </div>
       
       {/* Macros (three columns) */}
