@@ -1,9 +1,30 @@
 
-import { FoodItem } from "@/types/diet";
+// Generic types for food and nutrition data
+
+interface GenericFoodItem {
+  id?: string;
+  protein: number;
+  carbs: number;
+  fats: number;
+  calories?: number;
+  fiber?: number;
+  sugars?: number;
+  saturatedFat?: number;
+  transFat?: number;
+  cholesterol?: number;
+  sodium?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
+  [key: string]: any;
+}
 
 // Calculate how many servings of a food to include in a meal
 export const calculateServings = (
-  food: FoodItem,
+  food: GenericFoodItem,
   targetMacro: number,
   macroType: 'protein' | 'carbs' | 'fats',
   minServings: number = 0.5,
@@ -17,7 +38,7 @@ export const calculateServings = (
 };
 
 // Calculate the total calories and macros for a meal
-export const calculateMealTotals = (foods: any[]): { 
+export const calculateMealTotals = (foods: GenericFoodItem[]): { 
   totalCalories: number; 
   totalProtein: number; 
   totalCarbs: number; 
@@ -38,7 +59,7 @@ export const calculateMealTotals = (foods: any[]): {
 } => {
   const result = foods.reduce((totals, food) => {
     return {
-      totalCalories: totals.totalCalories + food.calories,
+      totalCalories: totals.totalCalories + (food.calories || 0),
       totalProtein: totals.totalProtein + food.protein,
       totalCarbs: totals.totalCarbs + food.carbs,
       totalFats: totals.totalFats + food.fats,

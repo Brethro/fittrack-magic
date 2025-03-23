@@ -1,10 +1,8 @@
-
-import { FoodItem, Meal } from "@/types/diet";
 import { calculateServings, calculateMealTotals } from './macroUtils';
 import { adjustServingsForCalorieTarget } from './mealAdjustUtils';
 
 // Create a food item with the specified servings
-export const createFoodWithServings = (food: FoodItem, servings: number): any => {
+export const createFoodWithServings = (food: any, servings: number): any => {
   return {
     id: food.id,
     name: food.name,
@@ -20,14 +18,14 @@ export const createFoodWithServings = (food: FoodItem, servings: number): any =>
 
 // Create a meal with foods that meet macro targets
 export const createBalancedMeal = (
-  foodItems: FoodItem[],
+  foodItems: any[],
   targetCalories: number,
   targetProtein: number,
   targetCarbs: number,  
   targetFats: number,
   mealName: string,
   tolerance: number = 0.05 // Default tolerance of 5%, can be stricter for specific diets
-): Meal => {
+): any => {
   let mealFoods: any[] = [];
   
   // Verify we have enough food items to work with
@@ -193,4 +191,3 @@ export const createBalancedMeal = (
     totalCalories: Math.round(totals.totalCalories)
   };
 };
-

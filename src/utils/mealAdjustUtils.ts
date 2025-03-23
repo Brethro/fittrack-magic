@@ -1,4 +1,3 @@
-
 import { recalculateFoodWithServings } from './macroUtils';
 
 // Adjust servings to meet calorie and protein targets
@@ -307,4 +306,3 @@ export const adjustServingsForCalorieTarget = (
   
   return adjustedFoods;
 };
-
