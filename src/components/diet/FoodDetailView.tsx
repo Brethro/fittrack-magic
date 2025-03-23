@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Check, ChevronUp, ChevronDown, Edit2, Plus } from "lucide-react";
+import { X, Check, Plus } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
@@ -415,12 +414,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 <div className="p-3">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium mb-0">Detailed Nutrients</h4>
-                    <CollapsibleTrigger asChild>
+                    <CollapsibleTrigger>
                       <Button variant="ghost" size="sm" className="p-1 h-8">
-                        {isNutrientsOpen ? 
-                          <ChevronUp className="h-4 w-4" /> : 
-                          <ChevronDown className="h-4 w-4" />
-                        }
+                        {isNutrientsOpen ? "Hide" : "Show"}
                       </Button>
                     </CollapsibleTrigger>
                   </div>

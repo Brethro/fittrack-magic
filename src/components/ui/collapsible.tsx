@@ -17,19 +17,7 @@ const CollapsibleTrigger = React.forwardRef<
     className={cn("flex items-center", className)}
     {...props}
   >
-    {/* Ensure we only have a single child element */}
-    {children ? (
-      typeof children === 'string' || typeof children === 'number' ? (
-        <span>{children}</span>
-      ) : React.Children.count(children) > 1 ? (
-        <div className="flex items-center">{children}</div>
-      ) : (
-        children
-      )
-    ) : null}
-    {showIcon && (
-      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
-    )}
+    {children}
   </CollapsiblePrimitive.CollapsibleTrigger>
 ))
 CollapsibleTrigger.displayName = CollapsiblePrimitive.CollapsibleTrigger.displayName
