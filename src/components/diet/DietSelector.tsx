@@ -6,7 +6,7 @@ import { DietType } from "@/types/diet";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const dietDescriptions: Record<DietType, string> = {
+const dietDescriptions: Record<string, string> = {
   all: "All foods available",
   mediterranean: "Rich in olive oil, vegetables, fruits, fish, and moderate wine",
   vegetarian: "Excludes meat and seafood, includes dairy and eggs",
@@ -17,7 +17,28 @@ const dietDescriptions: Record<DietType, string> = {
   italian: "Pasta, olive oil, tomatoes, cheese, and diverse proteins",
   paleo: "Mimics hunter-gatherer diet with meats, fish, fruits, vegetables, nuts, seeds",
   keto: "High fat, moderate protein, very low carb for ketosis",
-  pescatarian: "Plant-based diet that includes fish and seafood, but excludes other meats"
+  pescatarian: "Plant-based diet that includes fish and seafood, but excludes other meats",
+  "low-carb": "Restricts carbohydrate intake to favor protein and fat sources",
+  "high-protein": "Emphasizes protein-rich foods for muscle building and satiety",
+  carnivore: "Animal products only, excludes all plant foods",
+  whole30: "30-day reset eliminating grains, dairy, legumes, alcohol, and added sugar",
+  atkins: "Phased approach starting with severe carb restriction, gradually adding some back",
+  zone: "Balanced macronutrients with 40% carbs, 30% protein, and 30% fat"
+};
+
+// Function to format diet name for display
+const formatDietName = (diet: string): string => {
+  if (diet === "all") return "All Foods";
+  
+  // Handle hyphenated names like "low-carb"
+  if (diet.includes("-")) {
+    return diet.split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join("-");
+  }
+  
+  // Regular capitalization
+  return diet.charAt(0).toUpperCase() + diet.slice(1);
 };
 
 interface DietSelectorProps {
@@ -57,14 +78,14 @@ export function DietSelector({ selectedDiet, onDietChange, availableDiets }: Die
         }} className="flex flex-wrap gap-2 justify-start">
           {availableDiets.map((diet) => (
             <ToggleGroupItem key={diet} value={diet} className="rounded-full">
-              {diet === "all" ? "All Foods" : diet.charAt(0).toUpperCase() + diet.slice(1)}
+              {formatDietName(diet)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
         
-        {selectedDiet !== "all" && (
+        {selectedDiet !== "all" && dietDescriptions[selectedDiet] && (
           <p className="mt-4 text-sm">
-            <span className="font-medium">{selectedDiet.charAt(0).toUpperCase() + selectedDiet.slice(1)}:</span>{" "}
+            <span className="font-medium">{formatDietName(selectedDiet)}:</span>{" "}
             {dietDescriptions[selectedDiet]}
           </p>
         )}

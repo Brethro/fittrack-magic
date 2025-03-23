@@ -8,6 +8,8 @@ import { japaneseRules, japaneseSpecialRules, koreanRules, koreanSpecialRules } 
 import { mexicanRules, mexicanSpecialRules, italianRules, italianSpecialRules } from "./latinCuisineRules";
 import { paleoRules, paleoSpecialRules, ketoRules, ketoSpecialRules } from "./restrictiveDietRules";
 import { allDietSpecialRules } from "./allDietRules";
+import { lowCarbRules, lowCarbSpecialRules, highProteinRules, highProteinSpecialRules } from "./macroFocusedRules";
+import { carnivoreRules, carnivoreSpecialRules, whole30Rules, whole30SpecialRules, atkinsRules, atkinsSpecialRules, zoneRules, zoneSpecialRules } from "./otherDietRules";
 
 // Combine all diet compatible categories
 export const dietCompatibleCategories: Record<Exclude<DietType, "all">, {
@@ -28,7 +30,13 @@ export const dietCompatibleCategories: Record<Exclude<DietType, "all">, {
   mexican: mexicanRules,
   italian: italianRules,
   paleo: paleoRules,
-  keto: ketoRules
+  keto: ketoRules,
+  "low-carb": lowCarbRules,
+  "high-protein": highProteinRules,
+  carnivore: carnivoreRules,
+  whole30: whole30Rules,
+  atkins: atkinsRules,
+  zone: zoneRules
 };
 
 // Combine all special case rules
@@ -43,5 +51,11 @@ export const specialCaseRules: Record<DietType, (food: FoodItem) => boolean> = {
   mexican: mexicanSpecialRules,
   italian: italianSpecialRules,
   paleo: paleoSpecialRules,
-  keto: ketoSpecialRules
+  keto: ketoSpecialRules,
+  "low-carb": lowCarbSpecialRules,
+  "high-protein": highProteinSpecialRules,
+  carnivore: carnivoreSpecialRules,
+  whole30: whole30SpecialRules,
+  atkins: atkinsSpecialRules,
+  zone: zoneSpecialRules
 };

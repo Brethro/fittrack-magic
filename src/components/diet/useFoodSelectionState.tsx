@@ -58,16 +58,20 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     const filteredFoods: Record<string, boolean> = {};
     let matchCount = 0;
     
-    migratedFoodCategories.forEach(category => {
-      const compatibleFoods = filterFoodsByDiet(category.items, diet);
-      
-      // Mark all foods as selected or not based on diet compatibility
-      category.items.forEach(food => {
-        const isCompatible = compatibleFoods.some(f => f.id === food.id);
-        filteredFoods[food.id] = isCompatible;
-        if (isCompatible) matchCount++;
+    try {
+      migratedFoodCategories.forEach(category => {
+        const compatibleFoods = filterFoodsByDiet(category.items, diet);
+        
+        // Mark all foods as selected or not based on diet compatibility
+        category.items.forEach(food => {
+          const isCompatible = compatibleFoods.some(f => f.id === food.id);
+          filteredFoods[food.id] = isCompatible;
+          if (isCompatible) matchCount++;
+        });
       });
-    });
+    } catch (error) {
+      console.error(`Error filtering foods for diet '${diet}':`, error);
+    }
     
     // Only apply filter if at least one food is compatible with this diet
     if (matchCount === 0) {
@@ -82,11 +86,26 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     setSelectedFoods(filteredFoods);
     setSelectedDiet(diet);
     
-    const dietName = diet.charAt(0).toUpperCase() + diet.slice(1);
+    const dietName = formatDietName(diet);
     toast({
       title: `${dietName} diet selected`,
       description: `${matchCount} compatible foods available.`,
     });
+  };
+
+  // Format diet name for display
+  const formatDietName = (diet: string): string => {
+    if (diet === "all") return "All Foods";
+    
+    // Handle hyphenated names like "low-carb"
+    if (diet.includes("-")) {
+      return diet.split("-")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("-");
+    }
+    
+    // Regular capitalization
+    return diet.charAt(0).toUpperCase() + diet.slice(1);
   };
 
   // Get all selected food items as an array
@@ -114,7 +133,7 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     );
   };
 
-  // Get diets that have at least one compatible food - now using the dynamically collected diet types
+  // Get diets that have at least one compatible food or that are explicitly tagged on foods
   const getAvailableDiets = (): DietType[] => {
     // Get all available diet types from our central collection
     const allAvailableDiets = getAvailableDietTypes();
@@ -132,35 +151,41 @@ export const useFoodSelectionState = (foodCategories: FoodCategory[]) => {
     }
     
     // Filter to diets that have at least one compatible food
-    const dietWithCompatibleFoods = ["all" as DietType];
+    const dietsWithCompatibleFoods = ["all" as DietType];
     
     // Check each diet from our central collection
     allAvailableDiets.forEach(diet => {
       // Skip "all" as it's already included
       if (diet === "all") return;
       
-      // Check if this diet has compatible foods
-      // For explicitly tagged diets, check if any food has this diet tag
+      // First check for explicit diet tags as the primary method
       const hasExplicitTag = allFoods.some(food => 
         food.diets && Array.isArray(food.diets) && food.diets.includes(diet)
       );
       
       if (hasExplicitTag) {
-        dietWithCompatibleFoods.push(diet as DietType);
+        dietsWithCompatibleFoods.push(diet as DietType);
       } else {
-        // Fallback to rule-based compatibility check for standard diets
-        const compatibleFoods = filterFoodsByDiet(allFoods, diet as DietType);
+        // Only for common diets, try the rule-based compatibility check as a fallback
+        const standardDiets = ["vegetarian", "vegan", "pescatarian", "mediterranean", "paleo", "keto"];
         
-        if (compatibleFoods.length > 0) {
-          dietWithCompatibleFoods.push(diet as DietType);
+        if (standardDiets.includes(diet)) {
+          try {
+            const compatibleFoods = filterFoodsByDiet(allFoods, diet as DietType);
+            if (compatibleFoods.length > 0) {
+              dietsWithCompatibleFoods.push(diet as DietType);
+            }
+          } catch (error) {
+            console.warn(`Error checking compatibility for diet '${diet}':`, error);
+          }
         }
       }
     });
     
     // Log the final list of available diets for debugging
-    console.log("Final available diets (with compatible foods):", dietWithCompatibleFoods);
+    console.log("Final available diets (with compatible foods):", dietsWithCompatibleFoods);
     
-    return dietWithCompatibleFoods as DietType[];
+    return dietsWithCompatibleFoods as DietType[];
   };
 
   return {
