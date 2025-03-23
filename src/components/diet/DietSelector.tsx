@@ -3,8 +3,14 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DietType } from "@/types/diet";
-import { Info } from "lucide-react";
+import { Info, ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 const dietDescriptions: Record<string, string> = {
   all: "All foods available",
@@ -48,6 +54,8 @@ interface DietSelectorProps {
 }
 
 export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  
   // Debug what diets are actually available
   React.useEffect(() => {
     console.log("Available diets in DietSelector:", availableDiets);
@@ -55,41 +63,56 @@ export function DietSelector({ selectedDiet, onDietChange, availableDiets }: Die
 
   return (
     <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="mb-3 flex items-center">
-          <h3 className="text-lg font-medium">Dietary Preference</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="ml-2 h-4 w-4 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-sm">
-                <p>Select a diet type to filter food options that match your preference.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose a specific diet to filter compatible foods
-        </p>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full"
+      >
+        <CollapsibleTrigger className="flex w-full items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
+          <div className="flex items-center">
+            <h3 className="text-lg font-medium">Dietary Preference: {formatDietName(selectedDiet)}</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="ml-2 h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p>Select a diet type to filter food options that match your preference.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <ChevronDown className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isOpen ? "rotate-180" : "rotate-0"
+          )} />
+        </CollapsibleTrigger>
         
-        <ToggleGroup type="single" value={selectedDiet} onValueChange={(value) => {
-          if (value) onDietChange(value as DietType);
-        }} className="flex flex-wrap gap-2 justify-start">
-          {availableDiets.map((diet) => (
-            <ToggleGroupItem key={diet} value={diet} className="rounded-full">
-              {formatDietName(diet)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        
-        {selectedDiet !== "all" && dietDescriptions[selectedDiet] && (
-          <p className="mt-4 text-sm">
-            <span className="font-medium">{formatDietName(selectedDiet)}:</span>{" "}
-            {dietDescriptions[selectedDiet]}
-          </p>
-        )}
-      </CardContent>
+        <CollapsibleContent>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose a specific diet to filter compatible foods
+            </p>
+            
+            <ToggleGroup type="single" value={selectedDiet} onValueChange={(value) => {
+              if (value) onDietChange(value as DietType);
+            }} className="flex flex-wrap gap-2 justify-start">
+              {availableDiets.map((diet) => (
+                <ToggleGroupItem key={diet} value={diet} className="rounded-full">
+                  {formatDietName(diet)}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            
+            {selectedDiet !== "all" && dietDescriptions[selectedDiet] && (
+              <p className="mt-4 text-sm">
+                <span className="font-medium">{formatDietName(selectedDiet)}:</span>{" "}
+                {dietDescriptions[selectedDiet]}
+              </p>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }

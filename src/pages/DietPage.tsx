@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -102,7 +101,13 @@ const DietPage = () => {
               <TabsTrigger value="plan">Meal Plan</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="preferences" className="space-y-6">
+            <TabsContent value="preferences" className="space-y-4">
+              <DietSelector 
+                selectedDiet={selectedDiet}
+                onDietChange={setSelectedDiet}
+                availableDiets={availableDiets}
+              />
+              
               <FoodPreferences 
                 foodCategories={foodCategoriesData}
                 selectedFoods={selectedFoods}
