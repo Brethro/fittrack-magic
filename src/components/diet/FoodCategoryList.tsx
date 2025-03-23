@@ -69,30 +69,32 @@ export function FoodCategoryList({
             onOpenChange={() => toggleCategory(category.name)}
             className="border rounded-md px-4 py-2"
           >
-            <div className="flex items-center justify-between">
-              {/* The checkbox and label in their own div with specific click handler */}
+            <div className="flex items-center gap-2">
+              {/* Checkbox section with explicit click handling */}
               <div 
-                className="flex items-center space-x-2" 
                 onClick={(e) => {
                   e.stopPropagation();
+                  toggleAllInGroup(allCategoryFoodIds);
                 }}
+                className="flex items-center gap-2 cursor-pointer"
               >
                 <Checkbox 
                   id={`category-${category.name}`}
                   checked={allCategorySelected}
                   className={someCategorySelected && !allCategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-                  onCheckedChange={() => toggleAllInGroup(allCategoryFoodIds)}
+                  // Empty function since parent div handles the click
+                  onCheckedChange={() => {}}
                 />
+              </div>
+              
+              {/* Collapsible trigger that covers the entire title area */}
+              <CollapsibleTrigger className="flex-1 flex items-center justify-between text-left">
                 <Label
-                  htmlFor={`category-${category.name}`}
-                  className="text-base font-medium cursor-pointer"
+                  className="text-base font-medium cursor-pointer flex-1"
                 >
                   {category.displayName || category.name}
                 </Label>
-              </div>
-              
-              {/* The collapse/expand control */}
-              <CollapsibleTrigger className="ml-auto">
+                
                 <ChevronDown 
                   className={cn(
                     "h-4 w-4 transition-transform duration-200",

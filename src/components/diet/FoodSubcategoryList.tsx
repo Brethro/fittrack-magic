@@ -60,30 +60,32 @@ export function FoodSubcategoryList({
       onOpenChange={() => toggleSubcategory(subcategoryName)}
       className="border rounded-md px-3 py-2 ml-2"
     >
-      <div className="flex items-center justify-between">
-        {/* The checkbox and label with their own click handler */}
+      <div className="flex items-center gap-2">
+        {/* Checkbox section with explicit click handling */}
         <div 
-          className="flex items-center space-x-2" 
           onClick={(e) => {
             e.stopPropagation();
+            toggleAllInGroup(subcategoryFoodIds);
           }}
+          className="flex items-center gap-2 cursor-pointer"
         >
           <Checkbox 
             id={`subcategory-${subcategoryName}`}
             checked={allSubcategorySelected}
             className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-            onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
+            // Empty function since parent div handles the click
+            onCheckedChange={() => {}}
           />
+        </div>
+        
+        {/* Collapsible trigger that covers the entire title area */}
+        <CollapsibleTrigger className="flex-1 flex items-center justify-between text-left">
           <Label
-            htmlFor={`subcategory-${subcategoryName}`}
-            className="text-sm font-medium cursor-pointer"
+            className="text-sm font-medium cursor-pointer flex-1"
           >
             {displayName}
           </Label>
-        </div>
-        
-        {/* The collapse/expand control */}
-        <CollapsibleTrigger className="ml-auto">
+          
           <ChevronDown 
             className={cn(
               "h-3.5 w-3.5 transition-transform duration-200",
