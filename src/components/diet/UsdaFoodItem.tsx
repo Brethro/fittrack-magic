@@ -1,13 +1,14 @@
 
 import { Button } from "@/components/ui/button";
-import { Info, Database } from "lucide-react";
+import { Info, Database, Plus } from "lucide-react";
 import { type UsdaFoodItem as UsdaFoodItemType, extractNutritionInfo } from "@/utils/usdaApi";
 
 interface UsdaFoodItemProps {
   foodItem: UsdaFoodItemType;
+  onSelect?: (foodItem: UsdaFoodItemType) => void;
 }
 
-const UsdaFoodItem = ({ foodItem }: UsdaFoodItemProps) => {
+const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   // Extract nutritional information
   const nutrition = extractNutritionInfo(foodItem);
   
@@ -28,9 +29,11 @@ const UsdaFoodItem = ({ foodItem }: UsdaFoodItemProps) => {
     : "";
 
   const handleSelectFood = () => {
-    // For now, just log the selection 
-    console.log("Selected USDA food:", foodItem);
-    // TODO: Implement food detail view or add to meal
+    if (onSelect) {
+      onSelect(foodItem);
+    } else {
+      console.log("Selected USDA food:", foodItem);
+    }
   };
 
   return (
@@ -75,15 +78,27 @@ const UsdaFoodItem = ({ foodItem }: UsdaFoodItemProps) => {
           <p className="text-xs mt-1 text-emerald-600 font-medium">Source: USDA FoodData Central</p>
         </div>
         
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="ml-2 flex-shrink-0"
-          onClick={handleSelectFood}
-        >
-          <Info size={16} />
-          <span className="sr-only">View Details</span>
-        </Button>
+        <div className="flex flex-col gap-2 ml-2">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="flex-shrink-0"
+            onClick={handleSelectFood}
+          >
+            <Info size={16} />
+            <span className="sr-only">View Details</span>
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-shrink-0 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+            onClick={handleSelectFood}
+          >
+            <Plus size={16} />
+            <span className="sr-only">Add Food</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

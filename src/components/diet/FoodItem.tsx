@@ -1,13 +1,14 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Info, Star } from "lucide-react";
+import { Info, Star, Plus } from "lucide-react";
 
 interface FoodItemProps {
   product: any;
+  onSelect?: (product: any) => void;
 }
 
-const FoodItem = ({ product }: FoodItemProps) => {
+const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const navigate = useNavigate();
 
   // Extract and format nutritional information with better fallbacks
@@ -71,9 +72,11 @@ const FoodItem = ({ product }: FoodItemProps) => {
     : '';
 
   const handleSelectFood = () => {
-    // For now, just log the selection - we'll implement the details page later
-    console.log("Selected product:", product);
-    // TODO: Navigate to food detail page or open modal with product details
+    if (onSelect) {
+      onSelect(product);
+    } else {
+      console.log("Selected product:", product);
+    }
   };
 
   // Check if this likely appears to be an exact match to common search terms
@@ -185,15 +188,27 @@ const FoodItem = ({ product }: FoodItemProps) => {
           />
         )}
         
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="ml-2 flex-shrink-0"
-          onClick={handleSelectFood}
-        >
-          <Info size={16} />
-          <span className="sr-only">View Details</span>
-        </Button>
+        <div className="flex flex-col gap-2 ml-2">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="flex-shrink-0"
+            onClick={handleSelectFood}
+          >
+            <Info size={16} />
+            <span className="sr-only">View Details</span>
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-shrink-0 text-primary border-primary/20 hover:bg-primary/10"
+            onClick={handleSelectFood}
+          >
+            <Plus size={16} />
+            <span className="sr-only">Add Food</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

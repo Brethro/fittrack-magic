@@ -8,9 +8,16 @@ import { UsdaFoodItem as UsdaFoodItemType } from "@/utils/usdaApi";
 interface FoodSearchResultsProps {
   results: any[];
   usdaResults?: UsdaFoodItemType[];
+  onSelectFood?: (food: any) => void;
+  onSelectUsdaFood?: (food: UsdaFoodItemType) => void;
 }
 
-const FoodSearchResults = ({ results, usdaResults = [] }: FoodSearchResultsProps) => {
+const FoodSearchResults = ({ 
+  results, 
+  usdaResults = [], 
+  onSelectFood, 
+  onSelectUsdaFood 
+}: FoodSearchResultsProps) => {
   const hasOpenFoodResults = results.length > 0;
   const hasUsdaResults = usdaResults.length > 0;
   
@@ -43,7 +50,7 @@ const FoodSearchResults = ({ results, usdaResults = [] }: FoodSearchResultsProps
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <FoodItem product={product} />
+              <FoodItem product={product} onSelect={onSelectFood} />
             </motion.div>
           ))}
         </div>
@@ -63,7 +70,7 @@ const FoodSearchResults = ({ results, usdaResults = [] }: FoodSearchResultsProps
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: index * 0.05 }}
             >
-              <UsdaFoodItem foodItem={foodItem} />
+              <UsdaFoodItem foodItem={foodItem} onSelect={onSelectUsdaFood} />
             </motion.div>
           ))}
         </div>
