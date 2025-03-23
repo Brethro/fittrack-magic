@@ -1,28 +1,38 @@
 
 import { format } from "date-fns";
-import { Flame, Target, Utensils } from "lucide-react";
+import { Flame, Target, Utensils, ArrowUp, ArrowDown } from "lucide-react";
 import { useUserData } from "@/contexts/UserDataContext";
 
 export function DailyStats() {
   const { userData } = useUserData();
+  const isWeightGain = userData.isWeightGain || false;
 
-  // Calculate weekly weight loss projection based on caloric deficit
-  const calculateWeeklyWeightLoss = () => {
+  // Calculate weekly weight change projection based on caloric adjustment
+  const calculateWeeklyWeightChange = () => {
     if (!userData.tdee || !userData.dailyCalories) return null;
     
-    const dailyDeficit = userData.tdee - userData.dailyCalories;
+    const dailyAdjustment = isWeightGain 
+      ? userData.dailyCalories - userData.tdee 
+      : userData.tdee - userData.dailyCalories;
+      
     // 7700 calories per kg of body fat (or 3500 calories per pound)
-    const weeklyLoss = userData.useMetric 
-      ? (dailyDeficit * 7) / 7700 
-      : (dailyDeficit * 7) / 3500;
+    const weeklyChange = userData.useMetric 
+      ? (dailyAdjustment * 7) / 7700 
+      : (dailyAdjustment * 7) / 3500;
     
-    return weeklyLoss.toFixed(1);
+    return weeklyChange.toFixed(1);
   };
 
-  // Calculate daily caloric deficit
-  const calorieDeficit = userData.tdee ? userData.tdee - userData.dailyCalories : 0;
-  const deficitPercentage = userData.tdee ? Math.round((calorieDeficit / userData.tdee) * 100) : 0;
-  const weeklyWeightLoss = calculateWeeklyWeightLoss();
+  // Calculate daily caloric adjustment
+  const calorieAdjustment = userData.tdee && userData.dailyCalories 
+    ? (isWeightGain ? userData.dailyCalories - userData.tdee : userData.tdee - userData.dailyCalories)
+    : 0;
+    
+  const adjustmentPercentage = userData.tdee 
+    ? Math.round((calorieAdjustment / userData.tdee) * 100) 
+    : 0;
+    
+  const weeklyWeightChange = calculateWeeklyWeightChange();
 
   return (
     <div>
@@ -50,7 +60,15 @@ export function DailyStats() {
             <div>
               <p className="font-medium">Daily Target</p>
               <p className="text-sm text-muted-foreground">
-                {deficitPercentage}% deficit ({calorieDeficit} calories)
+                {isWeightGain ? (
+                  <>
+                    {adjustmentPercentage}% surplus ({calorieAdjustment} calories)
+                  </>
+                ) : (
+                  <>
+                    {adjustmentPercentage}% deficit ({calorieAdjustment} calories)
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -63,9 +81,16 @@ export function DailyStats() {
               <Target className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <p className="font-medium">Projected Loss</p>
+              <p className="font-medium">
+                {isWeightGain ? "Projected Gain" : "Projected Loss"}
+              </p>
               <p className="text-sm text-muted-foreground">
-                {weeklyWeightLoss} {userData.useMetric ? "kg" : "lbs"}/week
+                {weeklyWeightChange} {userData.useMetric ? "kg" : "lbs"}/week
+                {isWeightGain ? (
+                  <ArrowUp className="inline h-3 w-3 ml-1 text-green-500" />
+                ) : (
+                  <ArrowDown className="inline h-3 w-3 ml-1 text-red-500" />
+                )}
               </p>
             </div>
           </div>

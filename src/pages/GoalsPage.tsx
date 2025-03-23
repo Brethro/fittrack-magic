@@ -59,6 +59,24 @@ const GoalsPage = () => {
     }
   }, [userData, navigate, toast]);
 
+  // Calculate optimal timeframe for aggressive weight gain to maintain 20% surplus
+  const calculateOptimalBulkingTimeframe = () => {
+    if (!isWeightGain() || !userData.weight || !form.weightGoal || !userData.tdee) return null;
+    
+    const weightDiff = parseFloat(form.weightGoal) - userData.weight;
+    const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
+    const totalCalorieAdjustment = weightDiff * caloriesPerUnit;
+    
+    // Calculate daily surplus at 20% TDEE (optimal maximum for clean bulk)
+    const optimalDailySurplus = userData.tdee * 0.2;
+    
+    // Calculate days needed at the optimal surplus rate
+    const daysNeeded = totalCalorieAdjustment / optimalDailySurplus;
+    
+    // Convert to weeks (rounded up)
+    return Math.ceil(daysNeeded / 7);
+  };
+
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setForm((prev) => ({ ...prev, goalDate: date }));
@@ -68,18 +86,31 @@ const GoalsPage = () => {
   const handlePaceChange = (pace: GoalPaceType) => {
     let newDate;
     
-    switch (pace) {
-      case "aggressive":
+    if (isWeightGain() && pace === "aggressive") {
+      // For aggressive weight gain, calculate date based on optimal 20% surplus
+      const optimalWeeks = calculateOptimalBulkingTimeframe();
+      
+      if (optimalWeeks) {
+        newDate = addWeeks(new Date(), optimalWeeks);
+      } else {
+        // Fallback to default if we can't calculate
         newDate = addWeeks(new Date(), 8);
-        break;
-      case "moderate":
-        newDate = addMonths(new Date(), 3);
-        break;
-      case "conservative":
-        newDate = addMonths(new Date(), 6);
-        break;
-      default:
-        newDate = addMonths(new Date(), 3);
+      }
+    } else {
+      // Use standard timeframes for other scenarios
+      switch (pace) {
+        case "aggressive":
+          newDate = addWeeks(new Date(), 8);
+          break;
+        case "moderate":
+          newDate = addMonths(new Date(), 3);
+          break;
+        case "conservative":
+          newDate = addMonths(new Date(), 6);
+          break;
+        default:
+          newDate = addMonths(new Date(), 3);
+      }
     }
     
     setForm((prev) => ({
@@ -116,9 +147,9 @@ const GoalsPage = () => {
     }
   };
 
-  // Calculate if the weight goal is potentially unrealistic
+  // Calculate if the weight gain pace is potentially unrealistic
   const calculateWeightGainWarning = () => {
-    if (!isWeightGain() || !userData.weight || !form.weightGoal) return null;
+    if (!isWeightGain() || !userData.weight || !form.weightGoal || !userData.tdee) return null;
     
     const weightDiff = parseFloat(form.weightGoal) - userData.weight;
     const daysUntilGoal = Math.max(
@@ -129,10 +160,19 @@ const GoalsPage = () => {
     // Calculate pounds per week (or kg if metric)
     const poundsPerWeek = (weightDiff / daysUntilGoal) * 7;
     
-    if (form.goalPace === "aggressive" && poundsPerWeek > 1) {
+    // Calculate required daily surplus
+    const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
+    const totalCalorieAdjustment = weightDiff * caloriesPerUnit;
+    const dailySurplus = totalCalorieAdjustment / daysUntilGoal;
+    
+    // Calculate surplus as percentage of TDEE
+    const surplusPercent = (dailySurplus / userData.tdee) * 100;
+    
+    // If surplus is more than 20%, it's likely to cause more fat gain
+    if (surplusPercent > 20) {
       return {
         show: true,
-        message: `This goal may result in gaining over 1 ${userData.useMetric ? 'kg' : 'lb'} per week, which could lead to more fat gain than muscle. Consider a longer timeframe for a better muscle-to-fat ratio.`
+        message: `This timeline requires a ${Math.round(surplusPercent)}% caloric surplus, which is likely to result in more fat gain than muscle. For optimal muscle-to-fat ratio, consider a longer timeframe (about ${calculateOptimalBulkingTimeframe()} weeks).`
       };
     }
     
@@ -340,8 +380,15 @@ const GoalsPage = () => {
                     <Label htmlFor="aggressive" className="flex-1 cursor-pointer">
                       <div className="font-medium">Aggressive</div>
                       <div className="text-sm text-muted-foreground">
-                        {isWeightGain() ? "1-2 lbs per week gain" : "1-2 lbs per week loss"}
+                        {isWeightGain() 
+                          ? "Maximizes muscle gain with minimal fat" 
+                          : "1-2 lbs per week loss"}
                       </div>
+                      {isWeightGain() && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Optimized for ~20% caloric surplus
+                        </div>
+                      )}
                     </Label>
                   </CardContent>
                 </Card>
@@ -351,9 +398,9 @@ const GoalsPage = () => {
             {isWeightGain() && form.goalPace === "aggressive" && (
               <Alert variant="warning" className="mt-3">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Higher Fat Gain Likely</AlertTitle>
+                <AlertTitle>Optimal Timeline For Muscle Gain</AlertTitle>
                 <AlertDescription>
-                  Aggressive bulking may lead to more fat gain alongside muscle. For optimal results, consider a longer timeframe.
+                  For aggressive bulking, we've automatically set your timeline to approximately {calculateOptimalBulkingTimeframe()} weeks, which maximizes the muscle-to-fat ratio by maintaining a surplus of around 20% of your TDEE.
                 </AlertDescription>
               </Alert>
             )}
