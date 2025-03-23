@@ -2,12 +2,24 @@
 import { FoodItem, DietType } from "@/types/diet";
 import { itemMatchesQuery } from "@/utils/diet/foodSearchUtils";
 
+// Cache for filtered items to improve performance
+const filterCache = new Map<string, FoodItem[]>();
+const CACHE_MAX_SIZE = 50;
+
 // Filter food items based on search query and selected diet
 export const getFilteredItems = (
   items: FoodItem[],
   searchQuery: string,
   selectedDiet: DietType
 ): FoodItem[] => {
+  // Generate a cache key
+  const cacheKey = `${searchQuery}-${selectedDiet}-${items.length}`;
+  
+  // Check cache first
+  if (filterCache.has(cacheKey)) {
+    return filterCache.get(cacheKey) || [];
+  }
+  
   // Start with all items
   let filteredItems = [...items];
   
@@ -25,11 +37,16 @@ export const getFilteredItems = (
     filteredItems = filteredItems.filter(item => itemMatchesQuery(item, searchQuery));
   }
   
+  // Cache the results
+  if (filterCache.size >= CACHE_MAX_SIZE) {
+    // Remove the oldest entry if cache is full
+    const firstKey = filterCache.keys().next().value;
+    filterCache.delete(firstKey);
+  }
+  filterCache.set(cacheKey, filteredItems);
+  
   return filteredItems;
 };
-
-// Cache the search results to prevent repeated searches
-const searchCache = new Map<string, FoodItem[]>();
 
 // Get or compute and cache filtered items
 export const getCachedFilteredItems = (
@@ -37,18 +54,10 @@ export const getCachedFilteredItems = (
   searchQuery: string,
   selectedDiet: DietType
 ): FoodItem[] => {
-  const cacheKey = `${searchQuery}-${selectedDiet}`;
-  
-  if (!searchCache.has(cacheKey)) {
-    const results = getFilteredItems(items, searchQuery, selectedDiet);
-    searchCache.set(cacheKey, results);
-    return results;
-  }
-  
-  return searchCache.get(cacheKey) || [];
+  return getFilteredItems(items, searchQuery, selectedDiet);
 };
 
 // Clear the search cache when needed
 export const clearSearchCache = () => {
-  searchCache.clear();
+  filterCache.clear();
 };

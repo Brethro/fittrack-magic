@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -24,7 +24,6 @@ const DietPage = () => {
   const { userData } = useUserData();
   const [activeTab, setActiveTab] = useState("preferences");
   const [initialized, setInitialized] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const { initializeFoodData } = useFoodDatabase();
   const [apiError, setApiError] = useState(false);
   const [apiAttempted, setApiAttempted] = useState(false);
@@ -112,19 +111,18 @@ const DietPage = () => {
   }, [availableDiets, initialized]);
 
   // Generate meal plan function that passes selected food items and the diet type
-  const handleGenerateMealPlan = () => {
+  const handleGenerateMealPlan = useCallback(() => {
     generateMealPlanHook(getSelectedFoodItems(), selectedDiet);
     setActiveTab("plan");
-  };
+  }, [generateMealPlanHook, getSelectedFoodItems, selectedDiet]);
 
   // Regenerate meal function that passes selected food items
-  const handleRegenerateMeal = (mealId: string) => {
+  const handleRegenerateMeal = useCallback((mealId: string) => {
     regenerateMealHook(mealId, getSelectedFoodItems());
-  };
+  }, [regenerateMealHook, getSelectedFoodItems]);
 
   // Handle food search
-  const handleSearch = async (query: string) => {
-    setSearchTerm(query);
+  const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query);
     if (query.length >= 2) {
       try {
@@ -133,7 +131,7 @@ const DietPage = () => {
         console.error("Search error:", error);
       }
     }
-  };
+  }, [searchFoodItems, setSearchQuery]);
 
   return (
     <div className="container px-4 py-8 mx-auto">

@@ -46,6 +46,9 @@ interface OpenFoodFactsProduct {
 const foodSearchCache: Record<string, {timestamp: number, results: FoodItem[]}> = {};
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
+// Cache for seen product IDs to avoid duplicates across sessions
+const seenProductCodesSet = new Set<string>();
+
 // API call timeout - 5 seconds max
 const API_TIMEOUT = 5000;
 
@@ -62,8 +65,11 @@ const timeoutPromise = (ms: number) => {
  * Search for food items in Open Food Facts database
  */
 export const searchFoods = async (query: string, page = 1, pageSize = 20): Promise<FoodItem[]> => {
+  // Sanitize the query to ensure it's not causing issues
+  const sanitizedQuery = query.trim().slice(0, 50);
+  
   // Check cache first
-  const cacheKey = `${query}-${page}-${pageSize}`;
+  const cacheKey = `${sanitizedQuery}-${page}-${pageSize}`;
   const cachedData = foodSearchCache[cacheKey];
   const now = Date.now();
   
@@ -74,14 +80,14 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
   
   // Parameters for the API request
   const params = new URLSearchParams({
-    search_terms: query,
+    search_terms: sanitizedQuery,
     page_size: pageSize.toString(),
     page: page.toString(),
     fields: "code,product_name,product_name_en,brands,nutriments,categories_tags,serving_size,serving_quantity,ingredients_analysis_tags",
   });
   
   try {
-    console.log(`Searching Open Food Facts for "${query}"`);
+    console.log(`Searching Open Food Facts for "${sanitizedQuery}"`);
     
     // Race between the fetch and a timeout
     const response = await Promise.race([
@@ -95,16 +101,25 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
     
     const data: OpenFoodFactsResponse = await response.json();
     
-    // Track seen product codes to avoid duplicates
-    const seenProductCodes = new Set<string>();
-    const uniqueFoodItems: FoodItem[] = [];
+    if (!data.products || !Array.isArray(data.products)) {
+      console.error("Invalid API response format:", data);
+      return [];
+    }
     
     // Filter out duplicates based on product code
+    const uniqueFoodItems: FoodItem[] = [];
+    
     data.products.forEach(product => {
-      if (!seenProductCodes.has(product.code)) {
-        seenProductCodes.add(product.code);
-        uniqueFoodItems.push(mapProductToFoodItem(product));
+      if (!product.code || seenProductCodesSet.has(product.code)) {
+        return;
       }
+      
+      // Add to seen set
+      seenProductCodesSet.add(product.code);
+      
+      // Map and add to results
+      const foodItem = mapProductToFoodItem(product);
+      uniqueFoodItems.push(foodItem);
     });
     
     // Cache the results
@@ -264,8 +279,8 @@ const mapProductToFoodItem = (product: OpenFoodFactsProduct): FoodItem => {
     diets.push("high-protein");
   }
   
-  // Ensure the ID is truly unique by adding a random suffix if needed
-  const uniqueId = `off_${product.code}_${Math.floor(Math.random() * 1000)}`;
+  // Ensure the ID is truly unique by adding a random suffix
+  const uniqueId = `off_${product.code}_${Math.floor(Math.random() * 1000000)}`;
   
   // Create and return the FoodItem
   return {
@@ -356,7 +371,22 @@ export const getPopularFoods = async (): Promise<FoodItem[]> => {
     }
     
     const data: OpenFoodFactsResponse = await response.json();
-    const foodItems = data.products.map(mapProductToFoodItem);
+    
+    // Filter out products with missing crucial data
+    const validProducts = data.products.filter(product => 
+      product.code && 
+      (product.product_name || product.product_name_en) &&
+      product.nutriments
+    );
+    
+    // Map products to food items, ensuring no duplicates
+    const foodItems: FoodItem[] = [];
+    validProducts.forEach(product => {
+      if (!seenProductCodesSet.has(product.code)) {
+        seenProductCodesSet.add(product.code);
+        foodItems.push(mapProductToFoodItem(product));
+      }
+    });
     
     // Cache the results
     foodSearchCache[cacheKey] = {

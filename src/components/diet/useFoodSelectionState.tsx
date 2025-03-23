@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
@@ -16,6 +17,9 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Prevent infinite loops by avoiding state updates during search
+  const isSearching = useRef(false);
 
   // Update food categories when foodItems change
   useEffect(() => {
@@ -46,7 +50,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
 
   // Apply current search query when categories or diet changes
   useEffect(() => {
-    if (searchQuery.length >= 2) {
+    if (searchQuery.length >= 2 && !isSearching.current) {
       // Apply the search to the current food categories
       const filteredItems = getCachedFilteredItems(
         foodCategories.flatMap(cat => cat.items),
@@ -59,6 +63,8 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
 
   // Apply diet filter
   const applyDietFilter = async (diet: DietType) => {
+    if (diet === selectedDiet) return; // Prevent unnecessary updates
+    
     setSelectedDiet(diet);
     
     if (diet === "all") {
@@ -109,14 +115,17 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     }
   };
 
-  // Search food items
-  const searchFoodItems = async (query: string) => {
+  // Search food items with debounce to prevent rapid API calls
+  const searchFoodItems = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
       return [];
     }
 
+    if (isSearching.current) return []; // Prevent concurrent searches
+    isSearching.current = true;
     setLoading(true);
+    
     try {
       // First search local food items using highlighting
       const { items: localResults } = searchAndHighlightFoods(query, foodCategories);
@@ -156,26 +165,27 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
       return [];
     } finally {
       setLoading(false);
+      isSearching.current = false;
     }
-  };
+  }, [apiSearchFoodItems, foodCategories, foodItems, toast]);
 
   // Get selected food items
-  const getSelectedFoodItems = (): FoodItem[] => {
+  const getSelectedFoodItems = useCallback((): FoodItem[] => {
     return foodItems.filter(item => selectedFoods[item.id]);
-  };
+  }, [foodItems, selectedFoods]);
 
   // Get diet compatible foods
-  const getDietCompatibleFoods = (): FoodItem[] => {
+  const getDietCompatibleFoods = useCallback((): FoodItem[] => {
     if (selectedDiet === "all") return foodItems;
     
     return foodItems.filter(item => 
       (item.diets?.includes(selectedDiet)) || 
-      false // Instead of comparing with "all" which was causing the type error
+      false
     );
-  };
+  }, [foodItems, selectedDiet]);
 
   // Get available diets
-  const getAvailableDiets = (): DietType[] => {
+  const getAvailableDiets = useCallback((): DietType[] => {
     const dietSet = new Set<DietType>(["all"]);
     
     foodItems.forEach(item => {
@@ -190,7 +200,7 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     });
     
     return Array.from(dietSet);
-  };
+  }, [foodItems]);
 
   // Helper to check if a diet string is a valid DietType
   const isDietTypeValid = (diet: string): boolean => {

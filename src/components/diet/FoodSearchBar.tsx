@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 
 interface FoodSearchBarProps {
@@ -17,26 +17,48 @@ export function FoodSearchBar({
   onSearch,
   isLoading = false
 }: FoodSearchBarProps) {
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [inputValue, setInputValue] = useState(searchQuery);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   
-  // Debounce search query to avoid too many API calls
+  // Sync input value with searchQuery prop
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    setInputValue(searchQuery);
   }, [searchQuery]);
   
-  // Trigger search when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery.length >= 2 && onSearch) {
-      onSearch(debouncedQuery);
+  // Handle input changes with debounce
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    
+    // Clear any existing debounce timeout
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
     }
-  }, [debouncedQuery, onSearch]);
+    
+    // Set a new timeout to update the search query after a delay
+    debounceTimeout.current = setTimeout(() => {
+      setSearchQuery(value);
+      
+      if (value.length >= 2 && onSearch) {
+        onSearch(value);
+      }
+    }, 500);
+  };
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, []);
 
   const handleClear = () => {
+    setInputValue('');
     setSearchQuery('');
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
   };
   
   return (
@@ -53,10 +75,10 @@ export function FoodSearchBar({
             type="search"
             placeholder="Type to search Open Food Facts..."
             className="pl-10 pr-10 py-2"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
           />
-          {searchQuery.length > 0 && (
+          {inputValue.length > 0 && (
             <Button
               variant="ghost"
               size="icon"
@@ -67,9 +89,9 @@ export function FoodSearchBar({
             </Button>
           )}
         </div>
-        {searchQuery.length > 0 && (
+        {inputValue.length > 0 && (
           <div className="mt-2 text-xs text-foreground">
-            {searchQuery.length < 2 ? (
+            {inputValue.length < 2 ? (
               "Type at least 2 characters to search"
             ) : isLoading ? (
               "Searching Open Food Facts database..."
