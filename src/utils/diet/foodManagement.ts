@@ -277,7 +277,8 @@ export const importFoodsFromJson = (
           'mollusks': 'Fish & Seafood',   // Updated to match actual category name
           'mushrooms': 'vegetable',
           'game': 'Meats & Poultry',      // Updated to match actual category name
-          'offal': 'Meats & Poultry'      // Updated to match actual category name
+          'offal': 'Meats & Poultry',     // Updated to match actual category name
+          'poultry': 'Meats & Poultry'    // Added poultry mapping
           // Add more mappings as needed
         };
         

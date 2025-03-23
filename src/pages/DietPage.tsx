@@ -13,6 +13,7 @@ import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
+import { importPoultryData } from "@/utils/diet/importPoultryData";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -67,6 +68,14 @@ const DietPage = () => {
   useEffect(() => {
     console.log("Diet types from central collection:", getAvailableDietTypes());
     console.log("Available diets for selection:", availableDiets);
+    
+    // Import poultry data when component mounts
+    const result = importPoultryData();
+    if (result.success) {
+      console.log(`Successfully imported poultry data: ${result.addedCount} added, ${result.updatedCount} updated`);
+    } else {
+      console.error("Failed to import poultry data:", result.message);
+    }
   }, [availableDiets]);
 
   // Generate meal plan function that passes selected food items and the diet type
