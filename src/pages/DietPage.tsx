@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,20 +13,24 @@ const DietPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [apiStatus, setApiStatus] = useState<"idle" | "connected" | "error">("idle");
+  const [apiStatus, setApiStatus] = useState<"idle" | "checking" | "connected" | "error">("checking");
   const [errorMessage, setErrorMessage] = useState("");
 
   // Check API connection on component mount
   useEffect(() => {
     const checkApiConnection = async () => {
+      setApiStatus("checking");
       try {
+        // Using a more reliable endpoint for testing connection
         const response = await fetch(
-          "https://world.openfoodfacts.org/api/v0/product/search.json?search_terms=test&page_size=1"
+          "https://world.openfoodfacts.org/api/v2/search?fields=product_name,brands&page_size=1"
         );
         
         if (response.ok) {
           const data = await response.json();
-          if (data.products) {
+          console.log("API connection test response:", data);
+          
+          if (data && data.products && Array.isArray(data.products)) {
             setApiStatus("connected");
           } else {
             setApiStatus("error");
@@ -58,10 +62,11 @@ const DietPage = () => {
 
     setIsLoading(true);
     try {
+      // Using the v2 API which has a more consistent response format
       const response = await fetch(
-        `https://world.openfoodfacts.org/api/v0/product/search.json?search_terms=${encodeURIComponent(
+        `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(
           searchQuery
-        )}&page_size=20`
+        )}&fields=product_name,brands,serving_size,nutriments,image_url&page_size=20`
       );
       
       if (!response.ok) {
@@ -69,7 +74,7 @@ const DietPage = () => {
       }
       
       const data = await response.json();
-      console.log("API response:", data); // Debug log
+      console.log("Search API response:", data); // Debug log
       
       if (data.products && Array.isArray(data.products)) {
         setSearchResults(data.products);
@@ -115,19 +120,26 @@ const DietPage = () => {
 
         {/* API Status Indicator */}
         <div className="mb-4">
-          {apiStatus === "idle" && (
+          {apiStatus === "checking" && (
             <Alert>
-              <AlertDescription>Checking connection to Open Food Facts API...</AlertDescription>
+              <AlertDescription className="flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Checking connection to Open Food Facts API...
+              </AlertDescription>
             </Alert>
           )}
           {apiStatus === "connected" && (
             <Alert className="bg-green-50 border-green-200 text-green-800">
-              <AlertDescription>Open Food Facts API is connected and ready</AlertDescription>
+              <AlertDescription className="flex items-center">
+                <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                Open Food Facts API is connected and ready
+              </AlertDescription>
             </Alert>
           )}
           {apiStatus === "error" && (
             <Alert variant="destructive">
-              <AlertDescription>
+              <AlertDescription className="flex items-center">
+                <AlertCircle className="mr-2 h-4 w-4" />
                 Unable to connect to Open Food Facts API: {errorMessage}
               </AlertDescription>
             </Alert>
@@ -146,7 +158,9 @@ const DietPage = () => {
             />
             <Button onClick={handleSearch} disabled={isLoading}>
               {isLoading ? (
-                "Searching..."
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...
+                </>
               ) : (
                 <>
                   <Search className="mr-2 h-4 w-4" /> Search
