@@ -18,7 +18,11 @@ interface QuickFoodEntryFormData {
   unit: string;
 }
 
-const QuickFoodEntry = () => {
+interface QuickFoodEntryProps {
+  onAddSuccess?: () => void;
+}
+
+const QuickFoodEntry = ({ onAddSuccess }: QuickFoodEntryProps) => {
   const { toast } = useToast();
   const { addFoodEntry } = useFoodLog();
   const [selectedMeal, setSelectedMeal] = useState<"breakfast" | "lunch" | "dinner" | "snack">("breakfast");
@@ -63,6 +67,11 @@ const QuickFoodEntry = () => {
     
     // Reset form
     reset();
+    
+    // Call onAddSuccess callback if provided
+    if (onAddSuccess) {
+      onAddSuccess();
+    }
   };
   
   return (

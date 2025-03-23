@@ -25,7 +25,7 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
       <div className="flex flex-col w-full gap-1.5">
         {/* Food Name and Actions */}
         <div className="flex justify-between items-start w-full gap-1">
-          <h4 className="font-medium text-base text-foreground break-words overflow-hidden max-w-[80%]">{entry.foodName}</h4>
+          <h4 className="font-medium text-base text-foreground break-words overflow-hidden overflow-ellipsis max-w-[80%]">{entry.foodName}</h4>
           <div className="flex gap-1 shrink-0">
             <Button 
               variant="ghost" 
