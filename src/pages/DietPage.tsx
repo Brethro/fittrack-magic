@@ -40,7 +40,7 @@ const DietPage = () => {
         const offResults = await searchOpenFoodFacts(searchQuery, searchType);
         setSearchResults(offResults);
         
-        if (offResults.length === 0 && searchType === "exact" && searchSource !== "usda") {
+        if (offResults.length === 0 && searchType === "exact" && searchSource === "openfoods") {
           toast({
             title: "No exact matches found",
             description: "Trying broader search criteria...",

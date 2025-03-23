@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useForm, Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { type UsdaFoodItem, extractNutritionInfo } from "@/utils/usdaApi";
@@ -31,6 +32,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
 }) => {
   const { toast } = useToast();
   const { userData } = useUserData();
+  
+  // State for collapsible nutrients section
+  const [isNutrientsOpen, setIsNutrientsOpen] = useState(false);
   
   // Get base nutrition values from the food item
   const [baseNutrition, setBaseNutrition] = useState<any>({
@@ -543,30 +547,48 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
             </div>
           </div>
           
-          {/* Detailed nutrients */}
+          {/* Detailed nutrients - Now collapsible */}
           {detailedNutrients.length > 0 && (
-            <div className="glass-panel p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Detailed Nutrients</h4>
-              <div className="divide-y">
-                {detailedNutrients.map((nutrient, index) => (
-                  <div 
-                    key={index}
-                    className={`py-2 ${nutrient.isHeader ? 'bg-secondary/30 -mx-4 px-4 py-1' : ''}`}
-                  >
-                    {nutrient.isHeader ? (
-                      <h5 className="font-medium text-sm">{nutrient.name}</h5>
+            <Collapsible 
+              className="glass-panel p-4 rounded-lg"
+              open={isNutrientsOpen}
+              onOpenChange={setIsNutrientsOpen}
+            >
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium mb-0">Detailed Nutrients</h4>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1 h-8">
+                    {isNutrientsOpen ? (
+                      <ChevronUp className="h-4 w-4" />
                     ) : (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">{nutrient.name}</span>
-                        <span className="text-sm">
-                          {(parseFloat(nutrient.value) * multiplier).toFixed(1)} {nutrient.unit}
-                        </span>
-                      </div>
+                      <ChevronDown className="h-4 w-4" />
                     )}
-                  </div>
-                ))}
+                  </Button>
+                </CollapsibleTrigger>
               </div>
-            </div>
+              
+              <CollapsibleContent className="mt-3">
+                <div className="divide-y">
+                  {detailedNutrients.map((nutrient, index) => (
+                    <div 
+                      key={index}
+                      className={`py-2 ${nutrient.isHeader ? 'bg-secondary/30 -mx-4 px-4 py-1' : ''}`}
+                    >
+                      {nutrient.isHeader ? (
+                        <h5 className="font-medium text-sm">{nutrient.name}</h5>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">{nutrient.name}</span>
+                          <span className="text-sm">
+                            {(parseFloat(nutrient.value) * multiplier).toFixed(1)} {nutrient.unit}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </div>
         
