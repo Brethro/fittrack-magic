@@ -45,21 +45,16 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
     console.log("Saving food from detail view:", food);
     
     // Create a new food log entry from the food data
-    addFoodEntry({
-      foodName: food.foodName || description,
-      amount: food.amount || 100,
-      unit: food.unit || "g",
-      date: food.date || new Date(),
-      mealType: food.mealType || "breakfast", // Default meal type - user can edit later
-      nutrition: food.nutrition || nutritionValues,
-      source: "usda",
-      sourceId: food.sourceId || foodItem.fdcId.toString()
-    });
+    // We're not calling addFoodEntry here since FoodDetailView already does that
+    // This prevents duplicate entries
     
     toast({
       title: "Food added",
       description: `${food.foodName || description} added to your log`
     });
+    
+    // Close the detail view after saving
+    setShowDetailView(false);
   };
   
   return (

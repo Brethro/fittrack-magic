@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,24 +104,15 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const handleSaveFood = (food: any) => {
     console.log("Saving food from detail view:", food);
     
-    // Add food to the food log
-    if (food) {
-      addFoodEntry({
-        foodName: food.foodName,
-        amount: food.amount,
-        unit: food.unit,
-        date: food.date,
-        mealType: food.mealType,
-        nutrition: food.nutrition,
-        source: food.source || "openfoodfacts",
-        sourceId: food.sourceId || product.code || product.id
-      });
-      
-      toast({
-        title: "Food added",
-        description: `${food.foodName} added to your food log`
-      });
-    }
+    // FoodDetailView already adds to food log, so we only need to show the toast
+    // and close the detail view to prevent duplicates
+    toast({
+      title: "Food added",
+      description: `${food.foodName} added to your food log`
+    });
+    
+    // Close the detail view
+    setShowDetailView(false);
   };
 
   return (

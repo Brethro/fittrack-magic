@@ -82,7 +82,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 <div className="w-full">
                   {mealGroups.breakfast.map((entry) => (
                     <FoodLogEntry
-                      key={entry.id}
+                      key={`breakfast-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -101,7 +101,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 <div className="w-full">
                   {mealGroups.lunch.map((entry) => (
                     <FoodLogEntry
-                      key={entry.id}
+                      key={`lunch-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -120,7 +120,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 <div className="w-full">
                   {mealGroups.dinner.map((entry) => (
                     <FoodLogEntry
-                      key={entry.id}
+                      key={`dinner-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -139,7 +139,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                 <div className="w-full">
                   {mealGroups.snack.map((entry) => (
                     <FoodLogEntry
-                      key={entry.id}
+                      key={`snack-${entry.id}`}
                       entry={entry}
                       onEdit={handleEdit}
                       onDelete={handleDelete}

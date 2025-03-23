@@ -18,6 +18,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import MealTypeSelector from "./MealTypeSelector";
 import { FoodLogEntry } from "@/contexts/FoodLogContext";
+import { extractNutritionInfo } from "@/utils/usdaApi";
 
 interface FoodDetailViewProps {
   food: any;
@@ -38,30 +39,46 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const { addFoodEntry } = useFoodLog();
   const { toast } = useToast();
   
-  // Get calories with safety checks
-  const getCalories = (): number => {
-    if (source === 'openfoodfacts') {
-      const energyKcal = food.nutriments?.['energy-kcal_100g'] || 
-                        food.nutriments?.['energy-kcal'] || 0;
-      
-      if (energyKcal) return energyKcal;
-      
-      // Convert kJ to kcal if only energy in kJ is available
-      const energyKj = food.nutriments?.['energy_100g'] || 
-                       food.nutriments?.energy || 0;
-      
-      return energyKj ? (energyKj / 4.184) : 0;
-    } else {
-      // For USDA
-      return food.nutrients?.find((n: any) => 
-        n.name.toLowerCase().includes('energy'))?.amount || 0;
+  // Get nutrition values based on source
+  const getNutritionValues = () => {
+    if (source === 'usda') {
+      // Use the utility function for USDA format
+      const { nutritionValues } = extractNutritionInfo(food);
+      return nutritionValues;
+    } else if (source === 'openfoodfacts') {
+      // OpenFoodFacts format
+      return {
+        calories: food.nutriments?.['energy-kcal_100g'] || 
+                food.nutriments?.['energy-kcal'] || 
+                (food.nutriments?.['energy_100g'] || food.nutriments?.energy || 0) / 4.184,
+        protein: food.nutriments?.proteins_100g || food.nutriments?.proteins || 0,
+        carbs: food.nutriments?.carbohydrates_100g || food.nutriments?.carbohydrates || 0,
+        fat: food.nutriments?.fat_100g || food.nutriments?.fat || 0,
+        fiber: food.nutriments?.fiber_100g || food.nutriments?.fiber || 0,
+        sugars: food.nutriments?.sugars_100g || food.nutriments?.sugars || 0
+      };
     }
+    
+    // Default empty nutrition
+    return {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugars: 0
+    };
   };
+  
+  // Get initial nutrition values
+  const baseNutrition = getNutritionValues();
   
   // Default to a reasonable portion size
   useEffect(() => {
     if (food.serving_size_g && !isNaN(food.serving_size_g)) {
       setAmount(Number(food.serving_size_g));
+    } else if (food.servingSize && !isNaN(food.servingSize)) {
+      setAmount(Number(food.servingSize));
     } else if (food.serving_qty && !isNaN(food.serving_qty)) {
       setAmount(Number(food.serving_qty));
     }
@@ -91,88 +108,72 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
            !isNaN(value);
   };
   
-  // Format nutrient value to 1 decimal place
-  const formatNutrient = (value: number | undefined, multiplier = 1): string => {
-    if (value === undefined || value === null || isNaN(value)) return '0';
-    const scaledValue = (value * multiplier / 100) * amount;
-    return scaledValue.toFixed(1);
-  };
-  
-  // Get nutrient value with safety checks
-  const getNutrientValue = (nutrientKey: string, multiplier = 1): number => {
-    let value = 0;
-    
-    if (source === 'openfoodfacts') {
-      // OpenFoodFacts structure
-      if (food.nutriments && 
-          food.nutriments[nutrientKey] !== undefined && 
-          !isNaN(food.nutriments[nutrientKey])) {
-        value = food.nutriments[nutrientKey];
-      } else if (food.nutriments && 
-                food.nutriments[`${nutrientKey}_100g`] !== undefined && 
-                !isNaN(food.nutriments[`${nutrientKey}_100g`])) {
-        value = food.nutriments[`${nutrientKey}_100g`];
-      }
-    } else if (source === 'usda') {
-      // USDA structure
-      if (food.nutrients) {
-        const nutrient = food.nutrients.find((n: any) => n.name.toLowerCase().includes(nutrientKey));
-        if (nutrient && nutrient.amount !== undefined && !isNaN(nutrient.amount)) {
-          value = nutrient.amount;
-        }
-      }
-    }
-    
-    return (value * multiplier / 100) * amount;
-  };
-  
   // Calculate all nutrient values based on amount
   const calculateNutrients = () => {
-    const baseCals = getCalories();
-    const scaledCals = (baseCals / 100) * amount;
+    const scaleFactor = amount / 100;
     
     const nutrients = [
-      { name: 'Calories', value: Math.round(scaledCals), unit: 'kcal' },
-      { name: 'Protein', value: formatNutrient(
-        source === 'openfoodfacts' 
-          ? food.nutriments?.proteins_100g || food.nutriments?.proteins 
-          : food.nutrients?.find((n: any) => n.name.toLowerCase().includes('protein'))?.amount
-      ), unit: 'g' },
-      { name: 'Carbs', value: formatNutrient(
-        source === 'openfoodfacts'
-          ? food.nutriments?.carbohydrates_100g || food.nutriments?.carbohydrates
-          : food.nutrients?.find((n: any) => n.name.toLowerCase().includes('carbohydrate'))?.amount
-      ), unit: 'g' },
-      { name: 'Fat', value: formatNutrient(
-        source === 'openfoodfacts'
-          ? food.nutriments?.fat_100g || food.nutriments?.fat
-          : food.nutrients?.find((n: any) => n.name.toLowerCase().includes('fat') && 
-                                             !n.name.toLowerCase().includes('saturated'))?.amount
-      ), unit: 'g' },
+      { 
+        name: 'Calories', 
+        value: Math.round(baseNutrition.calories * scaleFactor), 
+        unit: 'kcal' 
+      },
+      { 
+        name: 'Protein', 
+        value: (baseNutrition.protein * scaleFactor).toFixed(1), 
+        unit: 'g' 
+      },
+      { 
+        name: 'Carbs', 
+        value: (baseNutrition.carbs * scaleFactor).toFixed(1), 
+        unit: 'g' 
+      },
+      { 
+        name: 'Fat', 
+        value: (baseNutrition.fat * scaleFactor).toFixed(1), 
+        unit: 'g' 
+      },
     ];
     
     // Add additional nutrients if they exist
-    const additionalNutrients = [
-      { key: 'fiber', name: 'Fiber' },
-      { key: 'sugars', name: 'Sugars' },
-      { key: 'saturated-fat', name: 'Saturated Fat' },
-      { key: 'sodium', name: 'Sodium', multiplier: 1000, unit: 'mg' },
-      { key: 'potassium', name: 'Potassium', multiplier: 1000, unit: 'mg' },
-      { key: 'calcium', name: 'Calcium', multiplier: 1000, unit: 'mg' },
-      { key: 'iron', name: 'Iron', multiplier: 1000, unit: 'mg' },
-    ];
+    if (shouldShowProperty(baseNutrition.fiber)) {
+      nutrients.push({
+        name: 'Fiber',
+        value: (baseNutrition.fiber * scaleFactor).toFixed(1),
+        unit: 'g'
+      });
+    }
     
-    for (const nutrient of additionalNutrients) {
-      const value = source === 'openfoodfacts'
-        ? (food.nutriments?.[`${nutrient.key}_100g`] || food.nutriments?.[nutrient.key])
-        : food.nutrients?.find((n: any) => n.name.toLowerCase().includes(nutrient.key))?.amount;
+    if (shouldShowProperty(baseNutrition.sugars)) {
+      nutrients.push({
+        name: 'Sugars',
+        value: (baseNutrition.sugars * scaleFactor).toFixed(1),
+        unit: 'g'
+      });
+    }
+    
+    // Add more detailed nutrients for specific sources
+    if (source === 'usda' && food.foodNutrients) {
+      const additionalNutrients = [
+        { name: 'Saturated Fat', key: 'saturated' },
+        { name: 'Sodium', key: 'sodium', multiplier: 1, unit: 'mg' },
+        { name: 'Potassium', key: 'potassium', multiplier: 1, unit: 'mg' },
+        { name: 'Calcium', key: 'calcium', multiplier: 1, unit: 'mg' },
+        { name: 'Iron', key: 'iron', multiplier: 1, unit: 'mg' },
+      ];
       
-      if (shouldShowProperty(value)) {
-        nutrients.push({
-          name: nutrient.name,
-          value: formatNutrient(value, nutrient.multiplier || 1),
-          unit: nutrient.unit || 'g'
-        });
+      for (const nutrient of additionalNutrients) {
+        const foundNutrient = food.foodNutrients.find((n: any) => 
+          n.nutrientName.toLowerCase().includes(nutrient.key.toLowerCase())
+        );
+        
+        if (foundNutrient && shouldShowProperty(foundNutrient.value)) {
+          nutrients.push({
+            name: nutrient.name,
+            value: (foundNutrient.value * (nutrient.multiplier || 1) * scaleFactor).toFixed(1),
+            unit: nutrient.unit || foundNutrient.unitName || 'g'
+          });
+        }
       }
     }
     
@@ -187,19 +188,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   
   // Handle form submission
   const onSubmit = (data: any) => {
+    const scaleFactor = data.amount / 100;
     
-    // Prepare nutritional data
-    const calories = source === 'openfoodfacts' 
-      ? getNutrientValue('energy-kcal') || getNutrientValue('energy') / 4.184
-      : getNutrientValue('energy');
-    
-    const protein = getNutrientValue('proteins');
-    const carbs = getNutrientValue('carbohydrates');
-    const fat = getNutrientValue('fat');
-    const fiber = getNutrientValue('fiber');
-    const sugars = getNutrientValue('sugars');
-    
-    // Create food entry
+    // Create food entry with correctly scaled nutrition values
     const foodEntry: Omit<FoodLogEntry, "id"> = {
       foodName: food.product_name || food.description || "Unnamed Food",
       amount: data.amount,
@@ -207,12 +198,12 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
       date: data.date,
       mealType: data.mealType,
       nutrition: {
-        calories: Math.round(calories),
-        protein: parseFloat(protein.toFixed(1)),
-        carbs: parseFloat(carbs.toFixed(1)),
-        fat: parseFloat(fat.toFixed(1)),
-        fiber: parseFloat(fiber.toFixed(1)),
-        sugars: parseFloat(sugars.toFixed(1))
+        calories: Math.round(baseNutrition.calories * scaleFactor),
+        protein: parseFloat((baseNutrition.protein * scaleFactor).toFixed(1)),
+        carbs: parseFloat((baseNutrition.carbs * scaleFactor).toFixed(1)),
+        fat: parseFloat((baseNutrition.fat * scaleFactor).toFixed(1)),
+        fiber: parseFloat((baseNutrition.fiber * scaleFactor).toFixed(1)),
+        sugars: parseFloat((baseNutrition.sugars * scaleFactor).toFixed(1))
       },
       source,
       sourceId: food.code || food.fdcId || food.id || undefined
@@ -227,13 +218,13 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
       description: `Added ${foodEntry.foodName} to your food log`,
     });
     
-    // Close modal
-    onClose();
-    
     // Call custom onSave handler if provided
     if (onSave) {
       onSave(foodEntry);
     }
+    
+    // Close modal
+    onClose();
   };
   
   // Nutrients for display
@@ -452,15 +443,15 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                         ))
                       }
                       
-                      {source === 'usda' && food.nutrients && food.nutrients
-                        .filter((n: any) => n.amount && n.amount !== 0)
+                      {source === 'usda' && food.foodNutrients && food.foodNutrients
+                        .filter((n: any) => n.value && n.value !== 0)
                         .map((nutrient: any, index: number) => (
-                          <div key={index} className="flex flex-col">
+                          <div key={`usda-nutrient-${index}`} className="flex flex-col">
                             <span className="text-muted-foreground">
-                              {nutrient.name}
+                              {nutrient.nutrientName}
                             </span>
                             <span>
-                              {((nutrient.amount / 100) * amount).toFixed(1)}
+                              {((nutrient.value / 100) * amount).toFixed(1)}
                               {nutrient.unitName?.toLowerCase() || 'g'}
                             </span>
                           </div>
