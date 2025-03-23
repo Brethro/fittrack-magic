@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { format, addMonths, addWeeks } from "date-fns";
+import { format, addMonths, addWeeks, addDays } from "date-fns";
 import { ArrowLeft, ArrowRight, Calendar as CalendarIcon, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -59,19 +59,25 @@ const GoalsPage = () => {
     }
   }, [userData, navigate, toast]);
 
-  // Calculate optimal timeframe for aggressive weight gain to maintain 20% surplus
-  const calculateOptimalBulkingTimeframe = () => {
+  // Calculate the number of days needed to achieve weight goal based on a specific surplus percentage
+  const calculateDaysNeeded = (surplusPercentage: number) => {
     if (!isWeightGain() || !userData.weight || !form.weightGoal || !userData.tdee) return null;
     
     const weightDiff = parseFloat(form.weightGoal) - userData.weight;
     const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
     const totalCalorieAdjustment = weightDiff * caloriesPerUnit;
     
-    // Calculate daily surplus at 20% TDEE (optimal maximum for clean bulk)
-    const optimalDailySurplus = userData.tdee * 0.2;
+    // Calculate daily surplus based on the given percentage
+    const dailySurplus = userData.tdee * (surplusPercentage / 100);
     
-    // Calculate days needed at the optimal surplus rate
-    const daysNeeded = totalCalorieAdjustment / optimalDailySurplus;
+    // Calculate days needed at that surplus rate
+    return Math.ceil(totalCalorieAdjustment / dailySurplus);
+  };
+
+  // Calculate optimal timeframe for weight gain based on the given surplus percentage
+  const calculateOptimalBulkingTimeframe = (surplusPercentage: number = 20) => {
+    const daysNeeded = calculateDaysNeeded(surplusPercentage);
+    if (!daysNeeded) return null;
     
     // Convert to weeks (rounded up)
     return Math.ceil(daysNeeded / 7);
@@ -86,18 +92,46 @@ const GoalsPage = () => {
   const handlePaceChange = (pace: GoalPaceType) => {
     let newDate;
     
-    if (isWeightGain() && pace === "aggressive") {
-      // For aggressive weight gain, calculate date based on optimal 20% surplus
-      const optimalWeeks = calculateOptimalBulkingTimeframe();
+    if (isWeightGain()) {
+      // For weight gain, calculate based on surplus percentages
+      let surplusPercentage;
       
-      if (optimalWeeks) {
-        newDate = addWeeks(new Date(), optimalWeeks);
+      switch (pace) {
+        case "conservative":
+          surplusPercentage = 10; // 10% surplus
+          break;
+        case "moderate":
+          surplusPercentage = 15; // 15% surplus
+          break;
+        case "aggressive":
+          surplusPercentage = 20; // 20% surplus (optimal maximum)
+          break;
+        default:
+          surplusPercentage = 15; // Default to moderate
+      }
+      
+      const daysNeeded = calculateDaysNeeded(surplusPercentage);
+      
+      if (daysNeeded) {
+        newDate = addDays(new Date(), daysNeeded);
       } else {
-        // Fallback to default if we can't calculate
-        newDate = addWeeks(new Date(), 8);
+        // Fallback to default timeframes if we can't calculate
+        switch (pace) {
+          case "conservative":
+            newDate = addMonths(new Date(), 6);
+            break;
+          case "moderate":
+            newDate = addMonths(new Date(), 3);
+            break;
+          case "aggressive":
+            newDate = addWeeks(new Date(), 8);
+            break;
+          default:
+            newDate = addMonths(new Date(), 3);
+        }
       }
     } else {
-      // Use standard timeframes for other scenarios
+      // Use standard timeframes for weight loss scenarios
       switch (pace) {
         case "aggressive":
           newDate = addWeeks(new Date(), 8);
@@ -157,9 +191,6 @@ const GoalsPage = () => {
       1
     );
     
-    // Calculate pounds per week (or kg if metric)
-    const poundsPerWeek = (weightDiff / daysUntilGoal) * 7;
-    
     // Calculate required daily surplus
     const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
     const totalCalorieAdjustment = weightDiff * caloriesPerUnit;
@@ -168,11 +199,12 @@ const GoalsPage = () => {
     // Calculate surplus as percentage of TDEE
     const surplusPercent = (dailySurplus / userData.tdee) * 100;
     
-    // If surplus is more than 20%, it's likely to cause more fat gain
+    // Only show warning if surplus is more than 20%
     if (surplusPercent > 20) {
+      const optimalWeeks = calculateOptimalBulkingTimeframe();
       return {
         show: true,
-        message: `This timeline requires a ${Math.round(surplusPercent)}% caloric surplus, which is likely to result in more fat gain than muscle. For optimal muscle-to-fat ratio, consider a longer timeframe (about ${calculateOptimalBulkingTimeframe()} weeks).`
+        message: `This timeline requires a ${Math.round(surplusPercent)}% caloric surplus, which is likely to result in more fat gain than muscle. For optimal muscle-to-fat ratio, consider a longer timeframe (about ${optimalWeeks} weeks).`
       };
     }
     
@@ -342,7 +374,9 @@ const GoalsPage = () => {
                     <Label htmlFor="conservative" className="flex-1 cursor-pointer">
                       <div className="font-medium">Conservative</div>
                       <div className="text-sm text-muted-foreground">
-                        {isWeightGain() ? "0.25-0.5 lbs per week gain" : "0.25-0.5 lbs per week loss"}
+                        {isWeightGain() 
+                          ? "~10% surplus (slower, cleaner gains)" 
+                          : "0.25-0.5 lbs per week loss"}
                       </div>
                     </Label>
                   </CardContent>
@@ -361,7 +395,9 @@ const GoalsPage = () => {
                     <Label htmlFor="moderate" className="flex-1 cursor-pointer">
                       <div className="font-medium">Moderate</div>
                       <div className="text-sm text-muted-foreground">
-                        {isWeightGain() ? "0.5-1 lbs per week gain" : "0.5-1 lbs per week loss"}
+                        {isWeightGain() 
+                          ? "~15% surplus (balanced approach)" 
+                          : "0.5-1 lbs per week loss"}
                       </div>
                     </Label>
                   </CardContent>
@@ -381,14 +417,9 @@ const GoalsPage = () => {
                       <div className="font-medium">Aggressive</div>
                       <div className="text-sm text-muted-foreground">
                         {isWeightGain() 
-                          ? "Maximizes muscle gain with minimal fat" 
+                          ? "~20% surplus (optimal for muscle gain)" 
                           : "1-2 lbs per week loss"}
                       </div>
-                      {isWeightGain() && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Optimized for ~20% caloric surplus
-                        </div>
-                      )}
                     </Label>
                   </CardContent>
                 </Card>
@@ -396,11 +427,11 @@ const GoalsPage = () => {
             </RadioGroup>
             
             {isWeightGain() && form.goalPace === "aggressive" && (
-              <Alert variant="warning" className="mt-3">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Optimal Timeline For Muscle Gain</AlertTitle>
+              <Alert variant="default" className="mt-3 bg-primary/5 border-primary/20">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Optimal Bulk Timeline</AlertTitle>
                 <AlertDescription>
-                  For aggressive bulking, we've automatically set your timeline to approximately {calculateOptimalBulkingTimeframe()} weeks, which maximizes the muscle-to-fat ratio by maintaining a surplus of around 20% of your TDEE.
+                  For optimal muscle gain with minimal fat, we've set your timeline using a 20% caloric surplus, which research suggests is the sweet spot for muscle growth.
                 </AlertDescription>
               </Alert>
             )}
