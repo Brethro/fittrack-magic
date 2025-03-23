@@ -63,12 +63,12 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-5 px-4">
+          <div className="space-y-5 px-4 pr-6">
             {/* Breakfast */}
             {mealGroups.breakfast.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-amber-500 mb-2">Breakfast</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   {mealGroups.breakfast.map((entry) => (
                     <FoodLogEntry
                       key={entry.id} 
@@ -85,7 +85,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {mealGroups.lunch.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-green-500 mb-2">Lunch</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   {mealGroups.lunch.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -102,7 +102,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {mealGroups.dinner.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-indigo-500 mb-2">Dinner</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   {mealGroups.dinner.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -119,7 +119,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             {mealGroups.snack.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-purple-500 mb-2">Snacks</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                   {mealGroups.snack.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}

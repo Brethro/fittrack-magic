@@ -40,10 +40,10 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   };
   
   return (
-    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2 w-full">
-      <div className="flex-1 min-w-0">
+    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2 max-w-full">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center justify-between gap-2 w-full">
-          <h4 className="font-medium text-sm truncate">{entry.foodName}</h4>
+          <h4 className="font-medium text-sm truncate max-w-[60%]">{entry.foodName}</h4>
           <div className="flex items-center gap-1 shrink-0">
             <Badge variant="outline" className={`text-xs py-0 px-1.5 h-5 ${mealColors[entry.mealType]}`}>
               {entry.mealType.charAt(0).toUpperCase()}
@@ -52,11 +52,11 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
           </div>
         </div>
         
-        <div className="text-xs text-muted-foreground mt-0.5">
+        <div className="text-xs text-muted-foreground mt-0.5 truncate">
           {entry.amount} {entry.unit}
         </div>
         
-        <div className="flex flex-wrap gap-1.5 mt-1.5">
+        <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-full overflow-hidden">
           <Badge variant="secondary" className="text-xs py-0 h-5">
             {Math.round(nutrition.calories)} kcal
           </Badge>
