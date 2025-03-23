@@ -1,7 +1,6 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { 
   Collapsible, 
@@ -61,33 +60,30 @@ export function FoodSubcategoryList({
       onOpenChange={() => toggleSubcategory(subcategoryName)}
       className="border rounded-md px-3 py-2 ml-2"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id={`subcategory-${subcategoryName}`}
-            checked={allSubcategorySelected}
-            className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-            onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
-          />
-          <Label
-            htmlFor={`subcategory-${subcategoryName}`}
-            className="text-sm font-medium cursor-pointer"
-          >
-            {displayName}
-          </Label>
-        </div>
-        <CollapsibleTrigger>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-            <ChevronDown 
-              className={cn(
-                "h-3.5 w-3.5 transition-transform duration-200",
-                openSubcategories[subcategoryName] ? "rotate-180" : "rotate-0"
-              )} 
+      <CollapsibleTrigger className="w-full">
+        <div className="flex items-center justify-between cursor-pointer">
+          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+            <Checkbox 
+              id={`subcategory-${subcategoryName}`}
+              checked={allSubcategorySelected}
+              className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
+              onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
             />
-            <span className="sr-only">Toggle {displayName}</span>
-          </Button>
-        </CollapsibleTrigger>
-      </div>
+            <Label
+              htmlFor={`subcategory-${subcategoryName}`}
+              className="text-sm font-medium cursor-pointer"
+            >
+              {displayName}
+            </Label>
+          </div>
+          <ChevronDown 
+            className={cn(
+              "h-3.5 w-3.5 transition-transform duration-200",
+              openSubcategories[subcategoryName] ? "rotate-180" : "rotate-0"
+            )} 
+          />
+        </div>
+      </CollapsibleTrigger>
       
       <CollapsibleContent className="mt-2">
         <div className="grid grid-cols-1 gap-2">
