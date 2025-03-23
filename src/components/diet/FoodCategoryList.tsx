@@ -70,13 +70,15 @@ export function FoodCategoryList({
             className="border rounded-md px-4 py-2"
           >
             <div className="flex items-center gap-2">
-              {/* Checkbox section with explicit click handling */}
+              {/* Checkbox completely separated from the title area */}
               <div 
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   toggleAllInGroup(allCategoryFoodIds);
                 }}
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex items-center justify-center cursor-pointer p-1"
+                aria-label={`Select all in ${category.displayName || category.name}`}
               >
                 <Checkbox 
                   id={`category-${category.name}`}
@@ -87,7 +89,7 @@ export function FoodCategoryList({
                 />
               </div>
               
-              {/* Collapsible trigger that covers the entire title area */}
+              {/* CollapsibleTrigger covers ONLY the text area */}
               <CollapsibleTrigger className="flex-1 flex items-center justify-between text-left">
                 <Label
                   className="text-base font-medium cursor-pointer flex-1"

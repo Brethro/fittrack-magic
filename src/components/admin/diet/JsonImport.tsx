@@ -18,6 +18,7 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [categoryMappings, setCategoryMappings] = useState<Record<string, string>>({});
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
   const handleCategoryMappingUpdate = (mappings: Record<string, string>) => {
     setCategoryMappings(mappings);
@@ -35,6 +36,7 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
     
     setIsImporting(true);
     setImportError(null);
+    setImportSuccess(null);
     
     try {
       // Use the importFoodsFromJson function with category mappings
@@ -44,9 +46,12 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
         // Update the last parse results
         setLastParseResults(result.dietTypes);
         
+        // Store success message
+        setImportSuccess(result.message);
+        
         toast({
           title: "Foods Imported",
-          description: result.message,
+          description: `Added ${result.addedCount} new foods, updated ${result.updatedCount} existing foods`,
         });
         
         // Reset the JSON data only if successful
@@ -94,6 +99,13 @@ export const JsonImport = ({ setLastParseResults }: JsonImportProps) => {
         <Alert variant="destructive" className="mb-4">
           <AlertTitle>Import Failed</AlertTitle>
           <AlertDescription className="whitespace-pre-wrap">{importError}</AlertDescription>
+        </Alert>
+      )}
+      
+      {importSuccess && (
+        <Alert variant="default" className="mb-4 bg-green-50 border-green-200">
+          <AlertTitle>Import Successful</AlertTitle>
+          <AlertDescription className="whitespace-pre-wrap">{importSuccess}</AlertDescription>
         </Alert>
       )}
       
