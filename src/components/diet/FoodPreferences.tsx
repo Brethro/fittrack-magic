@@ -11,7 +11,6 @@ import {
   CollapsibleContent, 
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
-import { DietSelector } from "./DietSelector";
 import { FoodFeedbackDialog } from "./FoodFeedbackDialog";
 import { FoodNutritionDialog } from "./FoodNutritionDialog";
 import { fuzzyFindFood } from "@/utils/diet/fuzzyMatchUtils";
@@ -30,7 +29,6 @@ interface FoodPreferencesProps {
   setIncludeFreeMeal: (include: boolean) => void;
   generateMealPlan: () => void;
   dailyCalories: number;
-  // Make availableDiets optional since we're handling the diet selection in DietSelector component
   availableDiets?: DietType[];
 }
 
@@ -245,11 +243,6 @@ export function FoodPreferences({
   if (foodCategories.length === 0 || foodCategories.every(category => category.items.length === 0)) {
     return (
       <div className="space-y-6">
-        <DietSelector 
-          selectedDiet={selectedDiet}
-          onDietChange={setSelectedDiet}
-          availableDiets={availableDiets}
-        />
         
         <div className="glass-panel rounded-lg p-6">
           <div className="text-center mb-6">
@@ -305,11 +298,6 @@ export function FoodPreferences({
   
   return (
     <div className="space-y-6">
-      <DietSelector 
-        selectedDiet={selectedDiet}
-        onDietChange={setSelectedDiet}
-        availableDiets={availableDiets}
-      />
       
       <div className="glass-panel rounded-lg p-4">
         <h2 className="text-lg font-medium mb-3">Select Your Preferred Foods</h2>
