@@ -27,6 +27,7 @@ interface FoodCategoryListProps {
   toggleSubcategory: (subcategory: string) => void;
   openFeedbackDialog: (food: FoodItem, event: React.MouseEvent) => void;
   openNutritionDialog: (food: FoodItem) => void;
+  isLoading?: boolean;
 }
 
 export function FoodCategoryList({
@@ -41,7 +42,8 @@ export function FoodCategoryList({
   openSubcategories,
   toggleSubcategory,
   openFeedbackDialog,
-  openNutritionDialog
+  openNutritionDialog,
+  isLoading = false
 }: FoodCategoryListProps) {
   return (
     <div className="space-y-4">
@@ -86,6 +88,7 @@ export function FoodCategoryList({
                   className={someCategorySelected && !allCategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
                   // Empty function since parent div handles the click
                   onCheckedChange={() => {}}
+                  disabled={isLoading}
                 />
               </div>
               
@@ -123,6 +126,7 @@ export function FoodCategoryList({
                   toggleSubcategory={toggleSubcategory}
                   openFeedbackDialog={openFeedbackDialog}
                   openNutritionDialog={openNutritionDialog}
+                  isLoading={isLoading}
                 />
               ))}
             </CollapsibleContent>

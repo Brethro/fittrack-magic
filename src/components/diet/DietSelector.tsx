@@ -3,7 +3,7 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DietType } from "@/types/diet";
-import { Info, ChevronDown } from "lucide-react";
+import { Info, ChevronDown, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Collapsible,
@@ -52,9 +52,15 @@ interface DietSelectorProps {
   selectedDiet: DietType;
   onDietChange: (diet: DietType) => void;
   availableDiets?: DietType[];
+  isLoading?: boolean;
 }
 
-export function DietSelector({ selectedDiet, onDietChange, availableDiets }: DietSelectorProps) {
+export function DietSelector({ 
+  selectedDiet, 
+  onDietChange, 
+  availableDiets,
+  isLoading = false
+}: DietSelectorProps) {
   // Changed default state to false to make it collapsed initially
   const [isOpen, setIsOpen] = React.useState(false);
   
@@ -76,6 +82,7 @@ export function DietSelector({ selectedDiet, onDietChange, availableDiets }: Die
         <CollapsibleTrigger className="flex w-full items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
           <div className="flex items-center">
             <h3 className="text-lg font-medium">Dietary Preference: {formatDietName(selectedDiet)}</h3>
+            {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -103,7 +110,7 @@ export function DietSelector({ selectedDiet, onDietChange, availableDiets }: Die
               if (value) onDietChange(value as DietType);
             }} className="flex flex-wrap gap-2 justify-start">
               {dietsToDisplay.map((diet) => (
-                <ToggleGroupItem key={diet} value={diet} className="rounded-full">
+                <ToggleGroupItem key={diet} value={diet} className="rounded-full" disabled={isLoading}>
                   {formatDietName(diet)}
                 </ToggleGroupItem>
               ))}

@@ -26,6 +26,7 @@ interface FoodSubcategoryListProps {
   toggleSubcategory: (subcategory: string) => void;
   openFeedbackDialog: (food: FoodItem, event: React.MouseEvent) => void;
   openNutritionDialog: (food: FoodItem) => void;
+  isLoading?: boolean;
 }
 
 export function FoodSubcategoryList({
@@ -40,7 +41,8 @@ export function FoodSubcategoryList({
   openSubcategories,
   toggleSubcategory,
   openFeedbackDialog,
-  openNutritionDialog
+  openNutritionDialog,
+  isLoading = false
 }: FoodSubcategoryListProps) {
   const filteredSubItems = getFilteredItems(subcategoryItems, searchQuery, selectedDiet);
   
@@ -77,6 +79,7 @@ export function FoodSubcategoryList({
             className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
             // Empty function since parent div handles the click
             onCheckedChange={() => {}}
+            disabled={isLoading}
           />
         </div>
         
@@ -108,6 +111,7 @@ export function FoodSubcategoryList({
               onOpenNutritionDialog={() => openNutritionDialog(food)}
               onOpenFeedbackDialog={(e) => openFeedbackDialog(food, e)}
               isHighlighted={searchQuery && food.name.toLowerCase().includes(searchQuery.toLowerCase())}
+              isDisabled={isLoading}
             />
           ))}
         </div>

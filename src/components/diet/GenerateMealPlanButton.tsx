@@ -1,15 +1,17 @@
 
 import { Button } from "@/components/ui/button";
-import { Utensils } from "lucide-react";
+import { Utensils, Loader2 } from "lucide-react";
 
 interface GenerateMealPlanButtonProps {
   generateMealPlan: () => void;
   selectedFoodCount: number;
+  isLoading?: boolean;
 }
 
 export function GenerateMealPlanButton({ 
   generateMealPlan, 
-  selectedFoodCount 
+  selectedFoodCount,
+  isLoading = false
 }: GenerateMealPlanButtonProps) {
   return (
     <div className="mt-6">
@@ -26,9 +28,14 @@ export function GenerateMealPlanButton({
       <Button 
         onClick={generateMealPlan}
         className="w-full"
+        disabled={selectedFoodCount < 10 || isLoading}
       >
-        <Utensils className="mr-2 h-4 w-4" />
-        Generate Meal Plan
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Utensils className="mr-2 h-4 w-4" />
+        )}
+        {isLoading ? "Loading..." : "Generate Meal Plan"}
       </Button>
     </div>
   );

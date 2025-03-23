@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FoodCategory, FoodItem, DietType } from "@/types/diet";
 import { useToast } from "@/components/ui/use-toast";
@@ -102,8 +103,8 @@ export const useFoodSelectionState = (initialFoodCategories: FoodCategory[]) => 
     if (selectedDiet === "all") return foodItems;
     
     return foodItems.filter(item => 
-      item.diets?.includes(selectedDiet) || 
-      selectedDiet === "all"
+      (item.diets?.includes(selectedDiet)) || 
+      false // Instead of comparing with "all" which was causing the type error
     );
   };
 

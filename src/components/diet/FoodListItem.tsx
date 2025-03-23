@@ -1,18 +1,17 @@
 
-import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { FileText, MessageSquare } from "lucide-react";
 import { FoodItem } from "@/types/diet";
+import { Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FoodListItemProps {
   food: FoodItem;
   isChecked: boolean;
   onToggleSelection: () => void;
   onOpenNutritionDialog: () => void;
-  onOpenFeedbackDialog: (e: React.MouseEvent) => void;
-  isHighlighted: boolean;
+  onOpenFeedbackDialog: (event: React.MouseEvent) => void;
+  isHighlighted?: boolean;
+  isDisabled?: boolean;
 }
 
 export function FoodListItem({
@@ -21,82 +20,57 @@ export function FoodListItem({
   onToggleSelection,
   onOpenNutritionDialog,
   onOpenFeedbackDialog,
-  isHighlighted
+  isHighlighted = false,
+  isDisabled = false
 }: FoodListItemProps) {
   return (
-    <div 
-      className={`p-3 rounded hover:bg-muted/50 transition-colors cursor-pointer ${
-        isHighlighted ? "bg-muted/40" : ""
-      }`}
-      onClick={onOpenNutritionDialog}
+    <div
+      className={cn(
+        "flex items-center space-x-2 rounded-md p-2 cursor-pointer hover:bg-muted/50 transition-colors",
+        isHighlighted && "bg-yellow-100/50 dark:bg-yellow-900/20",
+        isDisabled && "opacity-70 cursor-not-allowed"
+      )}
+      onClick={() => {
+        if (!isDisabled) {
+          onOpenNutritionDialog();
+        }
+      }}
     >
-      <div className="flex items-start">
+      <div 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isDisabled) {
+            onToggleSelection();
+          }
+        }} 
+        className="p-1"
+      >
         <Checkbox 
-          id={food.id}
-          checked={isChecked} 
-          onCheckedChange={onToggleSelection}
-          onClick={(e) => e.stopPropagation()}
-          className="mt-1"
+          checked={isChecked}
+          onCheckedChange={() => {}}
+          disabled={isDisabled}
         />
-        
-        <div className="ml-3 flex-1">
-          <div className="flex justify-between">
-            <Label
-              htmlFor={food.id}
-              className="text-sm font-medium cursor-pointer flex items-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {food.name}
-              <FileText className="h-3 w-3 ml-1 text-muted-foreground" />
-            </Label>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 -mr-1"
-              onClick={onOpenFeedbackDialog}
-              title="Suggest different category"
-            >
-              <MessageSquare className="h-3 w-3" />
-            </Button>
-          </div>
-          
-          {/* Calories and Macros Display */}
-          <div className="mt-2 flex items-start">
-            <div className="min-w-[60px] text-md font-semibold">
-              {food.caloriesPerServing} <span className="text-xs text-muted-foreground">cal</span>
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex flex-wrap justify-start gap-4">
-                <MacroIndicator type="P" value={food.protein || 0} color="bg-blue-500" />
-                <MacroIndicator type="C" value={food.carbs || 0} color="bg-amber-500" />
-                <MacroIndicator type="F" value={food.fats || 0} color="bg-pink-500" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="text-xs text-muted-foreground mt-1">
-            {food.servingSize}
-          </div>
+      </div>
+      <div className="flex flex-1 items-center">
+        <span className="text-sm font-medium">
+          {food.name}
+        </span>
+        <div className="ml-auto flex items-center space-x-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              if (!isDisabled) {
+                onOpenFeedbackDialog(e);
+              }
+            }}
+            className="p-1 rounded-full hover:bg-muted text-muted-foreground"
+            title="Report issue with this food"
+            disabled={isDisabled}
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-interface MacroIndicatorProps {
-  type: string;
-  value: number;
-  color: string;
-}
-
-function MacroIndicator({ type, value, color }: MacroIndicatorProps) {
-  return (
-    <div className="flex items-center gap-1">
-      <div className={`w-2 h-2 rounded-full ${color}`}></div>
-      <span className="text-sm font-medium">{type}:</span>
-      <span className="text-sm">{value}g</span>
     </div>
   );
 }
