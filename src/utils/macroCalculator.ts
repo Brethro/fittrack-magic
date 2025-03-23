@@ -64,46 +64,48 @@ export const calculateMacroDistribution = (
   let proteinPerKgLBM: number;
   
   if (isWeightGain) {
-    // For weight gain (muscle building)
+    // UPDATED: Higher protein recommendations for muscle building
     if (isMale) {
       if (bf > 20) {
-        proteinPerKgLBM = 2.2;
+        proteinPerKgLBM = 2.4; // Increased from 2.2
       } else if (bf > 12) {
-        proteinPerKgLBM = 2.4;
+        proteinPerKgLBM = 2.6; // Increased from 2.4
       } else {
-        proteinPerKgLBM = 2.6;
+        proteinPerKgLBM = 2.8; // Increased from 2.6
       }
     } else {
       if (bf > 28) {
-        proteinPerKgLBM = 2.2;
+        proteinPerKgLBM = 2.4; // Increased from 2.2
       } else if (bf > 20) {
-        proteinPerKgLBM = 2.4;
+        proteinPerKgLBM = 2.6; // Increased from 2.4
       } else {
-        proteinPerKgLBM = 2.6;
+        proteinPerKgLBM = 2.8; // Increased from 2.6
       }
     }
     
     // For aggressive bulks, provide even more protein
     if (goalPace === "aggressive") {
-      proteinPerKgLBM += 0.2;
+      proteinPerKgLBM += 0.3; // Increased from 0.2
+    } else if (goalPace === "moderate") {
+      proteinPerKgLBM += 0.1; // Added moderate pace bonus
     }
   } else {
-    // For weight loss
+    // For weight loss (slightly increased for muscle preservation)
     if (isMale) {
       if (bf > 25) {
-        proteinPerKgLBM = 1.8;
+        proteinPerKgLBM = 2.0; // Increased from 1.8
       } else if (bf > 15) {
-        proteinPerKgLBM = 2.2;
+        proteinPerKgLBM = 2.4; // Increased from 2.2
       } else {
-        proteinPerKgLBM = 2.4;
+        proteinPerKgLBM = 2.6; // Increased from 2.4
       }
     } else {
       if (bf > 32) {
-        proteinPerKgLBM = 1.8;
+        proteinPerKgLBM = 2.0; // Increased from 1.8
       } else if (bf > 23) {
-        proteinPerKgLBM = 2.2;
+        proteinPerKgLBM = 2.4; // Increased from 2.2
       } else {
-        proteinPerKgLBM = 2.4;
+        proteinPerKgLBM = 2.6; // Increased from 2.4
       }
     }
   }
@@ -115,9 +117,9 @@ export const calculateMacroDistribution = (
   // Fat calculation (different for weight gain vs loss)
   let fatPercentage: number;
   if (isWeightGain) {
-    fatPercentage = 0.30; // Higher fat for weight gain (hormonal support)
+    fatPercentage = 0.25; // Reduced from 0.30 to allocate more calories to protein
   } else {
-    fatPercentage = 0.25; // Lower fat for weight loss
+    fatPercentage = 0.25; // Unchanged for weight loss
   }
   
   const fatCalories = Math.round(dailyCalories * fatPercentage);
