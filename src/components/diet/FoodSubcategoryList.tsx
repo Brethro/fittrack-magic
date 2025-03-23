@@ -60,30 +60,33 @@ export function FoodSubcategoryList({
       onOpenChange={() => toggleSubcategory(subcategoryName)}
       className="border rounded-md px-3 py-2 ml-2"
     >
-      <CollapsibleTrigger className="w-full">
-        <div className="flex items-center justify-between cursor-pointer">
-          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-            <Checkbox 
-              id={`subcategory-${subcategoryName}`}
-              checked={allSubcategorySelected}
-              className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-              onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
-            />
-            <Label
-              htmlFor={`subcategory-${subcategoryName}`}
-              className="text-sm font-medium cursor-pointer"
-            >
-              {displayName}
-            </Label>
-          </div>
+      <div className="flex items-center justify-between cursor-pointer">
+        {/* The checkbox should be separate from the collapsible trigger */}
+        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+          <Checkbox 
+            id={`subcategory-${subcategoryName}`}
+            checked={allSubcategorySelected}
+            className={someSubcategorySelected && !allSubcategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
+            onCheckedChange={() => toggleAllInGroup(subcategoryFoodIds)}
+          />
+          <Label
+            htmlFor={`subcategory-${subcategoryName}`}
+            className="text-sm font-medium cursor-pointer"
+          >
+            {displayName}
+          </Label>
+        </div>
+        
+        {/* The collapse/expand control that takes the full width */}
+        <CollapsibleTrigger className="flex-1 flex justify-end">
           <ChevronDown 
             className={cn(
               "h-3.5 w-3.5 transition-transform duration-200",
               openSubcategories[subcategoryName] ? "rotate-180" : "rotate-0"
             )} 
           />
-        </div>
-      </CollapsibleTrigger>
+        </CollapsibleTrigger>
+      </div>
       
       <CollapsibleContent className="mt-2">
         <div className="grid grid-cols-1 gap-2">

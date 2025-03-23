@@ -69,30 +69,33 @@ export function FoodCategoryList({
             onOpenChange={() => toggleCategory(category.name)}
             className="border rounded-md px-4 py-2"
           >
-            <CollapsibleTrigger className="w-full">
-              <div className="flex items-center justify-between cursor-pointer">
-                <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                  <Checkbox 
-                    id={`category-${category.name}`}
-                    checked={allCategorySelected}
-                    className={someCategorySelected && !allCategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
-                    onCheckedChange={() => toggleAllInGroup(allCategoryFoodIds)}
-                  />
-                  <Label
-                    htmlFor={`category-${category.name}`}
-                    className="text-base font-medium cursor-pointer"
-                  >
-                    {category.displayName || category.name}
-                  </Label>
-                </div>
+            <div className="flex items-center justify-between cursor-pointer">
+              {/* The checkbox should be separate from the collapsible trigger */}
+              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                <Checkbox 
+                  id={`category-${category.name}`}
+                  checked={allCategorySelected}
+                  className={someCategorySelected && !allCategorySelected ? "data-[state=checked]:bg-muted-foreground/50" : ""}
+                  onCheckedChange={() => toggleAllInGroup(allCategoryFoodIds)}
+                />
+                <Label
+                  htmlFor={`category-${category.name}`}
+                  className="text-base font-medium cursor-pointer"
+                >
+                  {category.displayName || category.name}
+                </Label>
+              </div>
+              
+              {/* The collapse/expand control that takes the full width */}
+              <CollapsibleTrigger className="flex-1 flex justify-end">
                 <ChevronDown 
                   className={cn(
                     "h-4 w-4 transition-transform duration-200",
                     openCategories[category.name] ? "rotate-180" : "rotate-0"
                   )} 
                 />
-              </div>
-            </CollapsibleTrigger>
+              </CollapsibleTrigger>
+            </div>
             
             <CollapsibleContent className="mt-2 space-y-3">
               {/* Render each subcategory */}
