@@ -20,10 +20,32 @@ export type DietType =
   | "atkins"
   | "zone";
 
+export type FoodPrimaryCategory = 
+  | "meat"
+  | "redMeat"
+  | "poultry"
+  | "fish"
+  | "seafood"
+  | "dairy"
+  | "egg"
+  | "grain"
+  | "legume"
+  | "vegetable"
+  | "fruit"
+  | "nut"
+  | "seed"
+  | "oil"
+  | "sweetener"
+  | "herb"
+  | "spice"
+  | "processedFood"
+  | "other";
+
 export interface FoodItem {
   id: string;
   name: string;
-  primaryCategory?: string;
+  primaryCategory?: FoodPrimaryCategory;
+  secondaryCategories?: string[];
   servingSizeGrams?: number;
   servingSize?: string;
   caloriesPerServing?: number;
@@ -46,6 +68,7 @@ export interface FoodItem {
   polyunsaturatedFat?: number;
   monounsaturatedFat?: number;
   diets?: string[];
+  netCarbs?: number;
 }
 
 export interface FoodCategory {
@@ -55,8 +78,8 @@ export interface FoodCategory {
   items: FoodItem[];
 }
 
-export interface FoodPrimaryCategory {
-  name: string;
+export interface FoodPrimaryCategoryInfo {
+  name: FoodPrimaryCategory;
   displayName: string;
   description?: string;
 }
