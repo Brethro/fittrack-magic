@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format, differenceInCalendarDays, addDays, isAfter, parseISO } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
@@ -66,14 +67,16 @@ export function WeightChart() {
       [...userData.weightLog].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : 
       [];
     
-    // Filter only entries on or after today
-    const validWeightEntries = sortedWeightLog.filter(entry => {
-      const entryDate = new Date(entry.date);
-      entryDate.setHours(0, 0, 0, 0);
-      return !isAfter(today, entryDate);
-    });
+    // Find the earliest weight entry date
+    let earliestEntryDate = today;
+    if (sortedWeightLog.length > 0) {
+      // Find the earliest date among all entries
+      const dates = sortedWeightLog.map(entry => new Date(entry.date));
+      earliestEntryDate = new Date(Math.min(...dates.map(date => date.getTime())));
+      earliestEntryDate.setHours(0, 0, 0, 0);
+    }
     
-    // Generate projection data - starts with current weight
+    // Generate projection data
     const projectionData = [];
     
     // Calculate daily weight loss needed to reach target (ensure it's a small, gradual amount)
@@ -88,13 +91,33 @@ export function WeightChart() {
       remainingDays: totalDays
     });
     
-    // Generate enough points to make a smooth line
-    // We'll generate a point for each day to ensure a smooth progression
-    for (let day = 0; day <= totalDays; day++) {
+    // For past dates (before today), create a flat line at starting weight
+    if (earliestEntryDate < today) {
+      const pastDays = differenceInCalendarDays(today, earliestEntryDate);
+      for (let day = pastDays; day > 0; day--) {
+        const currentDate = addDays(today, -day);
+        projectionData.push({
+          date: format(currentDate, "MMM d"),
+          projection: startWeight, // Flat line at starting weight for past dates
+          tooltipDate: format(currentDate, "MMMM d, yyyy"),
+          fullDate: currentDate
+        });
+      }
+    }
+    
+    // Add today's point
+    projectionData.push({
+      date: format(today, "MMM d"),
+      projection: startWeight,
+      tooltipDate: format(today, "MMMM d, yyyy"),
+      fullDate: today
+    });
+    
+    // Generate future projection points
+    for (let day = 1; day <= totalDays; day++) {
       const currentDate = addDays(today, day);
       
       // Calculate weight with precise decimal values for this day
-      // This creates a smooth, gradual decline instead of sudden drops
       const projectedWeight = startWeight - (dailyLoss * day);
       
       projectionData.push({
@@ -108,8 +131,8 @@ export function WeightChart() {
     // Generate separate data array for actual weight entries
     const actualData = [];
     
-    if (validWeightEntries.length > 0) {
-      validWeightEntries.forEach(entry => {
+    if (sortedWeightLog.length > 0) {
+      sortedWeightLog.forEach(entry => {
         const entryDate = new Date(entry.date);
         actualData.push({
           date: format(entryDate, "MMM d"),
@@ -131,21 +154,25 @@ export function WeightChart() {
 
   // Determine Y-axis range based on data
   const getYAxisDomain = () => {
-    if (!userData.weight || !projectionData.length) return [0, 100]; // Return default numeric values
+    if (!userData.weight || !projectionData.length) return [0, 100];
     
-    // Start exactly at startWeight
-    const startWeight = userData.weight;
+    // Find min and max values across both projection and actual data
+    const allWeights = [
+      ...projectionData.map(d => d.projection),
+      ...actualData.map(d => d.actual)
+    ].filter(Boolean);
     
-    // Find the minimum value that will be displayed
-    const minTarget = projectionData.length > 0 
-      ? Math.min(...projectionData.map(d => d.projection))
-      : startWeight * 0.9;
+    if (allWeights.length === 0) return [0, 100];
     
-    // Add a small buffer below the minimum for better visualization
-    const minValue = Math.floor(minTarget - 1);
+    const minWeight = Math.min(...allWeights);
+    const maxWeight = Math.max(...allWeights);
     
-    // Return [min, max] as numbers
-    return [minValue, startWeight];
+    // Add buffer for better visualization
+    const buffer = (maxWeight - minWeight) * 0.1;
+    const minValue = Math.floor(minWeight - buffer);
+    const maxValue = Math.ceil(maxWeight + buffer);
+    
+    return [minValue, maxValue];
   };
 
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -216,7 +243,7 @@ export function WeightChart() {
               data={projectionData}
               type="monotone" 
               dataKey="projection" 
-              name="Projection"
+              name="projection"
               stroke="#8b5cf6" 
               strokeWidth={2}
               dot={{ fill: '#8b5cf6', r: 4 }}
@@ -230,7 +257,7 @@ export function WeightChart() {
               data={actualData}
               type="monotone" 
               dataKey="actual" 
-              name="Actual"
+              name="actual"
               stroke="#10b981" 
               strokeWidth={2}
               dot={{ fill: '#10b981', r: 4 }}

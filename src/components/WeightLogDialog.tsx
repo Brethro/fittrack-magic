@@ -59,15 +59,6 @@ export function WeightLogDialog({ open, onOpenChange, editEntry }: WeightLogDial
       return;
     }
 
-    // Check if selected date is today or in the past (before today)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-    
-    if (date < today) {
-      setError("Cannot log weight for dates before today");
-      return;
-    }
-
     const weightValue = parseFloat(parseFloat(weight).toFixed(1));
 
     if (editEntry) {
@@ -131,10 +122,10 @@ export function WeightLogDialog({ open, onOpenChange, editEntry }: WeightLogDial
                   onSelect={(date) => date && setDate(date)}
                   initialFocus
                   disabled={(date) => {
-                    // Disable dates in the past (before today)
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return date < today || date > new Date();
+                    // Allow today and dates in the past but limit to a reasonable range (1 year ago)
+                    const oneYearAgo = new Date();
+                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                    return date > new Date() || date < oneYearAgo;
                   }}
                   className="p-3 pointer-events-auto"
                 />
