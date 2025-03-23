@@ -39,7 +39,7 @@ export function DailyStats() {
       <h2 className="text-lg font-medium mb-3">Daily Stats</h2>
       
       <div className="space-y-3">
-        {/* All panels have consistent layout structure */}
+        {/* Total Daily Energy panel */}
         <div className="glass-panel rounded-lg p-4 flex justify-between items-center">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mr-3">
@@ -55,6 +55,7 @@ export function DailyStats() {
           </div>
         </div>
         
+        {/* Daily Target panel - explicitly fix alignment here */}
         <div className="glass-panel rounded-lg p-4 flex justify-between items-center">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mr-3">
@@ -80,6 +81,7 @@ export function DailyStats() {
           </div>
         </div>
         
+        {/* Projected Gain/Loss panel */}
         <div className="glass-panel rounded-lg p-4 flex justify-between items-center">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mr-3">
