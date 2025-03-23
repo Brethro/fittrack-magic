@@ -234,11 +234,6 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
         {/* Header */}
         <DialogHeader className="px-4 py-3 border-b flex justify-between items-center space-y-0">
           <DialogTitle className="text-xl">Food Details</DialogTitle>
-          <DialogClose asChild>
-            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-3">
-              <X className="h-5 w-5" />
-            </Button>
-          </DialogClose>
         </DialogHeader>
         
         {/* Content - scrollable */}
