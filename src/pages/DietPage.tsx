@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -171,7 +170,7 @@ const DietPage = () => {
           </div>
           
           {/* Food Log Section */}
-          <div className="flex-1 max-h-[500px] min-h-[400px]">
+          <div className="glass-panel p-4 rounded-lg flex-1 max-h-[500px] min-h-[400px] overflow-hidden">
             <FoodLog />
           </div>
 
