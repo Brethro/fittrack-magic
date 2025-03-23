@@ -18,9 +18,9 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background overflow-hidden">
-      {/* Main scrollable area that takes the full viewport height minus nav height */}
-      <div className="flex-1 w-full overflow-y-auto pb-20">
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Main content area with scrolling enabled */}
+      <div className="flex-1 w-full overflow-auto" style={{ paddingBottom: "80px" }}>
         <main className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative`}>
           <Outlet />
         </main>
