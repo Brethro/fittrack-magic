@@ -219,9 +219,9 @@ export const useFoodDatabase = () => {
       console.log("Available categories before poultry import:", 
         foodCategoriesData.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`).join(', '));
 
-      // Add the category mapping for poultry to Meats & Poultry - use internal name, not display name
+      // FIXED: Use the correct category mapping - "Meats & Poultry" instead of "meatsAndPoultry"
       const categoryMappings = {
-        'poultry': 'meatsAndPoultry'  // Matching internal name from data/diet/index.ts
+        'poultry': 'Meats & Poultry'  // Use the actual category name, not the internal name
       };
 
       // Import the data

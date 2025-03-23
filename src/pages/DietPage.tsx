@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,21 +24,23 @@ const DietPage = () => {
   const [initialized, setInitialized] = useState(false);
   const { importPoultryData } = useFoodDatabase();
 
-  // Initialize food categories and import poultry data
+  // Initialize food categories only
   useEffect(() => {
     // First, initialize food categories
     const categories = initializeFoodCategories(foodCategoriesData);
     console.log("DietPage: Food categories initialized:", 
       categories.map(cat => `${cat.name} (${cat.displayName || 'no display name'})`));
     
-    // Then import poultry data using the function from FoodUtils
-    setTimeout(() => {
-      importPoultryData();
-      
-      // Mark initialization as complete
-      setInitialized(true);
-    }, 500); // Short delay to ensure categories are fully initialized
-  }, [importPoultryData]);
+    // Mark initialization as complete
+    setInitialized(true);
+    
+    // Commented out the automatic poultry import to prevent error spamming
+    // This can be triggered manually from the admin interface
+    // We're not doing this here:
+    // setTimeout(() => {
+    //   importPoultryData();
+    // }, 500);
+  }, []);
 
   // Check if user has required data
   useEffect(() => {
