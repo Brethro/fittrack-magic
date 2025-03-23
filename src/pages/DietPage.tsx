@@ -103,7 +103,7 @@ const DietPage = () => {
           Diet Planner
         </h1>
 
-        <div className="flex flex-col space-y-4 max-w-4xl mx-auto flex-1">
+        <div className="flex flex-col space-y-4 max-w-4xl mx-auto w-full flex-1">
           {/* API Status Indicators */}
           <ApiStatusIndicators 
             apiStatus={apiStatus} 
@@ -129,7 +129,7 @@ const DietPage = () => {
           </div>
           
           {/* Food Log Section */}
-          <div className="flex-1 min-h-[500px]">
+          <div className="flex-1 max-h-[600px] min-h-[500px]">
             <FoodLog />
           </div>
         </div>

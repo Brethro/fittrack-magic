@@ -48,12 +48,12 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   return (
-    <div className="glass-panel rounded-lg flex flex-col h-[420px]">
+    <div className="glass-panel rounded-lg flex flex-col h-full max-h-[420px]">
       <div className="px-4 py-3 border-b border-border">
         <h3 className="font-medium">Food Log: {getDateHeader()}</h3>
       </div>
       
-      <ScrollArea className="flex-1 px-4 py-2">
+      <ScrollArea className="flex-1 py-2">
         {dailyEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[200px] text-center">
             <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
@@ -63,7 +63,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-5 px-4">
             {/* Breakfast */}
             {mealGroups.breakfast.length > 0 && (
               <div>

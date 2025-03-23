@@ -40,9 +40,9 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   };
   
   return (
-    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2">
+    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2 w-full">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 w-full">
           <h4 className="font-medium text-sm truncate">{entry.foodName}</h4>
           <div className="flex items-center gap-1 shrink-0">
             <Badge variant="outline" className={`text-xs py-0 px-1.5 h-5 ${mealColors[entry.mealType]}`}>

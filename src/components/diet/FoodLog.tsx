@@ -14,7 +14,7 @@ const FoodLog = () => {
   };
   
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col space-y-4 w-full h-full">
       <h2 className="text-xl font-semibold">Food Log</h2>
       
       <FoodLogSummary onDateChange={handleDateChange} />
@@ -25,7 +25,7 @@ const FoodLog = () => {
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="log" className="mt-4 flex-1">
+        <TabsContent value="log" className="mt-4 flex-1 overflow-hidden">
           <FoodLogList />
         </TabsContent>
         
