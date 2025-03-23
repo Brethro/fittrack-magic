@@ -107,12 +107,7 @@ export const useNutritionCalculator = (
       
       dailyCalories = result.dailyCalories;
       highSurplusWarning = result.highSurplusWarning;
-      
-      // For aggressive pace, ensure we use 19.99% for display
-      if (userData.goalPace === 'aggressive') {
-        // This is the key fix - ensure we use exactly 19.99% for aggressive pace
-        result.surplusPercentage = 19.99;
-      }
+      calculatedAdjustPercent = result.surplusPercentage;
       
       console.log("Weight gain calculation result:", result);
     } else {

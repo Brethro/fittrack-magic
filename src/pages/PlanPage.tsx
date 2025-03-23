@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,13 +41,43 @@ const PlanPage = () => {
       const currentBodyFat = userData.bodyFatPercentage;
       const goalWeight = userData.goalValue;
       
-      // Calculate with the pace-aware function
-      const newBodyFat = calculateBodyFatPercentage(
+      // Get the surplus percentage for more accurate body fat prediction
+      // Higher surplus = higher body fat gain
+      const tdee = userData.tdee || 0;
+      const dailyCalories = userData.dailyCalories || 0;
+      const actualSurplusPercentage = userData.isWeightGain && tdee > 0 ? 
+        ((dailyCalories - tdee) / tdee) * 100 : 0;
+      
+      // Adjust the body fat prediction based on the actual surplus percentage
+      let surplusMultiplier = 1.0;
+      if (userData.isWeightGain) {
+        if (actualSurplusPercentage > 30) {
+          surplusMultiplier = 1.5; // Much more fat gain with very high surplus
+        } else if (actualSurplusPercentage > 25) {
+          surplusMultiplier = 1.3; // More fat gain with high surplus
+        } else if (actualSurplusPercentage > 20) {
+          surplusMultiplier = 1.15; // Slightly more fat gain with moderately high surplus
+        }
+      }
+      
+      // Calculate with the pace-aware function, adjusting for surplus
+      const baseBfChange = calculateBodyFatPercentage(
         currentWeight, 
         currentBodyFat, 
         goalWeight,
         userData.goalPace // Pass the pace to get more accurate estimation
       );
+      
+      // Apply the surplus multiplier to the body fat change (above the base rate)
+      // but only for weight gain scenarios where we'd add body fat
+      let newBodyFat: number;
+      if (userData.isWeightGain && baseBfChange > currentBodyFat) {
+        const baseBfDifference = baseBfChange - currentBodyFat;
+        const adjustedBfDifference = baseBfDifference * surplusMultiplier;
+        newBodyFat = currentBodyFat + adjustedBfDifference;
+      } else {
+        newBodyFat = baseBfChange;
+      }
       
       // Round to 1 decimal place
       setEstimatedGoalBodyFat(Math.max(Math.round(newBodyFat * 10) / 10, 0));
@@ -55,7 +86,7 @@ const PlanPage = () => {
     }
     
     setInitialized(true);
-  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, navigate, toast, recalculateNutrition]);
+  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, userData.tdee, userData.dailyCalories, userData.isWeightGain, navigate, toast, recalculateNutrition]);
 
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (
@@ -106,6 +137,10 @@ const PlanPage = () => {
               {estimatedGoalBodyFat !== null && (
                 <div className="mt-2 text-sm text-muted-foreground text-center">
                   Estimated body fat at goal weight: <span className="text-primary font-medium">{estimatedGoalBodyFat}%</span>
+                  {userData.isWeightGain && userData.tdee && userData.dailyCalories && 
+                   ((userData.dailyCalories - userData.tdee) / userData.tdee) * 100 > 20 && (
+                    <span className="text-amber-400 ml-1">(higher due to aggressive surplus)</span>
+                  )}
                 </div>
               )}
             </motion.div>

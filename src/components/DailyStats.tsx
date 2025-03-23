@@ -42,14 +42,15 @@ const DailyStats = () => {
   let calorieAdjustmentText = '';
   if (userData.tdee && userData.dailyCalories) {
     if (userData.isWeightGain) {
-      // For weight gain, show the calculated surplus percentage from userData if available
-      if (userData.goalPace === 'aggressive') {
-        // For aggressive pace, always display 20% (rounded up from 19.99%)
+      // For weight gain, show the calculated surplus percentage
+      const surplusAmount = userData.dailyCalories - userData.tdee;
+      let surplusPercentage = (surplusAmount / userData.tdee) * 100;
+      
+      // For aggressive pace, if the percentage is around 19.99-20.01%, display 20%
+      if (userData.goalPace === 'aggressive' && surplusPercentage >= 19.99 && surplusPercentage <= 20.01) {
         calorieAdjustmentText = `(20% surplus)`;
       } else {
-        // For other paces, calculate and display the actual percentage
-        const surplusAmount = userData.dailyCalories - userData.tdee;
-        const surplusPercentage = (surplusAmount / userData.tdee) * 100;
+        // For other percentages, round to nearest integer
         calorieAdjustmentText = `(${Math.round(surplusPercentage)}% surplus)`;
       }
     } else if (userData.calculatedDeficitPercentage) {
