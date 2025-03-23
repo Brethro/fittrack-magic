@@ -106,13 +106,15 @@ const Index = () => {
                 Takes just 2 minutes to set up your personalized plan
               </p>
             )}
-            
-            {/* Disclaimer text - now with higher opacity to ensure visibility */}
-            <p className="text-[11px] text-[#8E9196] text-center mt-4 max-w-[90%] mx-auto opacity-75">
-              This application is intended as a fitness tracking tool only and not as a substitute for professional medical or nutritional advice. Consult healthcare professionals before starting any fitness or nutrition program.
-            </p>
           </motion.div>
         </motion.div>
+        
+        {/* Disclaimer moved outside the motion.div to be positioned at the bottom and ensure it's visible */}
+        <div className="pt-6 pb-2 w-full">
+          <p className="text-xs text-muted-foreground/90 text-center mx-auto max-w-[90%] border-t border-muted/20 pt-4">
+            This application is intended as a fitness tracking tool only and not as a substitute for professional medical or nutritional advice. Consult healthcare professionals before starting any fitness or nutrition program.
+          </p>
+        </div>
       </div>
     </div>
   );
