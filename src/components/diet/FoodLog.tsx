@@ -46,7 +46,7 @@ const FoodLog = () => {
             className="flex-1 m-0 h-full"
           >
             <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <QuickFoodEntry onAddSuccess={() => setActiveTab("log")} />
+              <QuickFoodEntry onSuccess={() => setActiveTab("log")} />
             </div>
           </TabsContent>
         </div>

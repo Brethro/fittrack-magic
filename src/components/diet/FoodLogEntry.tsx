@@ -12,9 +12,6 @@ interface FoodLogEntryProps {
 }
 
 const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
-  // Format time for display
-  const formattedTime = format(new Date(entry.date), "h:mm a");
-  
   // Ensure default nutrition values if any are missing
   const nutrition = {
     calories: entry.nutrition?.calories || 0,
@@ -24,55 +21,50 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   };
   
   return (
-    <div className="w-full bg-background/50 border border-border/40 rounded-md p-3 hover:shadow-sm transition-shadow">
-      <div className="flex justify-between items-start gap-2">
-        <div className="flex-1 min-w-0">
-          {/* Food name and time - with max width constraint */}
-          <div className="flex justify-between items-center gap-2 mb-1">
-            <h4 className="font-medium text-sm truncate max-w-[70%]">{entry.foodName}</h4>
-            <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{formattedTime}</span>
-          </div>
-          
-          {/* Amount and unit */}
-          <div className="text-xs text-muted-foreground mb-2">
-            {entry.amount} {entry.unit}
-          </div>
-          
-          {/* Nutrition badges - made flex-wrap */}
-          <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
-              {Math.round(nutrition.calories)} kcal
-            </Badge>
-            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-blue-500/10 text-blue-500 border-blue-300/20">
-              P: {nutrition.protein.toFixed(1)}g
-            </Badge>
-            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-amber-500/10 text-amber-500 border-amber-300/20">
-              C: {nutrition.carbs.toFixed(1)}g
-            </Badge>
-            <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-green-500/10 text-green-500 border-green-300/20">
-              F: {nutrition.fat.toFixed(1)}g
-            </Badge>
+    <div className="w-full py-4 px-3 border-b border-border/20 last:border-0">
+      <div className="flex flex-col w-full gap-1.5">
+        {/* Food Name */}
+        <div className="flex justify-between items-start w-full">
+          <h4 className="font-medium text-base text-foreground max-w-[85%] truncate">{entry.foodName}</h4>
+          <div className="flex gap-1 shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 text-muted-foreground"
+              onClick={() => onEdit(entry)}
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 text-destructive"
+              onClick={() => onDelete(entry.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
         
-        {/* Action buttons */}
-        <div className="flex gap-1 shrink-0 ml-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 text-muted-foreground"
-            onClick={() => onEdit(entry)}
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 text-destructive"
-            onClick={() => onDelete(entry.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+        {/* Amount and unit */}
+        <div className="text-sm text-muted-foreground text-right">
+          {entry.amount} {entry.unit}
+        </div>
+        
+        {/* Nutrition badges */}
+        <div className="flex flex-wrap gap-2 mt-1">
+          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-primary/10 text-primary border-primary/20">
+            {Math.round(nutrition.calories)} kcal
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-blue-500/10 text-blue-500 border-blue-300/20">
+            P: {nutrition.protein.toFixed(1)}g
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-amber-500/10 text-amber-500 border-amber-300/20">
+            C: {nutrition.carbs.toFixed(1)}g
+          </Badge>
+          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-green-500/10 text-green-500 border-green-300/20">
+            F: {nutrition.fat.toFixed(1)}g
+          </Badge>
         </div>
       </div>
     </div>

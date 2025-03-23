@@ -57,7 +57,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   
   return (
     <div className="h-full flex flex-col border rounded-lg overflow-hidden bg-card">
-      <div className="p-3 border-b bg-muted/30">
+      <div className="px-4 py-3 border-b bg-muted/30">
         <h3 className="text-base font-medium text-left">Food Log: {getDateHeader()}</h3>
       </div>
       
@@ -71,12 +71,12 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
         </div>
       ) : (
         <ScrollArea className="flex-1 w-full">
-          <div className="divide-y w-full">
+          <div className="w-full">
             {/* Breakfast */}
             {mealGroups.breakfast.length > 0 && (
-              <div className="p-2 w-full">
-                <h4 className={`${mealTypeStyles.breakfast} font-medium px-2 py-1 text-left`}>Breakfast</h4>
-                <div className="space-y-2 px-2 mt-1 w-full">
+              <div className="w-full">
+                <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-xl border-b border-border/20`}>Breakfast</h4>
+                <div className="w-full divide-y divide-border/20">
                   {mealGroups.breakfast.map((entry) => (
                     <FoodLogEntry
                       key={entry.id} 
@@ -91,9 +91,9 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             
             {/* Lunch */}
             {mealGroups.lunch.length > 0 && (
-              <div className="p-2 w-full">
-                <h4 className={`${mealTypeStyles.lunch} font-medium px-2 py-1 text-left`}>Lunch</h4>
-                <div className="space-y-2 px-2 mt-1 w-full">
+              <div className="w-full">
+                <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-xl border-b border-border/20`}>Lunch</h4>
+                <div className="w-full divide-y divide-border/20">
                   {mealGroups.lunch.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -108,9 +108,9 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             
             {/* Dinner */}
             {mealGroups.dinner.length > 0 && (
-              <div className="p-2 w-full">
-                <h4 className={`${mealTypeStyles.dinner} font-medium px-2 py-1 text-left`}>Dinner</h4>
-                <div className="space-y-2 px-2 mt-1 w-full">
+              <div className="w-full">
+                <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-xl border-b border-border/20`}>Dinner</h4>
+                <div className="w-full divide-y divide-border/20">
                   {mealGroups.dinner.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
@@ -125,9 +125,9 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
             
             {/* Snacks */}
             {mealGroups.snack.length > 0 && (
-              <div className="p-2 w-full">
-                <h4 className={`${mealTypeStyles.snack} font-medium px-2 py-1 text-left`}>Snacks</h4>
-                <div className="space-y-2 px-2 mt-1 w-full">
+              <div className="w-full">
+                <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-xl border-b border-border/20`}>Snacks</h4>
+                <div className="w-full divide-y divide-border/20">
                   {mealGroups.snack.map((entry) => (
                     <FoodLogEntry
                       key={entry.id}
