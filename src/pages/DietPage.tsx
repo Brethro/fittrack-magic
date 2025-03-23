@@ -175,6 +175,9 @@ const DietPage = () => {
               </div>
             )}
             
+            {/* Recent Foods - improved layout */}
+            <RecentFoods />
+            
             {/* Search Results */}
             {isLoading ? (
               <FoodSearchResultsSkeleton />
@@ -188,9 +191,6 @@ const DietPage = () => {
                 />
               )
             )}
-            
-            {/* Recent Foods - moved below search */}
-            <RecentFoods />
           </div>
           
           {/* Food Log Section */}
