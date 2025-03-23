@@ -30,7 +30,7 @@ const FoodItem = ({ product }: FoodItemProps) => {
   return (
     <div className="glass-panel p-4 rounded-lg">
       <div className="flex justify-between items-start">
-        <div className="space-y-1">
+        <div className="space-y-1 flex-1">
           <h3 className="font-medium">{productName}</h3>
           <p className="text-sm text-muted-foreground">{brand}</p>
           <div className="flex flex-wrap gap-3 mt-2 text-xs">
@@ -49,6 +49,17 @@ const FoodItem = ({ product }: FoodItemProps) => {
           </div>
           <p className="text-xs mt-1">Serving: {servingSize}</p>
         </div>
+        {product.image_url && (
+          <img 
+            src={product.image_url} 
+            alt={productName} 
+            className="w-16 h-16 object-contain rounded-md ml-2"
+            onError={(e) => {
+              // Hide broken images
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        )}
         <Button 
           size="sm" 
           variant="ghost" 

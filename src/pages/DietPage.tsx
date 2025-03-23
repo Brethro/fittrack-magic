@@ -62,11 +62,12 @@ const DietPage = () => {
 
     setIsLoading(true);
     try {
-      // Using the v2 API which has a more consistent response format
+      // Use more specific search parameters to improve relevance
+      // Adding tags to filter for food categories and using product_name to prioritize matches in names
       const response = await fetch(
         `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(
           searchQuery
-        )}&fields=product_name,brands,serving_size,nutriments,image_url&page_size=20`
+        )}&tagtype_0=categories&tag_contains_0=contains&tag_0=foods&sort_by=popularity_key&fields=product_name,brands,serving_size,nutriments,image_url&page_size=20`
       );
       
       if (!response.ok) {
@@ -77,13 +78,30 @@ const DietPage = () => {
       console.log("Search API response:", data); // Debug log
       
       if (data.products && Array.isArray(data.products)) {
-        setSearchResults(data.products);
+        // Filter results to prioritize items that actually match the search query in their name
+        const filteredResults = data.products.filter(product => {
+          const productName = product.product_name?.toLowerCase() || '';
+          const brandName = product.brands?.toLowerCase() || '';
+          const searchTerms = searchQuery.toLowerCase().split(' ');
+          
+          // Check if any search term is found in product name or brand
+          return searchTerms.some(term => 
+            productName.includes(term) || brandName.includes(term)
+          );
+        });
         
-        if (data.products.length === 0) {
-          toast({
-            title: "No results found",
-            description: "Try a different search term",
-          });
+        if (filteredResults.length > 0) {
+          setSearchResults(filteredResults);
+        } else {
+          // Fall back to original results if filtering removed everything
+          setSearchResults(data.products);
+          
+          if (data.products.length === 0) {
+            toast({
+              title: "No results found",
+              description: "Try a different search term",
+            });
+          }
         }
       } else {
         console.error("Unexpected API response format:", data);
