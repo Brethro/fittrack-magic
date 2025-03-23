@@ -1,9 +1,18 @@
 
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Dumbbell, LineChart } from "lucide-react";
+import { ArrowRight, BarChart3, Dumbbell, LineChart, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserData } from "@/contexts/UserDataContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const HomePage = () => {
   const { userData } = useUserData();
@@ -50,7 +59,7 @@ const HomePage = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="text-muted-foreground max-w-[350px]"
             >
-              Achieve your fat loss goals without sacrificing muscle, using science-based personalized plans.
+              Achieve your fitness goals - whether building muscle or losing fat - using science-based personalized plans.
             </motion.p>
           </div>
 
@@ -60,20 +69,23 @@ const HomePage = () => {
             transition={{ duration: 0.5, delay: 0.6 }}
             className="grid grid-cols-3 gap-4 w-full max-w-md"
           >
-            <div className="glass-panel rounded-xl p-4 flex flex-col items-center justify-center gap-2">
-              <Dumbbell size={24} className="text-purple-400" />
-              <p className="text-sm text-center">Custom Plans</p>
-            </div>
+            <FeatureCard 
+              icon={Dumbbell} 
+              title="Custom Plans"
+              description="Our personalized plans are tailored to your body type, goals, and activity level. We use sophisticated algorithms to create the perfect nutrition and exercise balance for your specific needs."
+            />
             
-            <div className="glass-panel rounded-xl p-4 flex flex-col items-center justify-center gap-2">
-              <BarChart3 size={24} className="text-purple-400" />
-              <p className="text-sm text-center">Track Progress</p>
-            </div>
+            <FeatureCard 
+              icon={BarChart3} 
+              title="Track Progress"
+              description="Track your progress with comprehensive analytics and data visualization. See your weight trends, body composition changes, and nutritional intake to stay motivated and on track with your goals."
+            />
             
-            <div className="glass-panel rounded-xl p-4 flex flex-col items-center justify-center gap-2">
-              <LineChart size={24} className="text-purple-400" />
-              <p className="text-sm text-center">Scientific Approach</p>
-            </div>
+            <FeatureCard 
+              icon={LineChart} 
+              title="Scientific Approach"
+              description="Our methodologies are based on peer-reviewed research. We implement formulas like the Mifflin-St Jeor equation for BMR, and account for the Thermic Effect of Food and Non-Exercise Activity Thermogenesis in calorie calculations."
+            />
           </motion.div>
 
           <motion.div
@@ -98,6 +110,43 @@ const HomePage = () => {
         </motion.div>
       </div>
     </div>
+  );
+};
+
+// Feature card component with clickable dialog
+const FeatureCard = ({ 
+  icon: Icon, 
+  title, 
+  description 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  description: string;
+}) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className={cn(
+          "glass-panel rounded-xl p-4 flex flex-col items-center justify-center gap-2",
+          "cursor-pointer hover:bg-accent/10 transition-colors"
+        )}>
+          <Icon size={24} className="text-purple-400" />
+          <p className="text-sm text-center">{title}</p>
+          <Info size={14} className="text-muted-foreground mt-1" />
+        </div>
+      </DialogTrigger>
+      <DialogContent className="glass-panel">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Icon size={18} className="text-purple-400" />
+            <span>{title}</span>
+          </DialogTitle>
+          <DialogDescription className="pt-4 text-foreground/80">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   );
 };
 
