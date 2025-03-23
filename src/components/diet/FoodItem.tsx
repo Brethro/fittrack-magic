@@ -1,8 +1,10 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Info, Star, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import FoodDetailView from "./FoodDetailView";
 
 interface FoodItemProps {
   product: any;
@@ -11,6 +13,7 @@ interface FoodItemProps {
 
 const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const isMobile = useIsMobile();
+  const [showDetailView, setShowDetailView] = useState(false);
 
   // Extract and format nutritional information with better fallbacks
   const calories = product.nutriments?.["energy-kcal_100g"] || 
@@ -86,87 +89,106 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const highlighted = isLikelyExactMatch(productName);
 
   const handleSelectFood = () => {
+    setShowDetailView(true);
+    
     if (onSelect) {
       onSelect(product);
     } else {
       console.log("Selected product:", product);
     }
   };
+  
+  const handleSaveFood = (food: any) => {
+    console.log("Saving food from detail view:", food);
+    // Here you would implement saving to user's food log or diary
+  };
 
   return (
-    <div className={`glass-panel p-4 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
-      <div className="flex justify-between items-start gap-3">
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="font-medium text-md sm:text-lg">{productName}</h3>
-              {highlighted && <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                size="icon"
-                variant="ghost" 
-                className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                onClick={handleSelectFood}
-              >
-                <Info size={18} />
-              </Button>
+    <>
+      <div className={`glass-panel p-4 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-md sm:text-lg">{productName}</h3>
+                {highlighted && <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />}
+              </div>
               
-              <Button 
-                size="icon"
-                variant="outline" 
-                className="h-8 w-8 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-                onClick={handleSelectFood}
-              >
-                <Plus size={18} />
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="icon"
+                  variant="ghost" 
+                  className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+                  onClick={() => setShowDetailView(true)}
+                >
+                  <Info size={18} />
+                </Button>
+                
+                <Button 
+                  size="icon"
+                  variant="outline" 
+                  className="h-8 w-8 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                  onClick={handleSelectFood}
+                >
+                  <Plus size={18} />
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-xs sm:text-sm text-muted-foreground">{brand}</p>
             
-            {mainCategory && (
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                {mainCategory}
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground">{brand}</p>
+              
+              {mainCategory && (
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                  {mainCategory}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Badge className="bg-secondary text-secondary-foreground">
+                {Math.round(calories)} kcal
               </Badge>
-            )}
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Badge className="bg-secondary text-secondary-foreground">
-              {Math.round(calories)} kcal
-            </Badge>
-            <Badge className="bg-secondary text-secondary-foreground">
-              P: {protein.toFixed(1)}g
-            </Badge>
-            <Badge className="bg-secondary text-secondary-foreground">
-              C: {carbs.toFixed(1)}g
-            </Badge>
-            <Badge className="bg-secondary text-secondary-foreground">
-              F: {fat.toFixed(1)}g
-            </Badge>
-          </div>
-          
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-xs sm:text-sm">Serving: {servingSize}</p>
+              <Badge className="bg-secondary text-secondary-foreground">
+                P: {protein.toFixed(1)}g
+              </Badge>
+              <Badge className="bg-secondary text-secondary-foreground">
+                C: {carbs.toFixed(1)}g
+              </Badge>
+              <Badge className="bg-secondary text-secondary-foreground">
+                F: {fat.toFixed(1)}g
+              </Badge>
+            </div>
             
-            {product.image_url && (
-              <img 
-                src={product.image_url} 
-                alt={productName} 
-                className="w-8 h-8 object-contain rounded-md bg-white/5"
-                onError={(e) => {
-                  // Hide broken images
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            )}
+            <div className="flex justify-between items-center mt-2">
+              <p className="text-xs sm:text-sm">Serving: {servingSize}</p>
+              
+              {product.image_url && (
+                <img 
+                  src={product.image_url} 
+                  alt={productName} 
+                  className="w-8 h-8 object-contain rounded-md bg-white/5"
+                  onError={(e) => {
+                    // Hide broken images
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      
+      {/* Food Detail Modal */}
+      {showDetailView && (
+        <FoodDetailView 
+          food={product}
+          source="openfoodfacts"
+          onClose={() => setShowDetailView(false)}
+          onSave={handleSaveFood}
+        />
+      )}
+    </>
   );
 };
 
