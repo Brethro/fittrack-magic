@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -111,6 +110,17 @@ export const useNutritionCalculator = (
       calculatedAdjustPercent = result.surplusPercentage;
       isTimelineDriven = result.isTimelineDriven;
       
+      // FIXED: Force exactly 20% for aggressive pace when not timeline-driven
+      if (userData.goalPace === 'aggressive' && !isTimelineDriven) {
+        // Calculate what 20% surplus calories would be
+        const exactSurplusCalories = Math.floor(tdee * 1.20);
+        // If the calculated amount is close to 20%, use exactly 20%
+        if (Math.abs(exactSurplusCalories - dailyCalories) < tdee * 0.01) { // Within 1% of TDEE
+          dailyCalories = exactSurplusCalories;
+          calculatedAdjustPercent = 20.0;
+        }
+      }
+      
       console.log("Weight gain calculation result:", result);
     } else {
       // Use our refactored weight loss calculator
@@ -163,7 +173,8 @@ export const useNutritionCalculator = (
       isTimelineDriven,
       macros,
       // Store the actual calculated percentage for display purposes
-      calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent
+      calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent,
+      calculatedSurplusPercentage: isWeightGain ? calculatedAdjustPercent : null
     });
     
   }, [userData, updateUserData]);
