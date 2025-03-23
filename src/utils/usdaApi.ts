@@ -6,7 +6,7 @@ const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
 // Rate limiting parameters
 const REQUEST_COOLDOWN = 2000; // Minimum time between requests (2 seconds)
 let lastRequestTime = 0;
-let pendingRequests: Promise<any>[] = [];
+let pendingRequests: Array<{ promise: Promise<any>; isPending: boolean }> = [];
 const MAX_CONCURRENT_REQUESTS = 1;
 
 export interface UsdaFoodItem {
@@ -80,8 +80,10 @@ async function rateLimitedFetch(url: string, options: RequestInit): Promise<Resp
   // Wait if we have too many concurrent requests
   while (pendingRequests.length >= MAX_CONCURRENT_REQUESTS) {
     console.log(`Waiting for pending USDA API requests to complete (${pendingRequests.length} pending)`);
-    await Promise.race(pendingRequests);
-    pendingRequests = pendingRequests.filter(p => p.status === "pending");
+    // Create a promise that resolves when any request completes
+    await Promise.race(pendingRequests.map(req => req.promise));
+    // Filter out completed requests
+    pendingRequests = pendingRequests.filter(req => req.isPending);
   }
   
   // Make the request

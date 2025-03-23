@@ -89,7 +89,7 @@ const DietPage = () => {
             toast({
               title: "USDA API rate limited",
               description: "You've reached the USDA API rate limit. Only showing Open Food Facts results.",
-              variant: "warning",
+              variant: "destructive", // Changed from "warning" to "destructive"
             });
           } else {
             toast({
