@@ -12,7 +12,7 @@ import {
   searchUsdaDatabase, 
   searchWithFallback 
 } from "@/services/foodSearchService";
-import { FoodLogProvider } from "@/contexts/FoodLogContext";
+import { FoodLogProvider, useFoodLog } from "@/contexts/FoodLogContext";
 import FoodLog from "@/components/diet/FoodLog";
 
 const DietPage = () => {
@@ -21,6 +21,14 @@ const DietPage = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { foodEntries } = useFoodLog();
+
+  // Clear search results when a new food entry is added
+  useEffect(() => {
+    // This will trigger whenever foodEntries changes (i.e., when food is added)
+    setSearchResults([]);
+    setUsdaResults([]);
+  }, [foodEntries]);
 
   // Check USDA API connection when selected
   useEffect(() => {
