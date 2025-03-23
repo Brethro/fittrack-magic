@@ -36,7 +36,7 @@ const FoodLog = () => {
         <div className="flex-1 flex overflow-hidden">
           <TabsContent 
             value="log" 
-            className="flex-1 m-0 h-full data-[state=active]:flex data-[state=active]:flex-col"
+            className="flex-1 m-0 h-full data-[state=active]:flex data-[state=active]:flex-col w-full"
           >
             <FoodLogList />
           </TabsContent>
@@ -46,7 +46,7 @@ const FoodLog = () => {
             className="flex-1 m-0 h-full"
           >
             <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <QuickFoodEntry onSuccess={() => setActiveTab("log")} />
+              <QuickFoodEntry onAddSuccess={() => setActiveTab("log")} />
             </div>
           </TabsContent>
         </div>

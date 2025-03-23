@@ -1,14 +1,8 @@
 
 import { format } from "date-fns";
-import { Trash2, Edit, MoreVertical } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { type FoodLogEntry as FoodLogEntryType } from "@/contexts/FoodLogContext";
 
 interface FoodLogEntryProps {
@@ -33,10 +27,10 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
     <div className="w-full bg-background/50 border border-border/40 rounded-md p-3 hover:shadow-sm transition-shadow">
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1 min-w-0">
-          {/* Food name and time */}
+          {/* Food name and time - with max width constraint */}
           <div className="flex justify-between items-center gap-2 mb-1">
-            <h4 className="font-medium text-sm truncate pr-2">{entry.foodName}</h4>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{formattedTime}</span>
+            <h4 className="font-medium text-sm truncate max-w-[70%]">{entry.foodName}</h4>
+            <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">{formattedTime}</span>
           </div>
           
           {/* Amount and unit */}
@@ -44,7 +38,7 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
             {entry.amount} {entry.unit}
           </div>
           
-          {/* Nutrition badges */}
+          {/* Nutrition badges - made flex-wrap */}
           <div className="flex flex-wrap gap-1.5">
             <Badge variant="outline" className="text-xs px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
               {Math.round(nutrition.calories)} kcal
@@ -62,7 +56,7 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
         </div>
         
         {/* Action buttons */}
-        <div className="flex gap-1 shrink-0">
+        <div className="flex gap-1 shrink-0 ml-1">
           <Button 
             variant="ghost" 
             size="icon" 
