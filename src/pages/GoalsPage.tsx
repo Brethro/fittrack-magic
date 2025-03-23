@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -82,6 +83,23 @@ const GoalsPage = () => {
     return Math.ceil(daysNeeded / 7);
   };
 
+  // This function calculates days needed for weight loss based on deficit percentage
+  const calculateDaysNeededForWeightLoss = (deficitPercentage: number) => {
+    if (isWeightGain() || !userData.weight || !form.weightGoal || !userData.tdee) return null;
+    
+    const weightDiff = userData.weight - parseFloat(form.weightGoal);
+    if (weightDiff <= 0) return null; // No weight loss needed
+    
+    const caloriesPerUnit = userData.useMetric ? 7700 : 3500; // Calories per kg or lb
+    const totalCalorieAdjustment = weightDiff * caloriesPerUnit;
+    
+    // Calculate daily deficit based on the given percentage
+    const dailyDeficit = userData.tdee * (deficitPercentage / 100);
+    
+    // Calculate days needed at that deficit rate
+    return Math.ceil(totalCalorieAdjustment / dailyDeficit);
+  };
+
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setForm((prev) => ({ ...prev, goalDate: date }));
@@ -130,19 +148,42 @@ const GoalsPage = () => {
         }
       }
     } else {
-      // Use standard timeframes for weight loss scenarios
+      // For weight loss, calculate based on deficit percentages
+      let deficitPercentage;
+      
       switch (pace) {
-        case "aggressive":
-          newDate = addWeeks(new Date(), 8);
+        case "conservative":
+          deficitPercentage = 10; // 10% deficit
           break;
         case "moderate":
-          newDate = addMonths(new Date(), 3);
+          deficitPercentage = 15; // 15% deficit
           break;
-        case "conservative":
-          newDate = addMonths(new Date(), 6);
+        case "aggressive":
+          deficitPercentage = 20; // 20% deficit
           break;
         default:
-          newDate = addMonths(new Date(), 3);
+          deficitPercentage = 15; // Default to moderate
+      }
+      
+      const daysNeeded = calculateDaysNeededForWeightLoss(deficitPercentage);
+      
+      if (daysNeeded) {
+        newDate = addDays(new Date(), daysNeeded);
+      } else {
+        // Fallback to default timeframes if we can't calculate
+        switch (pace) {
+          case "aggressive":
+            newDate = addWeeks(new Date(), 8);
+            break;
+          case "moderate":
+            newDate = addMonths(new Date(), 3);
+            break;
+          case "conservative":
+            newDate = addMonths(new Date(), 6);
+            break;
+          default:
+            newDate = addMonths(new Date(), 3);
+        }
       }
     }
     
@@ -152,6 +193,13 @@ const GoalsPage = () => {
       goalDate: newDate
     }));
   };
+
+  // Recalculate goal date when target weight changes
+  useEffect(() => {
+    if (form.goalPace && (form.weightGoal || form.bodyFatGoal)) {
+      handlePaceChange(form.goalPace);
+    }
+  }, [form.weightGoal, form.bodyFatGoal, form.goalType]);
 
   const calculateTargetGoal = () => {
     if (!userData.weight) return null;
