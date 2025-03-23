@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FoodPreferences } from "@/components/diet/FoodPreferences";
 import { MealPlanDisplay } from "@/components/diet/MealPlanDisplay";
 import { EmptyStateMessage } from "@/components/diet/EmptyStateMessage";
-import { DietSelector } from "@/components/diet/DietSelector"; // Add import for DietSelector
+import { DietSelector } from "@/components/diet/DietSelector"; 
 import { foodCategoriesData } from "@/data/diet";
 import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
@@ -120,7 +120,7 @@ const DietPage = () => {
                 setIncludeFreeMeal={setIncludeFreeMeal}
                 generateMealPlan={handleGenerateMealPlan}
                 dailyCalories={userData.dailyCalories || 2000}
-                // Remove the availableDiets prop since we're already selecting the diet in the DietSelector component above
+                // We've made the availableDiets optional in FoodPreferences, so we don't need to pass it here
               />
             </TabsContent>
             

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +30,8 @@ interface FoodPreferencesProps {
   setIncludeFreeMeal: (include: boolean) => void;
   generateMealPlan: () => void;
   dailyCalories: number;
-  availableDiets: DietType[];
+  // Make availableDiets optional since we're handling the diet selection in DietSelector component
+  availableDiets?: DietType[];
 }
 
 // Group food items by their primary category
