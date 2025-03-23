@@ -451,27 +451,32 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const leanBodyMass = weightInKg * (1 - (bodyFatPercentage / 100));
     const isMale = userData.gender !== 'female';
     
-    // Protein calculation based on goal and lean body mass
+    // UPDATED: Protein calculation based on goal and lean body mass
     let proteinPerKgLBM;
     
     if (isWeightGain) {
-      // For weight gain (muscle building), protein recommendations are different
+      // UPDATED: For weight gain (muscle building), protein recommendations increased
       if (isMale) {
         if (bodyFatPercentage > 20) {
-          proteinPerKgLBM = 1.8; // Lower protein for higher body fat
+          proteinPerKgLBM = 2.2; // Increased from 1.8 for higher body fat
         } else if (bodyFatPercentage > 12) {
-          proteinPerKgLBM = 2.0; // Moderate protein for moderate body fat
+          proteinPerKgLBM = 2.4; // Increased from 2.0 for moderate body fat
         } else {
-          proteinPerKgLBM = 2.2; // Higher protein for lower body fat
+          proteinPerKgLBM = 2.6; // Increased from 2.2 for lower body fat
         }
       } else {
         if (bodyFatPercentage > 28) {
-          proteinPerKgLBM = 1.8; // Lower protein for higher body fat
+          proteinPerKgLBM = 2.2; // Increased from 1.8 for higher body fat
         } else if (bodyFatPercentage > 20) {
-          proteinPerKgLBM = 2.0; // Moderate protein for moderate body fat
+          proteinPerKgLBM = 2.4; // Increased from 2.0 for moderate body fat
         } else {
-          proteinPerKgLBM = 2.2; // Higher protein for lower body fat
+          proteinPerKgLBM = 2.6; // Increased from 2.2 for lower body fat
         }
+      }
+      
+      // For aggressive bulks, provide even more protein
+      if (userData.goalPace === "aggressive") {
+        proteinPerKgLBM += 0.2; // Additional protein for aggressive bulking
       }
     } else {
       // For weight loss, keep the existing higher protein recommendations

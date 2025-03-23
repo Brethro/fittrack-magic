@@ -60,16 +60,16 @@ export function NutritionPanel() {
               <h4 className="font-medium">How we calculated your nutrition</h4>
               
               {isWeightGain ? (
-                // Weight Gain Explanation
+                // Weight Gain Explanation - Updated with higher protein recommendations
                 <>
                   <p className="text-sm text-muted-foreground">
                     Your daily calories are calculated based on your TDEE (Total Daily Energy Expenditure) with a {surplusPercent}% surplus 
                     to help you gain muscle with minimal fat accumulation by your target date.
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    The protein amount ({userData.macros.protein}g) is designed to support muscle protein synthesis—approximately {userData.bodyFatPercentage ? 
-                    `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '1.8-2.2g per kg'} of 
-                    lean body mass.
+                    The protein amount ({userData.macros.protein}g) is designed to maximize muscle protein synthesis—approximately {userData.bodyFatPercentage ? 
+                    `${(userData.macros.protein / ((userData.weight || 70) * (1 - (userData.bodyFatPercentage / 100)) / (userData.useMetric ? 1 : 2.2))).toFixed(1)}g per kg` : '2.2-2.6g per kg'} of 
+                    lean body mass, which research shows is optimal for muscle growth.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Higher carbohydrates provide energy for intense training sessions and recovery, while fats are set at 30% of total calories to support hormonal health during muscle building.
@@ -98,7 +98,7 @@ export function NutritionPanel() {
                 <p className="text-xs text-muted-foreground">
                   We use the {userData.bodyFatPercentage ? 'Katch-McArdle' : 'Mifflin-St Jeor'} equation 
                   to calculate your BMR, then apply activity multipliers. The macro balance is optimized for your 
-                  {isWeightGain ? ' muscle building goals, with sufficient carbohydrates for training energy and recovery.' : ' goal of preserving muscle during fat loss, which research shows requires higher protein intake than maintenance.'}
+                  {isWeightGain ? ' muscle building goals, with enhanced protein for optimal muscle growth and sufficient carbohydrates for training energy and recovery.' : ' goal of preserving muscle during fat loss, which research shows requires higher protein intake than maintenance.'}
                 </p>
               </div>
             </div>
