@@ -151,4 +151,11 @@ export type DietType =
   | "italian"
   | "paleo"
   | "keto"
-  | "pescatarian";
+  | "pescatarian"
+  | "low-carb"
+  | "high-protein"
+  | "carnivore"
+  | "whole30"
+  | "atkins"
+  | "zone";
+
