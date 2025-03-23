@@ -11,10 +11,11 @@ export const useFoodDatabase = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [totalFoodItems, setTotalFoodItems] = useState(0);
   const [categoriesInitialized, setCategoriesInitialized] = useState(false);
+  const [apiFailedCount, setApiFailedCount] = useState(0);
 
   // Function to search for foods using the Open Food Facts API
   const searchFoodItems = async (query: string, page = 1, pageSize = 20) => {
-    if (query.length < 2) {
+    if (query.length < 2 || apiFailedCount > 2) {
       return [];
     }
     
@@ -41,10 +42,12 @@ export const useFoodDatabase = () => {
       return results;
     } catch (error) {
       console.error("Error searching foods:", error);
+      setApiFailedCount(prev => prev + 1);
+      
       toast({
         title: "Search Error",
-        description: "There was an error searching for food items.",
-        variant: "destructive",
+        description: "Using local food database instead.",
+        variant: "default",
       });
       return [];
     } finally {
@@ -54,6 +57,12 @@ export const useFoodDatabase = () => {
 
   // Function to load initial food data
   const initializeFoodData = async () => {
+    if (apiFailedCount > 2) {
+      console.log("Too many API failures, using local data only");
+      setCategoriesInitialized(true);
+      return [];
+    }
+    
     setIsLoading(true);
     try {
       const popularFoods = await getPopularFoods();
@@ -73,11 +82,9 @@ export const useFoodDatabase = () => {
       return popularFoods;
     } catch (error) {
       console.error("Error initializing food data:", error);
-      toast({
-        title: "Initialization Error",
-        description: "There was an error loading initial food data.",
-        variant: "destructive",
-      });
+      setApiFailedCount(prev => prev + 1);
+      setCategoriesInitialized(true); // Still mark as initialized even on failure
+      
       return [];
     } finally {
       setIsLoading(false);
@@ -91,6 +98,23 @@ export const useFoodDatabase = () => {
 
   // Import food data - this will now search for poultry in the API
   const importPoultryData = async () => {
+    if (apiFailedCount > 2) {
+      toast({
+        title: "API Unavailable",
+        description: "Cannot import data, using local database only.",
+        variant: "destructive",
+      });
+      return {
+        success: false,
+        message: "API unavailable, using local data only",
+        addedCount: 0,
+        updatedCount: 0,
+        failedCount: 0,
+        failedItems: [],
+        dietTypes: []
+      };
+    }
+    
     setIsLoading(true);
     try {
       const poultryFoods = await searchFoods("chicken OR turkey OR poultry", 1, 50);
@@ -133,16 +157,17 @@ export const useFoodDatabase = () => {
       };
     } catch (error) {
       console.error("Error importing poultry data:", error);
+      setApiFailedCount(prev => prev + 1);
       
       toast({
         title: "Import Error",
-        description: "There was an error importing poultry data from Open Food Facts.",
-        variant: "destructive",
+        description: "Using local food data instead.",
+        variant: "default",
       });
       
       return {
         success: false,
-        message: "Error importing poultry data: " + (error instanceof Error ? error.message : String(error)),
+        message: "Error importing poultry data, using local data",
         addedCount: 0,
         updatedCount: 0,
         failedCount: 0,
@@ -164,6 +189,7 @@ export const useFoodDatabase = () => {
     searchFoodItems,
     initializeFoodData,
     foodItems,
-    isLoading
+    isLoading,
+    apiFailedCount
   };
 };

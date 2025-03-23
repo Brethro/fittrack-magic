@@ -1,4 +1,3 @@
-
 import { FoodItem, FoodPrimaryCategory } from "@/types/diet";
 
 // API endpoints
@@ -47,6 +46,18 @@ interface OpenFoodFactsProduct {
 const foodSearchCache: Record<string, {timestamp: number, results: FoodItem[]}> = {};
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
+// API call timeout - 5 seconds max
+const API_TIMEOUT = 5000;
+
+// Create a timeout promise
+const timeoutPromise = (ms: number) => {
+  return new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Request timed out after ${ms}ms`));
+    }, ms);
+  });
+};
+
 /**
  * Search for food items in Open Food Facts database
  */
@@ -71,7 +82,12 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
   
   try {
     console.log(`Searching Open Food Facts for "${query}"`);
-    const response = await fetch(`${SEARCH_URL}?${params.toString()}`);
+    
+    // Race between the fetch and a timeout
+    const response = await Promise.race([
+      fetch(`${SEARCH_URL}?${params.toString()}`),
+      timeoutPromise(API_TIMEOUT)
+    ]);
     
     if (!response.ok) {
       throw new Error(`Open Food Facts API error: ${response.status}`);
@@ -89,7 +105,8 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
     return foodItems;
   } catch (error) {
     console.error("Error searching Open Food Facts:", error);
-    throw error;
+    // Return empty array but don't throw - let calling code handle gracefully
+    return [];
   }
 };
 
@@ -98,7 +115,11 @@ export const searchFoods = async (query: string, page = 1, pageSize = 20): Promi
  */
 export const getFoodByBarcode = async (barcode: string): Promise<FoodItem | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/product/${barcode}`);
+    // Race between the fetch and a timeout
+    const response = await Promise.race([
+      fetch(`${BASE_URL}/product/${barcode}`),
+      timeoutPromise(API_TIMEOUT)
+    ]);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -115,7 +136,7 @@ export const getFoodByBarcode = async (barcode: string): Promise<FoodItem | null
     return mapProductToFoodItem(data.product);
   } catch (error) {
     console.error(`Error getting food by barcode ${barcode}:`, error);
-    throw error;
+    return null;
   }
 };
 
@@ -292,6 +313,16 @@ export const getFoodsByDiet = async (dietType: string, page = 1, pageSize = 20):
  * Get popular or recommended foods (useful for initial loading)
  */
 export const getPopularFoods = async (): Promise<FoodItem[]> => {
+  // Check cache first
+  const cacheKey = "popular-foods";
+  const cachedData = foodSearchCache[cacheKey];
+  const now = Date.now();
+  
+  if (cachedData && (now - cachedData.timestamp < CACHE_DURATION)) {
+    console.log("Using cached popular foods");
+    return cachedData.results;
+  }
+  
   // Parameters for the API request - get popular foods based on popularity
   const params = new URLSearchParams({
     sort_by: "popularity_key",
@@ -300,16 +331,28 @@ export const getPopularFoods = async (): Promise<FoodItem[]> => {
   });
   
   try {
-    const response = await fetch(`${SEARCH_URL}?${params.toString()}`);
+    // Race between the fetch and a timeout
+    const response = await Promise.race([
+      fetch(`${SEARCH_URL}?${params.toString()}`),
+      timeoutPromise(API_TIMEOUT)
+    ]);
     
     if (!response.ok) {
       throw new Error(`Open Food Facts API error: ${response.status}`);
     }
     
     const data: OpenFoodFactsResponse = await response.json();
-    return data.products.map(mapProductToFoodItem);
+    const foodItems = data.products.map(mapProductToFoodItem);
+    
+    // Cache the results
+    foodSearchCache[cacheKey] = {
+      timestamp: now,
+      results: foodItems
+    };
+    
+    return foodItems;
   } catch (error) {
     console.error("Error getting popular foods:", error);
-    throw error;
+    return [];
   }
 };

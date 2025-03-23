@@ -27,3 +27,28 @@ export const getFilteredItems = (
   
   return filteredItems;
 };
+
+// Cache the search results to prevent repeated searches
+const searchCache = new Map<string, FoodItem[]>();
+
+// Get or compute and cache filtered items
+export const getCachedFilteredItems = (
+  items: FoodItem[],
+  searchQuery: string,
+  selectedDiet: DietType
+): FoodItem[] => {
+  const cacheKey = `${searchQuery}-${selectedDiet}`;
+  
+  if (!searchCache.has(cacheKey)) {
+    const results = getFilteredItems(items, searchQuery, selectedDiet);
+    searchCache.set(cacheKey, results);
+    return results;
+  }
+  
+  return searchCache.get(cacheKey) || [];
+};
+
+// Clear the search cache when needed
+export const clearSearchCache = () => {
+  searchCache.clear();
+};

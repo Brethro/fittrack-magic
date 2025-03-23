@@ -14,6 +14,8 @@ import { useMealPlanState } from "@/components/diet/useMealPlanState";
 import { useFoodSelectionState } from "@/components/diet/useFoodSelectionState";
 import { getAvailableDietTypes } from "@/utils/diet/foodDataProcessing";
 import { useFoodDatabase } from "@/components/admin/diet/FoodUtils";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const DietPage = () => {
   const navigate = useNavigate();
@@ -23,26 +25,33 @@ const DietPage = () => {
   const [initialized, setInitialized] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { initializeFoodData } = useFoodDatabase();
+  const [apiError, setApiError] = useState(false);
+  const [apiAttempted, setApiAttempted] = useState(false);
 
   // Initialize food data on component mount
   useEffect(() => {
     const initData = async () => {
+      if (apiAttempted) return; // Prevent repeated attempts
+      
+      setApiAttempted(true);
       try {
         await initializeFoodData();
         console.log("DietPage: Food data initialized from Open Food Facts API");
         setInitialized(true);
+        setApiError(false);
       } catch (error) {
         console.error("Error initializing food data:", error);
+        setApiError(true);
         toast({
-          title: "Data Initialization Error",
-          description: "There was an error loading food data. Please try again.",
-          variant: "destructive",
+          title: "Data Initialization Notice",
+          description: "Using local data instead of online food database.",
+          variant: "default",
         });
       }
     };
     
     initData();
-  }, [initializeFoodData, toast]);
+  }, [initializeFoodData, toast, apiAttempted]);
 
   // Check if user has required data
   useEffect(() => {
@@ -132,6 +141,16 @@ const DietPage = () => {
           <h1 className="text-2xl font-bold mb-6 text-gradient-purple">
             Your Diet Plan
           </h1>
+          
+          {apiError && (
+            <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-300">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800">Open Food Facts API Unavailable</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                Unable to connect to the online food database. Using local food data instead.
+              </AlertDescription>
+            </Alert>
+          )}
           
           {/* Display Open Food Facts integration component */}
           <FoodData />
