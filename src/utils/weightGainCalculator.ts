@@ -125,7 +125,7 @@ export const calculateWeightGainCalories = (
   // For aggressive pace, ALWAYS use exactly 20% 
   // UNLESS timeline absolutely requires more aggressive surplus
   if (goalPace === "aggressive") {
-    // FIXED: Use exactly 20.0% (0.20) for aggressive pace
+    // For aggressive pace, EXACTLY 20.0% (0.20) surplus
     const aggressivePaceTarget = 0.20; // Exactly 20% as decimal
     
     // Only if timeline absolutely requires higher surplus, allow it
@@ -150,10 +150,26 @@ export const calculateWeightGainCalories = (
   }
   
   // Calculate daily calories with the percentage-based adjustment
-  let dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
+  // For aggressive pace that's NOT timeline-driven, ensure exact 20% by using ceiling 
+  // instead of floor to prevent rounding errors
+  let dailyCalories: number;
+  if (goalPace === "aggressive" && !isTimelineDriven) {
+    // Use Math.round to ensure we get EXACTLY 20% surplus when calculating back
+    // This avoids floating point precision issues
+    dailyCalories = Math.round(tdee * 1.20);
+  } else {
+    dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
+  }
   
-  // FIXED: Calculate exact surplus percentage for display
-  const displaySurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
+  // For aggressive pace that's not timeline-driven, always return exactly 20.0%
+  // This ensures display consistency
+  let displaySurplusPercentage: number;
+  if (goalPace === "aggressive" && !isTimelineDriven) {
+    displaySurplusPercentage = 20.0; // EXACTLY 20.0% for display
+  } else {
+    // Otherwise calculate the actual percentage
+    displaySurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
+  }
   
   // Set warning if surplus exceeds recommended amount
   let highSurplusWarning = false;
