@@ -48,14 +48,14 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   return (
-    <div className="glass-panel rounded-lg">
+    <div className="glass-panel rounded-lg flex flex-col h-full overflow-hidden">
       <div className="px-4 py-3 border-b border-border">
         <h3 className="font-medium">Food Log: {getDateHeader()}</h3>
       </div>
       
-      <ScrollArea className="h-[350px]">
+      <ScrollArea className="flex-1">
         {dailyEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[300px] text-center px-4">
+          <div className="flex flex-col items-center justify-center h-[200px] text-center px-4">
             <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
             <p className="text-base font-medium">No foods logged yet</p>
             <p className="text-xs text-muted-foreground max-w-[220px] mt-1">
@@ -107,7 +107,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
                     <FoodLogEntry 
                       key={entry.id}
                       entry={entry}
-                      onEdit={handleEdit}
+                      onEdit={handleDelete}
                       onDelete={handleDelete}
                     />
                   ))}

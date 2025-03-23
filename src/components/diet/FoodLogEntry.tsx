@@ -30,7 +30,7 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   };
   
   return (
-    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start">
+    <div className="glass-panel p-2.5 rounded-md hover:shadow-md transition-shadow flex justify-between items-start gap-2">
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-medium text-sm truncate">{entry.foodName}</h4>
@@ -62,24 +62,35 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
         </div>
       </div>
       
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-6 w-6 -mt-0.5">
-            <MoreVertical className="h-3.5 w-3.5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[130px]">
-          <DropdownMenuItem className="cursor-pointer" onClick={() => onEdit(entry)}>
-            <Edit className="mr-2 h-4 w-4" /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            className="cursor-pointer text-destructive" 
-            onClick={() => onDelete(entry.id)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-start gap-1 shrink-0">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" 
+          onClick={() => onDelete(entry.id)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <MoreVertical className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[130px]">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => onEdit(entry)}>
+              <Edit className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer text-destructive" 
+              onClick={() => onDelete(entry.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
