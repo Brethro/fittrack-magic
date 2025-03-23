@@ -102,14 +102,14 @@ const DailyStats = () => {
               <p className="text-2xl font-bold">{userData.dailyCalories}</p>
               <p className="text-sm text-muted-foreground mb-1">calories</p>
             </div>
-            {calorieAdjustmentText && (
-              <p className="text-sm text-primary font-medium">{calorieAdjustmentText}</p>
-            )}
             <Progress 
               value={caloriePercentage} 
               className="h-1 bg-muted/30" 
               indicatorClassName="bg-amber-400" 
             />
+            {calorieAdjustmentText && (
+              <p className="text-sm text-primary font-medium">{calorieAdjustmentText}</p>
+            )}
           </div>
           
           {/* Protein Intake */}
