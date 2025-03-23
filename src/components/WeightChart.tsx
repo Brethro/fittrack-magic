@@ -61,7 +61,8 @@ export function WeightChart() {
       targetWeight,
       totalDays,
       isWeightGain,
-      goalDate: format(goalDate, "yyyy-MM-dd")
+      goalDate: format(goalDate, "yyyy-MM-dd"),
+      goalPace: userData.goalPace
     });
     
     // Sort weight log by date (oldest first) for consistent charting
@@ -90,7 +91,8 @@ export function WeightChart() {
       targetWeight,
       weightChange,
       dailyChange,
-      remainingDays: totalDays
+      remainingDays: totalDays,
+      calculatedDailyChange: dailyChange
     });
     
     // For past dates (before today), create a flat line at starting weight
@@ -115,12 +117,58 @@ export function WeightChart() {
       fullDate: today
     });
     
-    // Generate future projection points
+    // Calculate an adjusted daily change rate based on the goal pace
+    // This ensures aggressive goals reach the target weight by the goal date
+    let adjustedDailyChange = dailyChange;
+    
+    // Apply pace-specific adjustments for more accurate projections
+    if (userData.goalPace) {
+      if (isWeightGain) {
+        // For weight gain, adjust based on surplus percentages
+        switch (userData.goalPace) {
+          case "aggressive": 
+            // For aggressive, ensure we reach the full goal by the date (no adjustment needed)
+            break;
+          case "moderate":
+            // For moderate, slightly reduce the daily change (90% of aggressive)
+            adjustedDailyChange = dailyChange * 0.9;
+            break;
+          case "conservative":
+            // For conservative, further reduce the daily change (80% of aggressive)
+            adjustedDailyChange = dailyChange * 0.8;
+            break;
+        }
+      } else {
+        // For weight loss, adjust based on deficit percentages
+        switch (userData.goalPace) {
+          case "aggressive":
+            // For aggressive, ensure we reach the full goal by the date (no adjustment needed)
+            break;
+          case "moderate":
+            // For moderate, slightly reduce the daily change (90% of aggressive)
+            adjustedDailyChange = dailyChange * 0.9;
+            break;
+          case "conservative":
+            // For conservative, further reduce the daily change (75% of aggressive)
+            adjustedDailyChange = dailyChange * 0.75;
+            break;
+        }
+      }
+    }
+    
+    // Log the adjusted daily change for debugging
+    console.log("Adjusted daily change based on pace:", {
+      originalDailyChange: dailyChange,
+      adjustedDailyChange: adjustedDailyChange,
+      pace: userData.goalPace
+    });
+    
+    // Generate future projection points with the adjusted daily change
     for (let day = 1; day <= totalDays; day++) {
       const currentDate = addDays(today, day);
       
-      // Calculate weight with precise decimal values for this day
-      const projectedWeight = startWeight + (dailyChange * day);
+      // Calculate weight with precise decimal values for this day using the adjusted rate
+      const projectedWeight = startWeight + (adjustedDailyChange * day);
       
       projectionData.push({
         date: format(currentDate, "MMM d"),
