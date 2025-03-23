@@ -27,7 +27,7 @@ const FoodSearchResults = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="space-y-4"
+      className="space-y-3"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Search Results</h2>
@@ -42,7 +42,7 @@ const FoodSearchResults = ({
       
       {/* Open Food Facts results */}
       {hasOpenFoodResults && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {results.map((product, index) => (
             <motion.div
               key={`off-${product.id || index}`}
@@ -58,10 +58,10 @@ const FoodSearchResults = ({
       
       {/* USDA results */}
       {hasUsdaResults && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mt-4 mb-2">
-            <h3 className="text-md font-medium text-emerald-500">USDA Database Results</h3>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mt-3 mb-1">
+            <h3 className="text-base font-medium text-emerald-500">USDA Database Results</h3>
+            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
               {usdaResults.length} items
             </Badge>
           </div>
@@ -81,8 +81,8 @@ const FoodSearchResults = ({
       
       {/* No results message */}
       {!hasOpenFoodResults && !hasUsdaResults && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
+        <div className="text-center py-6">
+          <p className="text-muted-foreground text-sm">
             No results found. Try different search terms or check your spelling.
           </p>
         </div>

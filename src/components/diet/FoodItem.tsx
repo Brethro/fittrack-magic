@@ -127,69 +127,69 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
 
   return (
     <>
-      <div className={`glass-panel p-4 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
-        <div className="flex justify-between items-start gap-3">
+      <div className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
+        <div className="flex justify-between items-start gap-2">
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="font-medium text-md sm:text-lg">{productName}</h3>
-                {highlighted && <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />}
+                <h3 className="font-medium text-sm sm:text-base line-clamp-1">{productName}</h3>
+                {highlighted && <Star className="h-3 w-3 text-yellow-500" fill="currentColor" />}
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button 
                   size="icon"
                   variant="ghost" 
-                  className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+                  className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary"
                   onClick={() => setShowDetailView(true)}
                 >
-                  <Info size={18} />
+                  <Info size={16} />
                 </Button>
                 
                 <Button 
                   size="icon"
                   variant="outline" 
-                  className="h-8 w-8 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                  className="h-7 w-7 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
                   onClick={handleSelectFood}
                 >
-                  <Plus size={18} />
+                  <Plus size={16} />
                 </Button>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-xs sm:text-sm text-muted-foreground">{brand}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-muted-foreground">{brand}</p>
               
               {mainCategory && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
                   {mainCategory}
                 </Badge>
               )}
             </div>
             
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Badge className="bg-secondary text-secondary-foreground">
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
                 {Math.round(calories)} kcal
               </Badge>
-              <Badge className="bg-secondary text-secondary-foreground">
+              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
                 P: {protein.toFixed(1)}g
               </Badge>
-              <Badge className="bg-secondary text-secondary-foreground">
+              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
                 C: {carbs.toFixed(1)}g
               </Badge>
-              <Badge className="bg-secondary text-secondary-foreground">
+              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
                 F: {fat.toFixed(1)}g
               </Badge>
             </div>
             
-            <div className="flex justify-between items-center mt-2">
-              <p className="text-xs sm:text-sm">Serving: {servingSize}</p>
+            <div className="flex justify-between items-center mt-1.5">
+              <p className="text-xs">Serving: {servingSize}</p>
               
               {product.image_url && (
                 <img 
                   src={product.image_url} 
                   alt={productName} 
-                  className="w-8 h-8 object-contain rounded-md bg-white/5"
+                  className="w-6 h-6 object-contain rounded-md bg-white/5"
                   onError={(e) => {
                     // Hide broken images
                     (e.target as HTMLImageElement).style.display = 'none';

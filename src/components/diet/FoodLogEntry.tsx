@@ -21,11 +21,11 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
   };
   
   return (
-    <div className="w-full py-4 px-3 border-b border-border/20 last:border-0">
-      <div className="flex flex-col w-full gap-1.5">
+    <div className="w-full py-3 px-3 border-b border-border/20 last:border-0">
+      <div className="flex flex-col w-full gap-1">
         {/* Food Name and Actions */}
         <div className="flex justify-between items-start w-full gap-1">
-          <h4 className="font-medium text-base text-foreground break-words overflow-hidden overflow-ellipsis max-w-[80%]">{entry.foodName}</h4>
+          <h4 className="font-medium text-sm text-foreground break-words overflow-hidden overflow-ellipsis max-w-[80%]">{entry.foodName}</h4>
           <div className="flex gap-1 shrink-0">
             <Button 
               variant="ghost" 
@@ -47,22 +47,22 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
         </div>
         
         {/* Amount and unit */}
-        <div className="text-sm text-muted-foreground text-right">
+        <div className="text-xs text-muted-foreground text-right">
           {entry.amount} {entry.unit}
         </div>
         
         {/* Nutrition badges */}
-        <div className="flex flex-wrap gap-2 mt-1">
-          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-primary/10 text-primary border-primary/20">
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
             {Math.round(nutrition.calories)} kcal
           </Badge>
-          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-blue-500/10 text-blue-500 border-blue-300/20">
+          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-blue-500/10 text-blue-500 border-blue-300/20">
             P: {nutrition.protein.toFixed(1)}g
           </Badge>
-          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-amber-500/10 text-amber-500 border-amber-300/20">
+          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-amber-500/10 text-amber-500 border-amber-300/20">
             C: {nutrition.carbs.toFixed(1)}g
           </Badge>
-          <Badge variant="outline" className="text-sm px-3 py-0.5 h-6 bg-green-500/10 text-green-500 border-green-300/20">
+          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-green-500/10 text-green-500 border-green-300/20">
             F: {nutrition.fat.toFixed(1)}g
           </Badge>
         </div>
