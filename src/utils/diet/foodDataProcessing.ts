@@ -1,39 +1,57 @@
 
+import { FoodCategory } from "@/types/diet";
+
 /**
- * @deprecated - This file is scheduled for replacement with Open Food Facts API integration
+ * @deprecated - This module has been replaced by Open Food Facts API integration
  * 
- * This file now re-exports functionality from smaller, more focused modules
- * to maintain backward compatibility with existing imports.
+ * This file now contains stub implementations to maintain compatibility
+ * during the migration to Open Food Facts API.
  */
 
-// Re-export from the new diet type management module
-export {
-  availableDietTypes,
-  addDietType,
-  collectDietTypes,
-  getAvailableDietTypes,
-  reparseFoodDatabaseForDietTypes
-} from './dietTypeManagement';
+// Stub export for backward compatibility
+export const categoryDisplayNames = {};
 
-// Re-export from the category display names module
-export { categoryDisplayNames } from './categoryDisplayNames';
+// Stub implementation for backward compatibility
+export const processRawFoodData = (categories: FoodCategory[]): FoodCategory[] => {
+  console.warn('processRawFoodData is deprecated - Open Food Facts API migration in progress');
+  return [];
+};
 
-// Re-export from the food processing utilities module
-export {
-  processRawFoodData,
-  batchProcessFoodData
-} from './foodProcessingUtils';
+// Stub implementation for backward compatibility
+export const batchProcessFoodData = () => {
+  console.warn('batchProcessFoodData is deprecated - Open Food Facts API migration in progress');
+  return [];
+};
 
-// Re-export from the food search utilities module
-export { searchFoodItems } from './foodSearchUtils';
+// Stub implementation for backward compatibility
+export const searchFoodItems = () => {
+  console.warn('searchFoodItems is deprecated - Open Food Facts API migration in progress');
+  return [];
+};
 
-// Re-export monitoring and feedback utilities for external use
-export { 
-  logCategorizationEvent, 
-  logErrorEvent 
-} from '@/utils/diet/testingMonitoring';
+// Stub implementation for backward compatibility
+export const availableDietTypes = ["all"];
 
-export { 
-  fuzzyFindFood,
-  identifyPotentialMiscategorizations
-} from '@/utils/diet/fuzzyMatchUtils';
+// Stub implementation for backward compatibility
+export const addDietType = () => {};
+
+// Stub implementation for backward compatibility
+export const collectDietTypes = () => ["all"];
+
+// Stub implementation for backward compatibility
+export const getAvailableDietTypes = () => ["all"];
+
+// Stub implementation for backward compatibility
+export const reparseFoodDatabaseForDietTypes = () => ["all"];
+
+// Stub implementation for backward compatibility
+export const logCategorizationEvent = () => {};
+
+// Stub implementation for backward compatibility
+export const logErrorEvent = () => {};
+
+// Stub implementation for backward compatibility
+export const fuzzyFindFood = () => [];
+
+// Stub implementation for backward compatibility
+export const identifyPotentialMiscategorizations = () => [];

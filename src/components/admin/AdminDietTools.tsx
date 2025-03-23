@@ -1,25 +1,18 @@
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Database, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Reparse } from "./diet/Reparse";
-import { ParseResults } from "./diet/ParseResults";
-import { JsonImport } from "./diet/JsonImport";
-import { AddFoodForm } from "./diet/AddFoodForm";
-import { useFoodDatabase } from "./diet/FoodUtils";
+import { Button } from "@/components/ui/button";
 
 export const AdminDietTools = () => {
-  const { totalFoodItems, lastParseResults, setLastParseResults, importPoultryData } = useFoodDatabase();
-
   return (
     <div className="space-y-6">
       <Alert variant="warning" className="mb-4">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Deprecation Notice</AlertTitle>
+        <AlertTitle>Food Database Migration</AlertTitle>
         <AlertDescription>
-          The current food database system is being deprecated and will be replaced with Open Food Facts API integration.
-          Only use these tools for maintenance until the new system is implemented.
+          The internal food database has been deprecated and is being replaced with Open Food Facts API integration.
+          This admin panel will be updated when the new system is implemented.
         </AlertDescription>
       </Alert>
 
@@ -27,31 +20,55 @@ export const AdminDietTools = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Database className="mr-2 h-5 w-5" />
-            Diet Database Tools
+            Open Food Facts API Migration
           </CardTitle>
           <CardDescription>
-            Tools for managing the diet database
+            Admin tools for the new Open Food Facts API integration
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <button 
-              onClick={importPoultryData} 
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors mb-4"
-            >
-              Import Poultry Data Manually
-            </button>
+          <div className="space-y-6">
+            <div className="bg-muted/50 p-4 rounded-md">
+              <h3 className="text-sm font-medium mb-2">Migration Status</h3>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+                <p className="text-sm">In Progress</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                The food database system is being migrated to Open Food Facts API.
+                Admin tools will be available after integration is complete.
+              </p>
+            </div>
             
-            <Reparse 
-              totalFoodItems={totalFoodItems} 
-              setLastParseResults={setLastParseResults} 
-            />
+            <div>
+              <h3 className="text-sm font-medium mb-2">Open Food Facts Resources</h3>
+              <div className="space-y-2">
+                <a 
+                  href="https://openfoodfacts.org/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm text-blue-600 hover:underline"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open Food Facts Website
+                </a>
+                <a 
+                  href="https://wiki.openfoodfacts.org/API" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm text-blue-600 hover:underline"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  API Documentation
+                </a>
+              </div>
+            </div>
 
-            <ParseResults lastParseResults={lastParseResults} />
-            
-            <JsonImport setLastParseResults={setLastParseResults} />
-
-            <AddFoodForm setLastParseResults={setLastParseResults} />
+            <div className="pt-4 border-t">
+              <Button disabled>
+                Check API Status
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
