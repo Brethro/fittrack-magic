@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { X, ChevronUp, ChevronDown, Save, Clock, Database, Plus, Coffee } from "lucide-react";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { X, ChevronUp, ChevronDown, Save, Clock, Database, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -88,17 +89,15 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   }, [food, source]);
   
   // Initialize from USDA food data
-  const initializeUsdaFood = (usdaFood: UsdaFoodItem) => {
+  const initializeUsdaFood = useCallback((usdaFood: UsdaFoodItem) => {
     // Extract basic nutrition
-    const nutritionData = extractNutritionInfo(usdaFood);
-    // Remove the 'serving' property before setting state
-    const { serving, ...nutrition } = nutritionData;
-    setBaseNutrition(nutrition);
-    setCurrentNutrition(nutrition);
+    const { nutritionValues, servingInfo } = extractNutritionInfo(usdaFood);
+    setBaseNutrition(nutritionValues);
+    setCurrentNutrition(nutritionValues);
     
     // Set default serving
-    const defaultServing = usdaFood.servingSize || 100;
-    const defaultUnit = usdaFood.servingSizeUnit || "g";
+    const defaultServing = usdaFood.servingSize || servingInfo.size;
+    const defaultUnit = usdaFood.servingSizeUnit || servingInfo.unit;
     
     setValue("amount", defaultServing);
     setValue("unit", defaultUnit);
@@ -126,10 +125,10 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     // Group and sort nutrients by category
     const groupedNutrients = groupNutrientsByCategory(detailedNutrients);
     setDetailedNutrients(groupedNutrients);
-  };
+  }, [setValue]);
   
   // Initialize from Open Food Facts data
-  const initializeOpenFoodFacts = (offFood: any) => {
+  const initializeOpenFoodFacts = useCallback((offFood: any) => {
     // Extract basic nutrition from Open Food Facts format
     const nutrition: NutritionValues = {
       calories: offFood.nutriments?.["energy-kcal_100g"] || 
@@ -193,7 +192,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     // Group and sort nutrients
     const groupedNutrients = groupNutrientsByCategory(detailedNutrients);
     setDetailedNutrients(groupedNutrients);
-  };
+  }, [setValue]);
   
   // Group nutrients by category for better display
   const groupNutrientsByCategory = (nutrients: any[]) => {
@@ -255,20 +254,30 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     return result;
   };
   
-  // Update nutrition values based on serving size
+  // Update nutrition values based on serving size - with dependency optimization
   useEffect(() => {
-    const newNutrition = calculateNutritionFromBaseServing(baseNutrition, amount, unit);
-    setCurrentNutrition(newNutrition);
-    
-    // Calculate standard multiplier for detailed nutrients
-    const standardAmount = convertToStandardUnit(amount, unit);
-    const newMultiplier = standardAmount / 100;
-    setMultiplier(newMultiplier);
+    // Skip initial render
+    if (amount > 0 && unit) {
+      const newNutrition = calculateNutritionFromBaseServing(baseNutrition, amount, unit);
+      setCurrentNutrition(newNutrition);
+      
+      // Calculate standard multiplier for detailed nutrients
+      const standardAmount = convertToStandardUnit(amount, unit);
+      const newMultiplier = standardAmount / 100;
+      setMultiplier(newMultiplier);
+    }
   }, [amount, unit, baseNutrition]);
   
-  // Calculate macronutrient percentages and calories
-  const macroPercentages = calculateMacroPercentages(currentNutrition);
-  const macroCalories = calculateMacroCalories(currentNutrition);
+  // Memoize expensive calculations
+  const macroPercentages = React.useMemo(() => 
+    calculateMacroPercentages(currentNutrition),
+    [currentNutrition]
+  );
+  
+  const macroCalories = React.useMemo(() => 
+    calculateMacroCalories(currentNutrition),
+    [currentNutrition]
+  );
   
   // Handle serving amount adjustments
   const incrementAmount = () => {

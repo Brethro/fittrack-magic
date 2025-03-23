@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { differenceInCalendarDays } from "date-fns";
 
 export type WeightLogEntry = {
@@ -93,21 +92,25 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Save user data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("fitTrackUserData", JSON.stringify(userData));
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem("fitTrackUserData", JSON.stringify(userData));
+    }, 300); // Debounce saving to localStorage to prevent excessive writes
+    
+    return () => clearTimeout(timeoutId);
   }, [userData]);
 
-  const updateUserData = (data: Partial<UserData>) => {
+  const updateUserData = useCallback((data: Partial<UserData>) => {
     console.log("Updating user data with:", data);
     setUserData((prev) => ({ ...prev, ...data }));
-  };
+  }, []);
 
-  const clearUserData = () => {
+  const clearUserData = useCallback(() => {
     setUserData(initialUserData);
     localStorage.removeItem("fitTrackUserData");
-  };
+  }, []);
 
-  // Weight log functions
-  const addWeightLogEntry = (entry: Omit<WeightLogEntry, "id">) => {
+  // Weight log functions with useCallback to prevent unnecessary re-renders
+  const addWeightLogEntry = useCallback((entry: Omit<WeightLogEntry, "id">) => {
     const newEntry = {
       ...entry,
       id: Date.now().toString()
@@ -117,26 +120,26 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...prev,
       weightLog: [...prev.weightLog, newEntry]
     }));
-  };
+  }, []);
 
-  const updateWeightLogEntry = (updatedEntry: WeightLogEntry) => {
+  const updateWeightLogEntry = useCallback((updatedEntry: WeightLogEntry) => {
     setUserData(prev => ({
       ...prev,
       weightLog: prev.weightLog.map(entry => 
         entry.id === updatedEntry.id ? updatedEntry : entry
       )
     }));
-  };
+  }, []);
 
-  const deleteWeightLogEntry = (id: string) => {
+  const deleteWeightLogEntry = useCallback((id: string) => {
     setUserData(prev => ({
       ...prev,
       weightLog: prev.weightLog.filter(entry => entry.id !== id)
     }));
-  };
+  }, []);
 
   // Function to recalculate nutrition values based on current user data
-  const recalculateNutrition = () => {
+  const recalculateNutrition = useCallback(() => {
     console.log("Recalculating nutrition with data:", userData);
     
     if (!userData.age || !userData.weight || !userData.height || !userData.activityLevel) {
@@ -327,18 +330,29 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         fats: fatGrams,
       }
     }));
-  };
+  }, [userData]);
+
+  // Create a stable context value to prevent unnecessary re-renders
+  const contextValue = React.useMemo(() => ({
+    userData, 
+    updateUserData, 
+    clearUserData, 
+    recalculateNutrition,
+    addWeightLogEntry,
+    updateWeightLogEntry,
+    deleteWeightLogEntry
+  }), [
+    userData, 
+    updateUserData, 
+    clearUserData, 
+    recalculateNutrition,
+    addWeightLogEntry,
+    updateWeightLogEntry,
+    deleteWeightLogEntry
+  ]);
 
   return (
-    <UserDataContext.Provider value={{ 
-      userData, 
-      updateUserData, 
-      clearUserData, 
-      recalculateNutrition,
-      addWeightLogEntry,
-      updateWeightLogEntry,
-      deleteWeightLogEntry
-    }}>
+    <UserDataContext.Provider value={contextValue}>
       {children}
     </UserDataContext.Provider>
   );

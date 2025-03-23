@@ -1,4 +1,3 @@
-
 // USDA Food Data Central API utilities
 const USDA_API_KEY = "1su4bvCoKYGVSnyCBgVCwQATKgRWw9uVHqWFTsw2";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
@@ -154,14 +153,19 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
   const fiber = findNutrient(NUTRIENT_IDS.FIBER)?.value || 0;
   const sugars = findNutrient(NUTRIENT_IDS.SUGARS)?.value || 0;
   
-  // For 100g serving - separate serving info and nutrition values
+  // Return a clean nutrition object with optional serving info
   return {
-    calories,
-    protein,
-    carbs,
-    fat,
-    fiber,
-    sugars,
-    serving: "100g", // This will be extracted separately in FoodDetailView.tsx
+    nutritionValues: {
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugars,
+    },
+    servingInfo: {
+      size: 100,
+      unit: "g"
+    }
   };
 }
