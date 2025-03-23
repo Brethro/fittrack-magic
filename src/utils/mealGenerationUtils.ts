@@ -1,193 +1,167 @@
-import { calculateServings, calculateMealTotals } from './macroUtils';
-import { adjustServingsForCalorieTarget } from './mealAdjustUtils';
 
-// Create a food item with the specified servings
-export const createFoodWithServings = (food: any, servings: number): any => {
-  return {
-    id: food.id,
-    name: food.name,
-    servings,
-    servingSizeGrams: food.servingSizeGrams,
-    servingSize: food.servingSize,
-    protein: parseFloat((food.protein * servings).toFixed(1)),
-    carbs: parseFloat((food.carbs * servings).toFixed(1)),
-    fats: parseFloat((food.fats * servings).toFixed(1)),
-    calories: Math.round((food.caloriesPerServing * servings))
-  };
-};
+import { calculateServings, recalculateFoodWithServings } from "./macroUtils";
+import { FoodItem, Meal, MealPlan } from "@/types/diet";
 
-// Create a meal with foods that meet macro targets
-export const createBalancedMeal = (
-  foodItems: any[],
-  targetCalories: number,
-  targetProtein: number,
-  targetCarbs: number,  
-  targetFats: number,
-  mealName: string,
-  tolerance: number = 0.05 // Default tolerance of 5%, can be stricter for specific diets
-): any => {
-  let mealFoods: any[] = [];
+// Generate a complete meal plan based on user preferences
+export const generateMealPlan = (
+  selectedFoods: FoodItem[],
+  totalCalories: number,
+  macros: { protein: number; carbs: number; fats: number },
+  mealCount: number = 3,
+  includeFreeMeal: boolean = false
+): MealPlan => {
+  // Create default meal plan structure
+  const meals: Meal[] = [];
   
-  // Verify we have enough food items to work with
-  if (foodItems.length < 5) {
-    // Create a placeholder meal if not enough foods
-    return {
-      id: `meal-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      name: mealName,
-      foods: [{
-        id: "placeholder",
-        name: "Not enough food options selected",
-        servings: 1,
-        servingSizeGrams: 0,
-        servingSize: "Please select more foods",
-        protein: 0,
-        carbs: 0,
-        fats: 0,
-        calories: 0
-      }],
+  for (let i = 0; i < mealCount; i++) {
+    meals.push({
+      id: `meal-${i + 1}`,
+      name: getMealNameByIndex(i),
+      foods: [],
+      totalCalories: 0,
       totalProtein: 0,
       totalCarbs: 0,
-      totalFats: 0,
-      totalCalories: 0
-    };
+      totalFats: 0
+    });
   }
   
-  // Start with protein sources - prioritize protein above all
-  const proteins = foodItems.filter(food => (food.protein || 0) > 10);
-  if (proteins.length > 0) {
-    // Choose multiple protein sources for variety and to hit targets
-    const proteinOptions = [...proteins];
-    // Shuffle protein options for variety
-    for (let i = proteinOptions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [proteinOptions[i], proteinOptions[j]] = [proteinOptions[j], proteinOptions[i]];
-    }
-    
-    // IMPROVED: Add 1-2 protein sources based on target protein amount
-    const proteinCount = targetProtein > 30 ? 2 : 1;
-    
-    for (let i = 0; i < Math.min(proteinCount, proteinOptions.length); i++) {
-      const protein = proteinOptions[i];
-      // Calculate servings based on protein target (divided among protein sources)
-      const servings = calculateServings(
-        protein, 
-        targetProtein / (Math.min(proteinCount, proteinOptions.length)), 
-        'protein',
-        0.75, // Reduced from 1.0 to avoid consistently going over
-        2.5   // Reduced from 3.0 to avoid consistently going over
-      );
-      
-      mealFoods.push(createFoodWithServings(protein, servings));
-    }
-  }
+  // Distribute foods across meals
+  distributeAcrossMeals(meals, selectedFoods, totalCalories, macros);
   
-  // Add a carb source - scale based on target calories
-  const carbs = foodItems.filter(food => 
-    (food.carbs || 0) > 15 && 
-    !mealFoods.some(mf => mf.id === food.id)
-  );
-  if (carbs.length > 0) {
-    const randomCarb = carbs[Math.floor(Math.random() * carbs.length)];
-    // Scale carb servings based on meal size
-    const carbServingScale = targetCalories < 400 ? 0.6 : 
-                             targetCalories < 600 ? 0.8 : 1.0;
-    const servings = calculateServings(randomCarb, targetCarbs * carbServingScale, 'carbs', 0.5, 1.5);
-    
-    mealFoods.push(createFoodWithServings(randomCarb, servings));
-  }
-  
-  // Add vegetables - high volume, low calorie
-  const veggies = foodItems.filter(food => 
-    food.id.includes("broccoli") || 
-    food.id.includes("spinach") || 
-    food.id.includes("kale") || 
-    food.id.includes("bell_peppers") || 
-    food.id.includes("cucumber") || 
-    food.id.includes("carrots") || 
-    food.id.includes("zucchini") || 
-    food.id.includes("tomatoes") &&
-    !mealFoods.some(mf => mf.id === food.id)
-  );
-  if (veggies.length > 0) {
-    const randomVeggie = veggies[Math.floor(Math.random() * veggies.length)];
-    // Reduce veggie servings for smaller meals
-    const servings = targetCalories < 450 ? 1.0 : 1.5;
-    
-    mealFoods.push(createFoodWithServings(randomVeggie, servings));
-  }
-  
-  // Add healthy fat if needed - scale based on target
-  const currentMacros = calculateMealTotals(mealFoods);
-  if (currentMacros.totalFats < targetFats * 0.6) {
-    const fats = foodItems.filter(food => 
-      (food.fats || 0) > 5 && 
-      !mealFoods.some(mf => mf.id === food.id)
-    );
-    if (fats.length > 0) {
-      const randomFat = fats[Math.floor(Math.random() * fats.length)];
-      // Scale fat servings based on meal size
-      const fatServingScale = targetCalories < 400 ? 0.5 : 
-                             targetCalories < 600 ? 0.75 : 1.0;
-      const servings = calculateServings(randomFat, (targetFats - currentMacros.totalFats) * fatServingScale, 'fats', 0.25, 1.0);
-      
-      mealFoods.push(createFoodWithServings(randomFat, servings));
-    }
-  }
-  
-  // Check initial calorie and protein status
-  let initialTotal = calculateMealTotals(mealFoods);
-  const isCaloriesTooLow = initialTotal.totalCalories < targetCalories * 0.8;
-  const isProteinTooLow = initialTotal.totalProtein < targetProtein * 0.8;
-  
-  // If protein is too low, add another protein source
-  if (isProteinTooLow) {
-    const remainingProteins = proteins.filter(food => 
-      !mealFoods.some(mf => mf.id === food.id)
-    );
-    
-    if (remainingProteins.length > 0) {
-      const additionalProtein = remainingProteins[Math.floor(Math.random() * remainingProteins.length)];
-      const proteinNeeded = targetProtein - initialTotal.totalProtein;
-      // Add just enough to meet target
-      const servings = calculateServings(additionalProtein, proteinNeeded, 'protein', 0.5, 1.0);
-      
-      mealFoods.push(createFoodWithServings(additionalProtein, servings));
-    }
-  }
-  // If calories are too low but protein is ok, add an additional food source
-  else if (isCaloriesTooLow) {
-    // Prioritize adding foods that would contribute to our calorie goal
-    const additionalFoods = foodItems.filter(food => 
-      food.caloriesPerServing > 50 && // Decent calorie contribution
-      !mealFoods.some(mf => mf.id === food.id)
-    );
-    
-    if (additionalFoods.length > 0) {
-      const randomFood = additionalFoods[Math.floor(Math.random() * additionalFoods.length)];
-      // Scale servings based on how much we're under
-      const caloriesNeeded = targetCalories - initialTotal.totalCalories;
-      const caloriesPerServing = randomFood.caloriesPerServing || 0;
-      const servings = caloriesPerServing > 0 ? 
-                        Math.min(caloriesNeeded / caloriesPerServing, 1.0) : 0.75;
-      
-      mealFoods.push(createFoodWithServings(randomFood, servings));
-    }
-  }
-  
-  // Adjust servings to get close to calorie target and protein target
-  // Pass the specified tolerance instead of using a fixed value
-  mealFoods = adjustServingsForCalorieTarget(mealFoods, targetCalories, targetProtein, tolerance);
-  
-  // Calculate final meal totals
-  const totals = calculateMealTotals(mealFoods);
-  
-  return {
-    id: `meal-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    name: mealName,
-    foods: mealFoods,
-    totalProtein: parseFloat(totals.totalProtein.toFixed(1)),
-    totalCarbs: parseFloat(totals.totalCarbs.toFixed(1)),
-    totalFats: parseFloat(totals.totalFats.toFixed(1)),
-    totalCalories: Math.round(totals.totalCalories)
+  // Calculate meal macro totals
+  const mealPlan: MealPlan = {
+    meals,
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFats: 0
   };
+  
+  calculateMealPlanTotals(mealPlan);
+  
+  return mealPlan;
+};
+
+// Get meal name by index
+const getMealNameByIndex = (index: number): string => {
+  const mealNames = ["Breakfast", "Lunch", "Dinner", "Snack", "Second Snack"];
+  return mealNames[index] || `Meal ${index + 1}`;
+};
+
+// Distribute foods across meals
+const distributeAcrossMeals = (
+  meals: Meal[],
+  availableFoods: FoodItem[],
+  totalCalories: number,
+  macros: { protein: number; carbs: number; fats: number }
+): void => {
+  if (!availableFoods.length || !meals.length) return;
+  
+  // Simple distribution logic - just assign foods to meals
+  const caloriesPerMeal = totalCalories / meals.length;
+  const proteinPerMeal = macros.protein / meals.length;
+  
+  const shuffledFoods = [...availableFoods].sort(() => Math.random() - 0.5);
+  
+  meals.forEach((meal, index) => {
+    let currentCalories = 0;
+    let currentProtein = 0;
+    
+    // Starting food index for this meal
+    const startIndex = (index * shuffledFoods.length) / meals.length;
+    const endIndex = ((index + 1) * shuffledFoods.length) / meals.length;
+    
+    // Assign foods to this meal
+    for (let i = Math.floor(startIndex); i < Math.floor(endIndex); i++) {
+      if (i >= shuffledFoods.length) break;
+      
+      const food = shuffledFoods[i];
+      const servings = calculateServings(food, proteinPerMeal / 3, caloriesPerMeal / 3);
+      
+      const foodWithServings = recalculateFoodWithServings(food, servings);
+      meal.foods.push(foodWithServings);
+      
+      currentCalories += foodWithServings.caloriesPerServing || 0;
+      currentProtein += foodWithServings.protein || 0;
+      
+      if (currentCalories >= caloriesPerMeal * 0.8) break;
+    }
+    
+    // Update meal totals
+    calculateMealTotals(meal);
+  });
+};
+
+// Calculate meal totals
+export const calculateMealTotals = (meal: Meal): void => {
+  meal.totalCalories = meal.foods.reduce((sum, food) => sum + (food.caloriesPerServing || 0), 0);
+  meal.totalProtein = meal.foods.reduce((sum, food) => sum + (food.protein || 0), 0);
+  meal.totalCarbs = meal.foods.reduce((sum, food) => sum + (food.carbs || 0), 0);
+  meal.totalFats = meal.foods.reduce((sum, food) => sum + (food.fats || 0), 0);
+};
+
+// Calculate meal plan totals
+export const calculateMealPlanTotals = (mealPlan: MealPlan): void => {
+  mealPlan.totalCalories = mealPlan.meals.reduce((sum, meal) => sum + meal.totalCalories, 0);
+  mealPlan.totalProtein = mealPlan.meals.reduce((sum, meal) => sum + meal.totalProtein, 0);
+  mealPlan.totalCarbs = mealPlan.meals.reduce((sum, meal) => sum + meal.totalCarbs, 0);
+  mealPlan.totalFats = mealPlan.meals.reduce((sum, meal) => sum + meal.totalFats, 0);
+};
+
+// Re-generate a specific meal
+export const regenerateMeal = (
+  mealPlan: MealPlan,
+  mealId: string,
+  selectedFoods: FoodItem[]
+): MealPlan => {
+  const mealIndex = mealPlan.meals.findIndex(meal => meal.id === mealId);
+  if (mealIndex === -1) return mealPlan;
+  
+  // Calculate target calories for this meal
+  const targetCalories = mealPlan.totalCalories / mealPlan.meals.length;
+  const targetProtein = mealPlan.totalProtein / mealPlan.meals.length;
+  
+  // Create a new meal
+  const newMeal: Meal = {
+    id: mealId,
+    name: mealPlan.meals[mealIndex].name,
+    foods: [],
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFats: 0
+  };
+  
+  // Fill with new foods
+  const shuffledFoods = [...selectedFoods].sort(() => Math.random() - 0.5);
+  let currentCalories = 0;
+  
+  for (let i = 0; i < Math.min(5, shuffledFoods.length); i++) {
+    const food = shuffledFoods[i];
+    const servings = calculateServings(food, targetProtein / 3, targetCalories / 4);
+    
+    const foodWithServings = recalculateFoodWithServings(food, servings);
+    newMeal.foods.push(foodWithServings);
+    
+    currentCalories += foodWithServings.caloriesPerServing || 0;
+    if (currentCalories >= targetCalories * 0.8) break;
+  }
+  
+  // Update meal totals
+  calculateMealTotals(newMeal);
+  
+  // Replace the meal in the meal plan
+  const newMeals = [...mealPlan.meals];
+  newMeals[mealIndex] = newMeal;
+  
+  // Create updated meal plan
+  const updatedMealPlan: MealPlan = {
+    ...mealPlan,
+    meals: newMeals
+  };
+  
+  // Recalculate totals
+  calculateMealPlanTotals(updatedMealPlan);
+  
+  return updatedMealPlan;
 };

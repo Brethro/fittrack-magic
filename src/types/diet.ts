@@ -1,28 +1,15 @@
 
-// Minimal types to satisfy dependencies
-
 export type DietType = 
-  | "all"
+  | "all" 
   | "mediterranean" 
   | "vegetarian" 
   | "vegan" 
-  | "japanese" 
-  | "korean"
-  | "mexican" 
-  | "italian" 
   | "paleo" 
   | "keto" 
-  | "pescatarian"
-  | "low-carb"
-  | "high-protein"
-  | "carnivore"
-  | "whole30"
-  | "atkins"
-  | "zone";
+  | "pescatarian";
 
 export type FoodPrimaryCategory = 
   | "meat"
-  | "redMeat"
   | "poultry"
   | "fish"
   | "seafood"
@@ -44,61 +31,73 @@ export type FoodPrimaryCategory =
 export interface FoodItem {
   id: string;
   name: string;
-  primaryCategory?: FoodPrimaryCategory;
+  primaryCategory: FoodPrimaryCategory;
   secondaryCategories?: string[];
-  servingSizeGrams?: number;
   servingSize?: string;
+  servingSizeGrams?: number;
   caloriesPerServing?: number;
-  protein: number;
-  carbs: number;
-  fats: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
   fiber?: number;
   sugars?: number;
   saturatedFat?: number;
   transFat?: number;
   cholesterol?: number;
   sodium?: number;
-  potassium?: number;
   calcium?: number;
   iron?: number;
+  potassium?: number;
+  zinc?: number;
   vitaminA?: number;
   vitaminC?: number;
   vitaminD?: number;
-  addedSugars?: number;
-  polyunsaturatedFat?: number;
-  monounsaturatedFat?: number;
   diets?: string[];
+  servings?: number;
   netCarbs?: number;
 }
 
 export interface FoodCategory {
   name: string;
-  displayName?: string;
-  description?: string;
-  items: FoodItem[];
-}
-
-export interface FoodPrimaryCategoryInfo {
-  name: FoodPrimaryCategory;
   displayName: string;
-  description?: string;
+  items: FoodItem[];
 }
 
 export interface Meal {
   id: string;
   name: string;
-  foods: any[];
+  foods: FoodItem[];
+  totalCalories: number;
   totalProtein: number;
   totalCarbs: number;
   totalFats: number;
-  totalCalories: number;
 }
 
 export interface MealPlan {
-  id: string;
   meals: Meal[];
   totalCalories: number;
   totalProtein: number;
   totalCarbs: number;
   totalFats: number;
+}
+
+export interface FoodSearchOptions {
+  query: string;
+  dietType?: DietType;
+  categories?: FoodPrimaryCategory[];
+  page?: number;
+  pageSize?: number;
+}
+
+export interface NutritionGoals {
+  dailyCalories: number;
+  targetProtein: number;
+  targetCarbs: number;
+  targetFats: number;
+}
+
+export interface DietPreferences {
+  selectedDiet: DietType;
+  excludedCategories: FoodPrimaryCategory[];
+  includeFreeMeal: boolean;
 }

@@ -1,4 +1,6 @@
 
+// This file defines the human-readable display names for food categories
+
 export const categoryDisplayNames: Record<string, string> = {
   "meat": "Meat",
   "redMeat": "Red Meat",
