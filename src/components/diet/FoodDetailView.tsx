@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, ChevronUp, ChevronDown, Save, Clock, Database, Plus, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -353,6 +352,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     ? `USDA FoodData Central (${food.dataType})`
     : food.brands || "Unknown Brand";
   
+  // Determine which chevron icon to show based on isNutrientsOpen state
+  const ChevronIcon = isNutrientsOpen ? ChevronUp : ChevronDown;
+  
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-card border rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -558,11 +560,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                 <h4 className="font-medium mb-0">Detailed Nutrients</h4>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="p-1 h-8">
-                    {isNutrientsOpen ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
+                    <ChevronIcon className="h-4 w-4" />
                   </Button>
                 </CollapsibleTrigger>
               </div>
