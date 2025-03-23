@@ -54,10 +54,15 @@
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+    height: 100%;
+    position: fixed;
+    width: 100%;
   }
 
   html {
     @apply scroll-smooth;
+    height: 100%;
+    overflow: hidden;
   }
 }
 
