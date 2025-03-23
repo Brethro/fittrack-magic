@@ -342,8 +342,8 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                   control={control}
                   render={({ field }) => (
                     <MealTypeSelector 
-                      mealType={field.value} 
-                      onChange={field.onChange} 
+                      selectedMealType={field.value}
+                      onMealTypeChange={field.onChange} 
                     />
                   )}
                 />
