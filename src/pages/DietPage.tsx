@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -119,7 +120,7 @@ const DietPage = () => {
                 setIncludeFreeMeal={setIncludeFreeMeal}
                 generateMealPlan={handleGenerateMealPlan}
                 dailyCalories={userData.dailyCalories || 2000}
-                availableDiets={availableDiets}
+                // Remove the availableDiets prop since we're already selecting the diet in the DietSelector component above
               />
             </TabsContent>
             
