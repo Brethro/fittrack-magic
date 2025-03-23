@@ -18,8 +18,8 @@ const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
-      <main className={`flex-1 w-full ${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative pb-20`}>
+    <div className="min-h-screen flex flex-col bg-background">
+      <main className={`flex-1 w-full ${isMobile ? "max-w-full" : "max-w-md"} mx-auto relative pb-20 overflow-y-auto max-h-screen`}>
         <Outlet />
       </main>
       
