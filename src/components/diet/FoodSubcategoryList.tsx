@@ -60,9 +60,14 @@ export function FoodSubcategoryList({
       onOpenChange={() => toggleSubcategory(subcategoryName)}
       className="border rounded-md px-3 py-2 ml-2"
     >
-      <div className="flex items-center justify-between cursor-pointer">
-        {/* The checkbox should be separate from the collapsible trigger */}
-        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between">
+        {/* The checkbox and label with their own click handler */}
+        <div 
+          className="flex items-center space-x-2" 
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           <Checkbox 
             id={`subcategory-${subcategoryName}`}
             checked={allSubcategorySelected}
@@ -77,8 +82,8 @@ export function FoodSubcategoryList({
           </Label>
         </div>
         
-        {/* The collapse/expand control that takes the full width */}
-        <CollapsibleTrigger className="flex-1 flex justify-end">
+        {/* The collapse/expand control */}
+        <CollapsibleTrigger className="ml-auto">
           <ChevronDown 
             className={cn(
               "h-3.5 w-3.5 transition-transform duration-200",

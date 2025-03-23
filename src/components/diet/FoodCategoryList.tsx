@@ -69,9 +69,14 @@ export function FoodCategoryList({
             onOpenChange={() => toggleCategory(category.name)}
             className="border rounded-md px-4 py-2"
           >
-            <div className="flex items-center justify-between cursor-pointer">
-              {/* The checkbox should be separate from the collapsible trigger */}
-              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              {/* The checkbox and label in their own div with specific click handler */}
+              <div 
+                className="flex items-center space-x-2" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
                 <Checkbox 
                   id={`category-${category.name}`}
                   checked={allCategorySelected}
@@ -86,8 +91,8 @@ export function FoodCategoryList({
                 </Label>
               </div>
               
-              {/* The collapse/expand control that takes the full width */}
-              <CollapsibleTrigger className="flex-1 flex justify-end">
+              {/* The collapse/expand control */}
+              <CollapsibleTrigger className="ml-auto">
                 <ChevronDown 
                   className={cn(
                     "h-4 w-4 transition-transform duration-200",

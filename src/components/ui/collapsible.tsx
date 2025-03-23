@@ -14,7 +14,7 @@ const CollapsibleTrigger = React.forwardRef<
 >(({ className, showIcon = false, children, ...props }, ref) => (
   <CollapsiblePrimitive.CollapsibleTrigger
     ref={ref}
-    className={cn("flex items-center justify-between", className)}
+    className={cn("flex items-center", className)}
     {...props}
   >
     {children}
