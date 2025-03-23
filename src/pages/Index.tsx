@@ -106,6 +106,11 @@ const Index = () => {
                 Takes just 2 minutes to set up your personalized plan
               </p>
             )}
+            
+            {/* Disclaimer text - barely visible, low contrast */}
+            <p className="text-[10px] text-[#444] text-center mt-4 max-w-[85%] mx-auto opacity-50">
+              This application is intended as a fitness tracking tool only and not as a substitute for professional medical or nutritional advice. Consult healthcare professionals before starting any fitness or nutrition program.
+            </p>
           </motion.div>
         </motion.div>
       </div>
