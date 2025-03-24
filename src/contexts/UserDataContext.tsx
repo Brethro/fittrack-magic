@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useNutritionCalculator } from "@/hooks/useNutritionCalculator";
@@ -81,24 +82,35 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Load user data from localStorage if available
     const savedData = localStorage.getItem("fitTrackUserData");
     if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      
-      // Convert goalDate string back to Date object if it exists
-      if (parsedData.goalDate) {
-        parsedData.goalDate = new Date(parsedData.goalDate);
+      try {
+        const parsedData = JSON.parse(savedData);
+        
+        // Convert goalDate string back to Date object if it exists
+        if (parsedData.goalDate) {
+          parsedData.goalDate = new Date(parsedData.goalDate);
+        }
+        
+        // Convert goalCustomDate string back to Date object if it exists
+        if (parsedData.goalCustomDate) {
+          parsedData.goalCustomDate = new Date(parsedData.goalCustomDate);
+        }
+        
+        // Convert weight log dates back to Date objects
+        if (parsedData.weightLog) {
+          parsedData.weightLog = parsedData.weightLog.map((entry: any) => ({
+            ...entry,
+            date: new Date(entry.date)
+          }));
+        } else {
+          parsedData.weightLog = [];
+        }
+        
+        return parsedData;
+      } catch (error) {
+        console.error("Error parsing saved user data:", error);
+        localStorage.removeItem("fitTrackUserData");
+        return initialUserData;
       }
-      
-      // Convert weight log dates back to Date objects
-      if (parsedData.weightLog) {
-        parsedData.weightLog = parsedData.weightLog.map((entry: any) => ({
-          ...entry,
-          date: new Date(entry.date)
-        }));
-      } else {
-        parsedData.weightLog = [];
-      }
-      
-      return parsedData;
     }
     return initialUserData;
   });

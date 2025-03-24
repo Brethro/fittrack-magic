@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useUserData } from "@/contexts/UserDataContext";
 import { WeightLogList } from "@/components/WeightLogList";
 import WeightLogDialog from "@/components/WeightLogDialog";
@@ -18,8 +18,29 @@ const PlanPage = () => {
   const [estimatedGoalBodyFat, setEstimatedGoalBodyFat] = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
 
+  // Check if necessary user data is available
+  const hasRequiredUserData = userData && 
+    userData.age !== null && 
+    userData.weight !== null && 
+    userData.height !== null && 
+    userData.activityLevel !== null && 
+    userData.gender !== null && 
+    userData.goalValue !== null && 
+    userData.goalDate !== null;
+
   // Always recalculate nutrition when the page loads to ensure accuracy
   useEffect(() => {
+    if (!hasRequiredUserData) {
+      // If we're missing any essential user data, redirect to profile
+      toast({
+        title: "Missing information",
+        description: "Please complete your profile first",
+        variant: "destructive",
+      });
+      navigate("/onboarding");
+      return;
+    }
+    
     if (!userData.goalValue || !userData.goalDate) {
       toast({
         title: "Missing information",
@@ -87,18 +108,37 @@ const PlanPage = () => {
     }
     
     setInitialized(true);
-  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, userData.tdee, userData.dailyCalories, userData.isWeightGain, navigate, toast, recalculateNutrition]);
+  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, userData.tdee, userData.dailyCalories, userData.isWeightGain, hasRequiredUserData, navigate, toast, recalculateNutrition]);
+
+  // If data is incomplete, show a friendly message and redirect button
+  if (!hasRequiredUserData) {
+    return (
+      <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
+        <div className="text-center glass-panel p-6 rounded-lg">
+          <h2 className="text-xl font-bold mb-3 text-gradient-purple">Missing Profile Data</h2>
+          <p className="mb-4 text-muted-foreground">Please complete your profile information first</p>
+          <button 
+            onClick={() => navigate("/onboarding")}
+            className="px-4 py-2 bg-gradient-purple rounded-md text-white neo-btn"
+          >
+            Complete Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!userData.dailyCalories || !userData.macros.protein) {
     return (
       <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
-        <div className="text-center">
-          <p>Please complete your goals setup first</p>
+        <div className="text-center glass-panel p-6 rounded-lg">
+          <h2 className="text-xl font-bold mb-3 text-gradient-purple">Missing Goals</h2>
+          <p className="mb-4 text-muted-foreground">Please complete your goals setup first</p>
           <button 
             onClick={() => navigate("/goals")}
-            className="mt-4 px-4 py-2 bg-primary rounded-md text-white"
+            className="px-4 py-2 bg-gradient-purple rounded-md text-white neo-btn"
           >
-            Go to Goals
+            Set Goals
           </button>
         </div>
       </div>
