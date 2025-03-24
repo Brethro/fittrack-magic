@@ -12,9 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 interface UsdaFoodItemProps {
   foodItem: UsdaFoodItemType;
   onSelect?: (foodItem: UsdaFoodItemType) => void;
+  showSourceBadge?: boolean;
 }
 
-const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
+const UsdaFoodItem = ({ 
+  foodItem, 
+  onSelect,
+  showSourceBadge = true // Default to showing the source badge
+}: UsdaFoodItemProps) => {
   const isMobile = useIsMobile();
   const [showDetailView, setShowDetailView] = useState(false);
   const { addFoodEntry } = useFoodLog();
@@ -128,9 +133,12 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             </div>
             
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
-                USDA Database
-              </Badge>
+              {/* Only show these badges when not in unified view (where source badge is shown elsewhere) */}
+              {showSourceBadge && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+                  USDA Database
+                </Badge>
+              )}
               
               {category && (
                 <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
@@ -156,7 +164,7 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             
             <div className="flex justify-between items-center mt-1.5 text-xs">
               <p>Serving: {servingSize}</p>
-              <p className="text-emerald-500 text-xs">Source: USDA</p>
+              {showSourceBadge && <p className="text-emerald-500 text-xs">Source: USDA</p>}
             </div>
           </div>
         </div>

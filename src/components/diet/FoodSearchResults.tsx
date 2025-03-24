@@ -182,16 +182,15 @@ export function UnifiedFoodResults({
           transition={{ duration: 0.2, delay: index * 0.05 }}
           className="relative"
         >
-          {/* Source badge indicating which database the result is from */}
-          <div className="absolute top-2 right-3 z-10">
-            <Badge variant={result.type === 'usda' ? 'secondary' : 'outline'} className={`text-xs ${result.type === 'usda' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-300/20' : ''}`}>
-              {result.type === 'usda' ? 'USDA' : 'OFF'}
-            </Badge>
-          </div>
-          
           {/* Render appropriate component based on result type */}
           {result.type === 'openfoodfacts' ? (
-            <>
+            <div className="relative">
+              {/* Source badge in top-right corner */}
+              <div className="absolute top-3 right-3 z-10">
+                <Badge variant="outline" className="text-xs">
+                  OFF
+                </Badge>
+              </div>
               <FoodItem 
                 product={result.item} 
                 onSelect={(food) => {
@@ -206,11 +205,18 @@ export function UnifiedFoodResults({
                     ` | Nutrition data: ${result.item._nutritionalCompleteness}`}
                 </div>
               )}
-            </>
+            </div>
           ) : (
-            <>
+            <div className="relative">
+              {/* Source badge in top-right corner */}
+              <div className="absolute top-3 right-3 z-10">
+                <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+                  USDA
+                </Badge>
+              </div>
               <UsdaFoodItem 
-                foodItem={result.item} 
+                foodItem={result.item}
+                showSourceBadge={false} // Hide redundant source badge
                 onSelect={(food) => {
                   if (onSelectUsdaFood) onSelectUsdaFood(food);
                 }}
@@ -221,7 +227,7 @@ export function UnifiedFoodResults({
                   Score: {Math.round(result.score)} | USDA
                 </div>
               )}
-            </>
+            </div>
           )}
         </motion.div>
       ))}
