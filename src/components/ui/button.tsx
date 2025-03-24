@@ -10,20 +10,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "pink-purple-gradient text-primary-foreground shadow-md hover:shadow-[0_5px_15px_rgba(191,90,242,0.4)]",
+        default: "pink-purple-gradient text-primary-foreground shadow-md hover:gradient-border-purple",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-white/10 bg-black/20 backdrop-blur-md hover:bg-white/5 hover:text-white",
+          "border border-white/10 bg-black/20 backdrop-blur-md hover:bg-white/5 hover:text-white hover:gradient-border-purple",
         secondary:
-          "bg-secondary/80 backdrop-blur-md text-secondary-foreground hover:bg-secondary/60",
-        ghost: "hover:bg-accent/10 hover:text-accent-foreground",
+          "bg-secondary/80 backdrop-blur-md text-secondary-foreground hover:bg-secondary/60 hover:gradient-border-purple",
+        ghost: "hover:bg-accent/10 hover:text-accent-foreground hover:gradient-border-purple",
         link: "text-primary underline-offset-4 hover:underline",
-        glass: "glassmorphism hover:bg-black/30",
-        accent: "gradient-accent text-white shadow-md hover:shadow-[0_5px_15px_rgba(191,90,242,0.4)]",
-        purple: "purple-glass text-white hover:opacity-90 shadow-md hover:shadow-[0_5px_15px_rgba(191,90,242,0.4)]",
-        dark: "dark-glass text-white hover:bg-black/20",
-        gradient: "purple-pink-gradient text-white shadow-md hover:shadow-[0_5px_15px_rgba(191,90,242,0.4)]",
+        glass: "glassmorphism hover:bg-black/30 hover:gradient-border-purple",
+        accent: "gradient-accent text-white shadow-md hover:gradient-border-pink",
+        purple: "purple-glass text-white hover:opacity-90 shadow-md hover:gradient-border-purple",
+        dark: "dark-glass text-white hover:bg-black/20 hover:gradient-border-blue",
+        gradient: "purple-pink-gradient text-white shadow-md hover:gradient-border-pink",
       },
       size: {
         default: "h-10 px-4 py-2",

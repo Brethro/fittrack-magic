@@ -15,8 +15,13 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 }
 
+/* Replacing purple-glow with gradient border */
 .purple-glow {
-  box-shadow: 0 5px 20px rgba(191, 90, 242, 0.4);
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+                    linear-gradient(135deg, #c026d3 0%, #7e22ce 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
 .gradient-background {
@@ -60,5 +65,9 @@
 
 .button-gradient:hover {
   opacity: 0.9;
-  box-shadow: 0 5px 15px rgba(191, 90, 242, 0.4);
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), 
+                    linear-gradient(90deg, #c026d3 0%, #7e22ce 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }

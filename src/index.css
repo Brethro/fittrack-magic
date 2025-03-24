@@ -94,7 +94,7 @@
   }
   
   .neo-btn {
-    @apply transition-all duration-200 hover:shadow-[0_8px_20px_rgba(156,39,176,0.3)] active:scale-95;
+    @apply transition-all duration-200 hover:shadow-none hover:border hover:border-primary/50 active:scale-95;
   }
   
   .text-gradient-pink-blue {
@@ -144,13 +144,43 @@
     background: linear-gradient(180deg, rgba(147, 51, 234, 0.3) 0%, rgba(147, 51, 234, 0) 100%);
   }
   
+  /* Replace glow-effect with gradient border */
   .glow-effect {
-    box-shadow: 0 5px 15px rgba(191, 90, 242, 0.4);
+    border: 1px solid transparent;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+                      linear-gradient(135deg, #c026d3 0%, #9333ea 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  /* Adding gradient border variants */
+  .gradient-border-purple {
+    border: 1px solid transparent;
+    background-image: linear-gradient(rgba(30, 27, 38, 0.8), rgba(30, 27, 38, 0.8)), 
+                      linear-gradient(135deg, #c026d3 0%, #7e22ce 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  .gradient-border-pink {
+    border: 1px solid transparent;
+    background-image: linear-gradient(rgba(30, 27, 38, 0.8), rgba(30, 27, 38, 0.8)), 
+                      linear-gradient(135deg, #f472b6 0%, #c026d3 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  .gradient-border-blue {
+    border: 1px solid transparent;
+    background-image: linear-gradient(rgba(30, 27, 38, 0.8), rgba(30, 27, 38, 0.8)), 
+                      linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
   }
   
   .btn-gradient {
     background: linear-gradient(90deg, #c026d3 0%, #7e22ce 100%);
-    @apply hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-lg;
+    @apply hover:opacity-90 transition-all duration-300 shadow-md hover:gradient-border-purple;
   }
   
   /* Updated nav-gradient for better glass effect */
@@ -185,35 +215,33 @@
   }
 }
 
-/* Animated gradient background */
-.animated-gradient {
-  background-size: 400% 400%;
-  animation: gradientAnimation 15s ease infinite;
-}
-
-@keyframes gradientAnimation {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Card hover effects */
+/* Card hover effects - replaced glow with gradient border */
 .card-hover {
   transition: all 0.3s ease;
 }
 
 .card-hover:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(191, 90, 242, 0.3);
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+                    linear-gradient(135deg, #c026d3 0%, #7e22ce 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
-/* Button animations */
+/* Button animations - replace pulse glow with gradient border pulse */
 .btn-pulse {
-  animation: pulse 2s infinite;
+  animation: borderPulse 2s infinite;
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(191, 90, 242, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(191, 90, 242, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(191, 90, 242, 0); }
+@keyframes borderPulse {
+  0% {
+    border: 1px solid rgba(191, 90, 242, 0.1);
+  }
+  50% {
+    border: 1px solid rgba(191, 90, 242, 0.8);
+  }
+  100% {
+    border: 1px solid rgba(191, 90, 242, 0.1);
+  }
 }
