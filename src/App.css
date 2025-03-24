@@ -7,41 +7,60 @@
   height: 100%;
 }
 
-/* Other utility classes */
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+/* Utility classes for glass morphism design */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.purple-glow {
+  box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.gradient-background {
+  background: linear-gradient(135deg, hsl(270, 50%, 15%) 0%, hsl(250, 40%, 10%) 100%);
+  background-attachment: fixed;
 }
 
-@keyframes logo-spin {
+.animated-gradient {
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-.card {
-  padding: 2em;
+.scale-hover {
+  transition: transform 0.2s ease-out;
 }
 
-.read-the-docs {
-  color: #888;
+.scale-hover:hover {
+  transform: scale(1.05);
 }

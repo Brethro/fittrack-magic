@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -57,6 +58,8 @@
     padding: 0;
     height: 100%;
     width: 100%;
+    background: linear-gradient(135deg, hsl(270, 50%, 15%) 0%, hsl(250, 40%, 10%) 100%);
+    background-attachment: fixed;
   }
 
   html {
@@ -109,5 +112,50 @@
   
   .bg-gradient-card {
     @apply bg-gradient-to-br from-purple-500/80 to-violet-600/80;
+  }
+
+  /* New glass morphism classes inspired by the design */
+  .glassmorphism {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg;
+  }
+  
+  .purple-glass {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.8) 0%, rgba(147, 51, 234, 0.7) 100%);
+    @apply backdrop-blur-md border border-white/20 shadow-lg;
+  }
+  
+  .dark-glass {
+    background: linear-gradient(135deg, rgba(30, 27, 38, 0.8) 0%, rgba(23, 21, 28, 0.7) 100%);
+    @apply backdrop-blur-md border border-white/10 shadow-lg;
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(270, 50%, 15%) 0%, hsl(250, 40%, 10%) 100%);
+  }
+  
+  .gradient-purple {
+    background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, #7b68ee 0%, #9370db 100%);
+  }
+  
+  .chart-gradient {
+    background: linear-gradient(180deg, rgba(147, 51, 234, 0.2) 0%, rgba(147, 51, 234, 0) 100%);
+  }
+  
+  .glow-effect {
+    box-shadow: 0 5px 15px rgba(123, 104, 238, 0.3);
+  }
+  
+  .btn-gradient {
+    background: linear-gradient(90deg, #9c27b0 0%, #673ab7 100%);
+    @apply hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-lg;
+  }
+  
+  .nav-gradient {
+    background: linear-gradient(180deg, rgba(23, 21, 28, 0.7) 0%, rgba(30, 27, 38, 0.8) 100%);
+    @apply backdrop-blur-xl;
   }
 }

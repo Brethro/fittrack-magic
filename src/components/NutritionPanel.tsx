@@ -22,7 +22,7 @@ function MacroBreakdown({ macroCalories, totalCalories, macros }: {
   return (
     <div className="grid grid-cols-3 gap-3">
       {/* Protein */}
-      <div className="glass-card rounded-lg p-3">
+      <div className="glassmorphism rounded-lg p-3">
         <div className="flex justify-between items-center mb-1">
           <span className="text-blue-400 text-sm font-bold">Protein</span>
           <span className="text-xs">{(macroCalories.protein / macroCalories.total * 100).toFixed(0)}%</span>
@@ -30,14 +30,14 @@ function MacroBreakdown({ macroCalories, totalCalories, macros }: {
         <p className="text-lg font-bold">{macros.protein}g</p>
         <Progress
           value={Math.round(macroCalories.protein / totalCalories * 100)}
-          className="h-1.5 mt-1 bg-blue-950"
-          indicatorClassName="bg-blue-400"
+          className="h-1.5 mt-1 bg-blue-950/30"
+          indicatorClassName="bg-blue-500"
         />
         <p className="text-xs text-right mt-1">{macroCalories.protein} cal</p>
       </div>
 
       {/* Carbs */}
-      <div className="glass-card rounded-lg p-3">
+      <div className="glassmorphism rounded-lg p-3">
         <div className="flex justify-between items-center mb-1">
           <span className="text-amber-400 text-sm font-bold">Carbs</span>
           <span className="text-xs">{(macroCalories.carbs / macroCalories.total * 100).toFixed(0)}%</span>
@@ -45,14 +45,14 @@ function MacroBreakdown({ macroCalories, totalCalories, macros }: {
         <p className="text-lg font-bold">{macros.carbs}g</p>
         <Progress
           value={Math.round(macroCalories.carbs / totalCalories * 100)}
-          className="h-1.5 mt-1 bg-amber-950"
-          indicatorClassName="bg-amber-400"
+          className="h-1.5 mt-1 bg-amber-950/30"
+          indicatorClassName="bg-amber-500"
         />
         <p className="text-xs text-right mt-1">{macroCalories.carbs} cal</p>
       </div>
 
       {/* Fats */}
-      <div className="glass-card rounded-lg p-3">
+      <div className="glassmorphism rounded-lg p-3">
         <div className="flex justify-between items-center mb-1">
           <span className="text-pink-400 text-sm font-bold">Fats</span>
           <span className="text-xs">{(macroCalories.fat / macroCalories.total * 100).toFixed(0)}%</span>
@@ -60,8 +60,8 @@ function MacroBreakdown({ macroCalories, totalCalories, macros }: {
         <p className="text-lg font-bold">{macros.fats}g</p>
         <Progress
           value={Math.round(macroCalories.fat / totalCalories * 100)}
-          className="h-1.5 mt-1 bg-pink-950"
-          indicatorClassName="bg-pink-400"
+          className="h-1.5 mt-1 bg-pink-950/30"
+          indicatorClassName="bg-pink-500"
         />
         <p className="text-xs text-right mt-1">{macroCalories.fat} cal</p>
       </div>
@@ -76,10 +76,10 @@ function CalorieSummary({ totalCalories, tdee, isWeightGain, exactPercentage }: 
   exactPercentage: string;
 }) {
   return (
-    <div className="glass-card rounded-lg p-3 text-center mb-3">
-      <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
+    <div className="purple-glass rounded-lg p-3 text-center mb-3">
+      <Flame className="w-5 h-5 mx-auto mb-1 text-orange-300" />
       <p className="text-lg font-bold">{totalCalories}</p>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-white/70">
         Calories
         {isWeightGain ? ` (${exactPercentage}% Surplus)` : ` (${exactPercentage}% Deficit)`}
       </p>
@@ -382,7 +382,7 @@ export function NutritionPanel() {
   const highSurplusWarning = userData.highSurplusWarning || false;
 
   return (
-    <div className="glass-panel rounded-lg p-4 mb-4">
+    <div className="glassmorphism rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-medium">Daily Nutrition</h2>
         <AboutYourPlan userData={userData} macroCalories={macroCalories} isWeightGain={isWeightGain} />
