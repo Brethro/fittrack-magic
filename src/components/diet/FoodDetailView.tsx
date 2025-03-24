@@ -106,11 +106,20 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Get initial nutrition values
   const baseNutrition = getNutritionValues();
   
-  // Helper to extract serving size from OpenFoodFacts product
+  // IMPROVED Helper to extract serving size from OpenFoodFacts product
   const getOpenFoodFactsServingSize = (product: any): number => {
     // Try serving_size_g first (most precise)
     if (product.serving_size_g && !isNaN(product.serving_size_g)) {
       return Number(product.serving_size_g);
+    }
+    
+    // Look for weight in parentheses like "1 scoop (31 g)" or "2 scoops (50g)"
+    if (product.serving_size && typeof product.serving_size === 'string') {
+      // Try to find a pattern like (31g) or (31 g) or (31)
+      const weightInParentheses = product.serving_size.match(/\((\d+(?:\.\d+)?)\s*g?\)/i);
+      if (weightInParentheses && weightInParentheses[1]) {
+        return parseFloat(weightInParentheses[1]);
+      }
     }
     
     // Try serving_quantity 
@@ -120,9 +129,51 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
     
     // Try parsing numeric part from serving_size string
     if (product.serving_size && typeof product.serving_size === 'string') {
-      const numericMatch = product.serving_size.match(/(\d+(\.\d+)?)/);
+      const numericMatch = product.serving_size.match(/(\d+(?:\.\d+)?)/);
       if (numericMatch && numericMatch[1]) {
+        // If the number is followed by ml/mL, don't use it as grams
+        if (product.serving_size.toLowerCase().includes('ml') || 
+            product.serving_size.toLowerCase().includes('l')) {
+          // For liquids, use a rough conversion or default to 100g
+          return 100;
+        }
         return Number(numericMatch[1]);
+      }
+    }
+    
+    // Default to 100g
+    return 100;
+  };
+  
+  // Extract USDA serving size with improved support for household measures
+  const getUsdaServingSizeInGrams = (foodItem: UsdaFoodItem): number => {
+    // Get the nutrition info extraction first
+    const { servingInfo } = extractNutritionInfo(foodItem);
+    
+    // If servingInfo has size, use it
+    if (servingInfo && servingInfo.size) {
+      return servingInfo.size;
+    }
+    
+    // If there's a household serving size description, try to extract weight from it
+    if (foodItem.householdServingFullText) {
+      // Try to extract weight in parentheses, e.g., "1 scoop (31 g)"
+      const weightMatch = foodItem.householdServingFullText.match(/\((\d+(?:\.\d+)?)\s*g?\)/i);
+      if (weightMatch && weightMatch[1]) {
+        return parseFloat(weightMatch[1]);
+      }
+    }
+    
+    // If we have serving size and unit from the USDA data
+    if (foodItem.servingSize && foodItem.servingSizeUnit) {
+      // If already in grams, return directly
+      if (foodItem.servingSizeUnit.toLowerCase() === 'g') {
+        return foodItem.servingSize;
+      }
+      
+      // Convert other units if needed (simplified)
+      if (foodItem.servingSizeUnit.toLowerCase() === 'ml') {
+        return foodItem.servingSize; // Assuming 1ml ~= 1g for simplicity
       }
     }
     
@@ -133,11 +184,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Set initial amount based on source and available serving information
   useEffect(() => {
     if (source === 'usda') {
-      // For USDA, use the serving info from extractNutritionInfo
-      const { servingInfo } = extractNutritionInfo(food as UsdaFoodItem);
-      if (servingInfo && servingInfo.size) {
-        setAmount(servingInfo.size);
-      }
+      // For USDA, use the improved serving extraction
+      const servingSizeInGrams = getUsdaServingSizeInGrams(food as UsdaFoodItem);
+      setAmount(servingSizeInGrams);
     } else if (source === 'openfoodfacts') {
       // For Open Food Facts, use enhanced extraction logic
       const servingSize = getOpenFoodFactsServingSize(food);

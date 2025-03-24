@@ -27,10 +27,48 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   const description = foodItem.description || "Unnamed Food";
   const category = foodItem.foodCategory || "";
   
+  // Extract the proper serving size value in grams - IMPROVED to handle cases like "1 scoop (31g)"
+  const getServingSizeInGrams = (): number => {
+    // If serving size information is available from USDA
+    if (servingInfo && servingInfo.size) {
+      // Check if the size is actually in grams (common for USDA)
+      return servingInfo.size;
+    }
+    
+    // If there's a household serving size description, try to extract weight from it
+    if (foodItem.householdServingFullText) {
+      // Try to extract weight in parentheses, e.g., "1 scoop (31 g)"
+      const weightMatch = foodItem.householdServingFullText.match(/\((\d+(?:\.\d+)?)\s*g?\)/i);
+      if (weightMatch && weightMatch[1]) {
+        return parseFloat(weightMatch[1]);
+      }
+    }
+    
+    // If we have serving size and unit from the USDA data
+    if (foodItem.servingSize && foodItem.servingSizeUnit) {
+      // If already in grams, return directly
+      if (foodItem.servingSizeUnit.toLowerCase() === 'g') {
+        return foodItem.servingSize;
+      }
+      
+      // Convert other units if needed (simplified)
+      if (foodItem.servingSizeUnit.toLowerCase() === 'ml') {
+        return foodItem.servingSize; // Assuming 1ml ~= 1g for simplicity
+      }
+    }
+    
+    // Default to 100g if no serving size information is available
+    return 100;
+  };
+  
   // Handle serving size information - use extracted serving info with proper formatting
-  const servingSize = servingInfo.size && servingInfo.unit
-    ? `${servingInfo.size}${servingInfo.unit}`
-    : (servingInfo.size ? `${servingInfo.size}g` : "100g");
+  const servingSizeInGrams = getServingSizeInGrams();
+  
+  // Format the display string for serving size
+  const servingSize = foodItem.householdServingFullText || 
+                     (servingInfo.size && servingInfo.unit
+                       ? `${servingInfo.size}${servingInfo.unit}`
+                       : `${servingSizeInGrams}g`);
 
   const handleSelectFood = () => {
     setShowDetailView(true);
@@ -43,11 +81,16 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   };
   
   // Calculate per-serving nutrition values based on the actual serving size
-  const scaleFactor = servingInfo.size / 100;
+  const scaleFactor = servingSizeInGrams / 100;
   const caloriesPerServing = Math.round(nutritionValues.calories * scaleFactor);
   const proteinPerServing = (nutritionValues.protein * scaleFactor).toFixed(1);
   const carbsPerServing = (nutritionValues.carbs * scaleFactor).toFixed(1);
   const fatPerServing = (nutritionValues.fat * scaleFactor).toFixed(1);
+  
+  // Log values for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`UsdaFoodItem "${description}": servingSize=${servingSize}, servingSizeInGrams=${servingSizeInGrams}, calories=${nutritionValues.calories}, caloriesPerServing=${caloriesPerServing}`);
+  }
   
   return (
     <>

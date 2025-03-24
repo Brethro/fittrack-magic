@@ -68,7 +68,7 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   
   const servingSize = getServingSize();
   
-  // Extract numeric serving size for calculations
+  // Extract numeric serving size for calculations - IMPROVED to handle formats like "1 scoop (31g)"
   const getNumericServingSize = (): number => {
     // If serving_size_g exists, use it directly
     if (product.serving_size_g && !isNaN(product.serving_size_g)) {
@@ -80,10 +80,23 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
       return parseFloat(product.serving_quantity);
     }
     
-    // Try to parse numeric part from serving_size string
+    // Look for weight in parentheses like "1 scoop (31 g)" or "2 scoops (50g)"
     if (product.serving_size && typeof product.serving_size === 'string') {
-      const match = product.serving_size.match(/(\d+(\.\d+)?)/);
+      // Try to find a pattern like (31g) or (31 g) or (31)
+      const weightInParentheses = product.serving_size.match(/\((\d+(?:\.\d+)?)\s*g?\)/i);
+      if (weightInParentheses && weightInParentheses[1]) {
+        return parseFloat(weightInParentheses[1]);
+      }
+      
+      // Try to extract just numbers as a fallback
+      const match = product.serving_size.match(/(\d+(?:\.\d+)?)/);
       if (match && match[1]) {
+        // If the number is followed by ml/mL, don't use it as grams
+        if (product.serving_size.toLowerCase().includes('ml') || 
+            product.serving_size.toLowerCase().includes('l')) {
+          // For liquids, use a rough conversion or default to 100g
+          return 100;
+        }
         return parseFloat(match[1]);
       }
     }
@@ -164,6 +177,11 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
       console.log("Selected product:", product);
     }
   };
+
+  // Log values for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`FoodItem "${productName}": servingSize=${servingSize}, servingSizeInGrams=${servingSizeInGrams}, calories=${calories}, caloriesPerServing=${caloriesPerServing}`);
+  }
 
   return (
     <>
