@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import FoodItem from "./FoodItem";
@@ -59,11 +60,21 @@ const FoodSearchResults = ({
         </Badge>
       </div>
       
-      {/* Since we're now only using OpenFoodFacts, simplify the UI */}
+      {/* Display results from both sources */}
       <div className="space-y-2">
         {/* Open Food Facts results */}
         {hasOpenFoodResults && (
           <div className="space-y-2">
+            {/* Show source header if we have results from both sources */}
+            {hasUsdaResults && (
+              <div className="flex items-center gap-2 mt-3 mb-1">
+                <h3 className="text-base font-medium">Open Food Facts Results</h3>
+                <Badge variant="outline" className="text-xs">
+                  {results.length} items
+                </Badge>
+              </div>
+            )}
+            
             {results.map((product, index) => (
               <motion.div
                 key={`off-${product.id || index}`}
@@ -90,7 +101,7 @@ const FoodSearchResults = ({
           </div>
         )}
         
-        {/* USDA results - conditionally rendered, but we're no longer showing them */}
+        {/* USDA results - conditionally rendered */}
         {hasUsdaResults && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 mt-3 mb-1">

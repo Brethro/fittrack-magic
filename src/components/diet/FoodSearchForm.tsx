@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +25,13 @@ interface FoodSearchFormProps {
     userPreferences?: UserPreferences
   ) => void;
   isLoading?: boolean;
-  disableUsdaOption?: boolean; // New prop to control USDA option visibility
+  disableUsdaOption?: boolean; // Prop to control USDA option visibility
 }
 
 const FoodSearchForm = ({ onSearch, isLoading = false, disableUsdaOption = false }: FoodSearchFormProps) => {
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("openfoods"); // Default to openfoods
+  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("both"); // Default to both
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   
   // User preferences
@@ -81,7 +82,7 @@ const FoodSearchForm = ({ onSearch, isLoading = false, disableUsdaOption = false
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Force "openfoods" as searchSource if USDA is disabled
+      // Use appropriate searchSource based on disableUsdaOption
       const effectiveSearchSource = disableUsdaOption ? "openfoods" : searchSource;
       onSearch(searchQuery, effectiveSearchSource, userPreferences);
     }
