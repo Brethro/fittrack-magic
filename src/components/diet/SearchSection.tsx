@@ -60,12 +60,12 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     setLastUsdaResponse(null);
     
     try {
-      // Always use broad search for best results
+      // Always use broad search mode
       const searchType = "broad";
       
       // Search in Open Food Facts if selected
       if (searchSource === "openfoods" || searchSource === "both") {
-        // First attempt: search with broad mode
+        // Search with broad mode
         let offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
         
         // If broad search returns no results, try fallback search

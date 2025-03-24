@@ -39,6 +39,73 @@ function loadUserSelections(): void {
 // Load saved selections when module initializes
 loadUserSelections();
 
+/**
+ * Check if a food item has valid nutritional data
+ * @param product Food product from OpenFoodFacts
+ * @returns boolean indicating if the product has any nutritional data
+ */
+function hasNutritionData(product: any): boolean {
+  if (!product || !product.nutriments) return false;
+  
+  // Extract key nutrients to check
+  const calories = product.nutriments?.["energy-kcal_100g"] || 
+                  product.nutriments?.["energy-kcal"] || 
+                  (product.nutriments?.energy_100g ? product.nutriments.energy_100g / 4.184 : 0) ||
+                  (product.nutriments?.energy ? product.nutriments.energy / 4.184 : 0) ||
+                  (product.nutriments?.["energy-kj_100g"] ? product.nutriments["energy-kj_100g"] / 4.184 : 0) ||
+                  (product.nutriments?.["energy-kj"] ? product.nutriments["energy-kj"] / 4.184 : 0);
+  
+  const protein = product.nutriments?.proteins_100g || 
+                  product.nutriments?.proteins || 
+                  product.nutriments?.protein_100g ||
+                  product.nutriments?.protein || 0;
+  
+  const carbs = product.nutriments?.carbohydrates_100g || 
+                product.nutriments?.carbohydrates || 
+                product.nutriments?.["carbohydrate_100g"] ||
+                product.nutriments?.carbohydrate || 0;
+  
+  const fat = product.nutriments?.fat_100g || 
+              product.nutriments?.fat || 
+              product.nutriments?.["total-fat_100g"] ||
+              product.nutriments?.["total-fat"] || 0;
+  
+  // Return true if ANY of the key nutrients have a value > 0
+  return calories > 0 || protein > 0 || carbs > 0 || fat > 0;
+}
+
+/**
+ * Check if a USDA food item has valid nutritional data
+ * @param foodItem Food item from USDA database
+ * @returns boolean indicating if the item has any nutritional data
+ */
+function hasUsdaNutritionData(foodItem: UsdaFoodItem): boolean {
+  if (!foodItem || !foodItem.foodNutrients || foodItem.foodNutrients.length === 0) return false;
+  
+  // Common nutrient IDs in USDA database
+  const NUTRIENT_IDS = {
+    ENERGY_KCAL: [1008, 2047, 2048, 1062],
+    PROTEIN: [1003, 1299, 1162],
+    TOTAL_FAT: [1004, 1300, 1085],
+    CARBOHYDRATES: [1005, 1050, 2000, 1072],
+  };
+  
+  // Find nutrients with matching IDs
+  const findNutrient = (nutrientIds: number[]) => {
+    for (const id of nutrientIds) {
+      const nutrient = foodItem.foodNutrients.find(n => n.nutrientId === id);
+      if (nutrient && nutrient.value > 0) return true;
+    }
+    return false;
+  };
+  
+  // Check if ANY of the key nutrients have a value > 0
+  return findNutrient(NUTRIENT_IDS.ENERGY_KCAL) || 
+         findNutrient(NUTRIENT_IDS.PROTEIN) || 
+         findNutrient(NUTRIENT_IDS.TOTAL_FAT) || 
+         findNutrient(NUTRIENT_IDS.CARBOHYDRATES);
+}
+
 // Search Open Food Facts database
 export async function searchOpenFoodFacts(
   searchQuery: string, 
@@ -155,8 +222,13 @@ export async function searchOpenFoodFacts(
       return product;
     });
     
+    // Filter products to only include those with nutritional data
+    const productsWithNutrition = enhancedProducts.filter(product => hasNutritionData(product));
+    
+    console.log(`Filtered out ${enhancedProducts.length - productsWithNutrition.length} products with no nutritional data`);
+    
     // Enhanced scoring system with improved weighting for broad search
-    const scoredResults = enhancedProducts.map(product => {
+    const scoredResults = productsWithNutrition.map(product => {
       const productName = (product.product_name || '').toLowerCase();
       const productNameEn = (product.product_name_en || '').toLowerCase();
       const brandName = (product.brands || '').toLowerCase();
@@ -450,11 +522,16 @@ export async function searchUsdaDatabase(
       console.log("USDA first result details:", response.foods[0]);
     }
     
+    // Filter out items without nutritional data
+    const foodsWithNutrition = response.foods.filter(item => hasUsdaNutritionData(item));
+    
+    console.log(`Filtered out ${response.foods.length - foodsWithNutrition.length} USDA foods with no nutritional data`);
+    
     // Extract search terms for better matching
     const searchTerms = searchQuery.toLowerCase().split(' ');
     
     // Enhanced scoring system for USDA results
-    const scoredResults = response.foods.map(item => {
+    const scoredResults = foodsWithNutrition.map(item => {
       const description = item.description.toLowerCase();
       const category = (item.foodCategory || '').toLowerCase();
       

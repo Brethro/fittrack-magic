@@ -1,24 +1,16 @@
 
-import { useState } from "react";
-import { Search, Loader2, Plus, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Search, Loader2, Settings2 } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface UserPreferences {
   dietary?: string[];
@@ -28,221 +20,268 @@ export interface UserPreferences {
 
 interface FoodSearchFormProps {
   onSearch: (
-    query: string, 
+    searchQuery: string, 
     searchSource: "both" | "openfoods" | "usda",
-    preferences?: UserPreferences
-  ) => Promise<void>;
-  isLoading: boolean;
+    userPreferences?: UserPreferences
+  ) => void;
+  isLoading?: boolean;
 }
 
-const DIETARY_OPTIONS = [
-  { label: "Vegan", value: "vegan" },
-  { label: "Vegetarian", value: "vegetarian" },
-  { label: "Gluten Free", value: "gluten-free" },
-  { label: "Organic", value: "organic" },
-  { label: "Dairy Free", value: "dairy-free" },
-  { label: "Low Sugar", value: "low-sugar" },
-];
-
-const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
-  const { toast } = useToast();
+const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) => {
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("usda");
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("both");
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   
-  // User preference states
-  const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
-  const [excludeIngredient, setExcludeIngredient] = useState("");
-  const [excludedIngredients, setExcludedIngredients] = useState<string[]>([]);
-  const [preferHighProtein, setPreferHighProtein] = useState(false);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      toast({
-        title: "Empty search",
-        description: "Please enter a food to search for",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Collect user preferences
-    const preferences: UserPreferences = {};
-    
-    if (selectedDietary.length > 0) {
-      preferences.dietary = selectedDietary;
-    }
-    
-    if (excludedIngredients.length > 0) {
-      preferences.excludeIngredients = excludedIngredients;
-    }
-    
-    if (preferHighProtein) {
-      preferences.preferHighProtein = true;
-    }
-    
-    await onSearch(
-      searchQuery,
-      searchSource, 
-      Object.keys(preferences).length > 0 ? preferences : undefined
-    );
-  };
+  // User preferences
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    dietary: [],
+    excludeIngredients: [],
+    preferHighProtein: false,
+  });
   
-  const addExcludedIngredient = () => {
-    if (excludeIngredient.trim() && !excludedIngredients.includes(excludeIngredient.trim())) {
-      setExcludedIngredients(prev => [...prev, excludeIngredient.trim()]);
-      setExcludeIngredient("");
+  // Load user preferences from local storage
+  useEffect(() => {
+    try {
+      const savedPreferences = localStorage.getItem("food_search_preferences");
+      if (savedPreferences) {
+        setUserPreferences(JSON.parse(savedPreferences));
+      }
+      
+      const savedSource = localStorage.getItem("food_search_source");
+      if (savedSource) {
+        setSearchSource(savedSource as "both" | "openfoods" | "usda");
+      }
+    } catch (error) {
+      console.error("Error loading search preferences:", error);
+    }
+  }, []);
+  
+  // Save user preferences to local storage
+  const savePreferences = (newPreferences: UserPreferences, newSource?: "both" | "openfoods" | "usda") => {
+    try {
+      localStorage.setItem("food_search_preferences", JSON.stringify(newPreferences));
+      setUserPreferences(newPreferences);
+      
+      if (newSource) {
+        localStorage.setItem("food_search_source", newSource);
+        setSearchSource(newSource);
+      }
+    } catch (error) {
+      console.error("Error saving search preferences:", error);
     }
   };
   
-  const removeExcludedIngredient = (ingredient: string) => {
-    setExcludedIngredients(prev => prev.filter(item => item !== ingredient));
+  // Handle search submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      onSearch(searchQuery, searchSource, userPreferences);
+    }
   };
   
-  const toggleDietaryOption = (option: string) => {
-    setSelectedDietary(prev => 
-      prev.includes(option)
-        ? prev.filter(item => item !== option)
-        : [...prev, option]
-    );
+  // Handle dietary preference toggle
+  const toggleDietary = (diet: string) => {
+    const current = [...(userPreferences.dietary || [])];
+    const newDietary = current.includes(diet)
+      ? current.filter(d => d !== diet)
+      : [...current, diet];
+    
+    savePreferences({
+      ...userPreferences,
+      dietary: newDietary
+    });
   };
-
+  
+  // Handle excluded ingredient toggle
+  const toggleExcludeIngredient = (ingredient: string) => {
+    const current = [...(userPreferences.excludeIngredients || [])];
+    const newExcluded = current.includes(ingredient)
+      ? current.filter(i => i !== ingredient)
+      : [...current, ingredient];
+    
+    savePreferences({
+      ...userPreferences,
+      excludeIngredients: newExcluded
+    });
+  };
+  
+  // Common dietary preferences and allergens
+  const dietaryOptions = [
+    "vegetarian",
+    "vegan",
+    "gluten-free",
+    "organic",
+    "kosher",
+    "halal",
+  ];
+  
+  const allergenOptions = [
+    "gluten",
+    "dairy",
+    "peanuts",
+    "tree-nuts",
+    "soy",
+    "eggs",
+    "shellfish",
+    "fish",
+  ];
+  
   return (
-    <section className="mb-6">
-      <h2 className="text-lg font-semibold mb-3">Food Search</h2>
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
+    <div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="relative flex-1">
           <Input
-            placeholder="Search for a food (e.g., apple, yogurt)"
+            type="text"
+            placeholder="Search for a food (e.g., chicken breast, apple)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="flex-1"
+            className="pr-10"
           />
-          <Button onClick={handleSearch} disabled={isLoading} className="px-6">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching
-              </>
-            ) : (
-              <>
-                <Search className="mr-2 h-4 w-4" /> Search
-              </>
-            )}
-          </Button>
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         </div>
         
-        <div className="flex flex-wrap items-center justify-between mt-2 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              Data source:
-            </span>
-            <Select 
-              value={searchSource} 
-              onValueChange={(value) => setSearchSource(value as "both" | "openfoods" | "usda")}
-            >
-              <SelectTrigger className="h-8 w-[160px]">
-                <SelectValue placeholder="Select data source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="both">Both databases</SelectItem>
-                <SelectItem value="openfoods">Open Food Facts</SelectItem>
-                <SelectItem value="usda">USDA Database</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        {/* Search Filters */}
-        <div className="mt-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowFilters(!showFilters)}
-            className="text-xs h-7"
-          >
-            {showFilters ? "Hide Filters" : "Show Filters"} 
-            {(selectedDietary.length > 0 || excludedIngredients.length > 0 || preferHighProtein) && (
-              <Badge className="ml-2 bg-primary-foreground text-primary h-5">
-                {selectedDietary.length + excludedIngredients.length + (preferHighProtein ? 1 : 0)}
-              </Badge>
-            )}
-          </Button>
-          
-          {showFilters && (
-            <div className="mt-3 space-y-4 p-3 border rounded-md bg-background/50">
-              {/* Dietary Preferences */}
-              <div>
-                <h3 className="text-sm font-medium mb-2">Dietary Preferences</h3>
-                <div className="flex flex-wrap gap-2">
-                  {DIETARY_OPTIONS.map(option => (
-                    <Badge
-                      key={option.value}
-                      variant={selectedDietary.includes(option.value) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => toggleDietaryOption(option.value)}
-                    >
-                      {option.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+        <div className="flex gap-2">
+          <Sheet open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" type="button" size="icon" className="relative">
+                <Settings2 className="h-4 w-4" />
+                {(userPreferences.dietary?.length || userPreferences.excludeIngredients?.length || userPreferences.preferHighProtein) && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Search Settings</SheetTitle>
+                <SheetDescription>
+                  Customize your food search to find exactly what you're looking for.
+                </SheetDescription>
+              </SheetHeader>
               
-              {/* Exclude Ingredients */}
-              <div>
-                <h3 className="text-sm font-medium mb-2">Exclude Ingredients</h3>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Enter ingredient to exclude"
-                    value={excludeIngredient}
-                    onChange={(e) => setExcludeIngredient(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addExcludedIngredient()}
-                    className="h-8 text-sm"
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={addExcludedIngredient}
-                    className="h-8"
+              <div className="mt-4 space-y-4">
+                {/* Search source */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Search In</h3>
+                  <Tabs 
+                    defaultValue={searchSource} 
+                    onValueChange={(value) => savePreferences(userPreferences, value as "both" | "openfoods" | "usda")}
+                    className="w-full"
                   >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="both">Both</TabsTrigger>
+                      <TabsTrigger value="openfoods">Open Food Facts</TabsTrigger>
+                      <TabsTrigger value="usda">USDA Database</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
                 
-                {excludedIngredients.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {excludedIngredients.map(ingredient => (
-                      <Badge key={ingredient} variant="secondary" className="pl-2">
-                        {ingredient}
-                        <button 
-                          onClick={() => removeExcludedIngredient(ingredient)}
-                          className="ml-1"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
+                <Separator />
+                
+                {/* High protein preference */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="high-protein">Prefer High Protein</Label>
+                    <p className="text-xs text-muted-foreground">Prioritize foods higher in protein</p>
+                  </div>
+                  <Switch
+                    id="high-protein"
+                    checked={userPreferences.preferHighProtein}
+                    onCheckedChange={(checked) => savePreferences({
+                      ...userPreferences,
+                      preferHighProtein: checked
+                    })}
+                  />
+                </div>
+                
+                <Separator />
+                
+                {/* Dietary preferences */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Dietary Preferences</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {dietaryOptions.map(diet => (
+                      <div key={diet} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={diet} 
+                          checked={userPreferences.dietary?.includes(diet)}
+                          onCheckedChange={() => toggleDietary(diet)}
+                        />
+                        <Label htmlFor={diet} className="text-sm capitalize">{diet}</Label>
+                      </div>
                     ))}
                   </div>
-                )}
-              </div>
-              
-              {/* Nutritional Preferences */}
-              <div>
-                <h3 className="text-sm font-medium mb-2">Nutritional Preferences</h3>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="protein-preference"
-                    checked={preferHighProtein}
-                    onCheckedChange={setPreferHighProtein}
-                  />
-                  <Label htmlFor="protein-preference">Prefer high protein foods</Label>
+                </div>
+                
+                <Separator />
+                
+                {/* Exclude ingredients/allergens */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Exclude Ingredients</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allergenOptions.map(allergen => (
+                      <div key={allergen} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`exclude-${allergen}`} 
+                          checked={userPreferences.excludeIngredients?.includes(allergen)}
+                          onCheckedChange={() => toggleExcludeIngredient(allergen)}
+                        />
+                        <Label htmlFor={`exclude-${allergen}`} className="text-sm capitalize">{allergen}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <Button 
+                    className="w-full" 
+                    onClick={() => setPreferencesOpen(false)}
+                  >
+                    Apply Settings
+                  </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </SheetContent>
+          </Sheet>
+          
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Search
+          </Button>
         </div>
-      </div>
-    </section>
+      </form>
+      
+      {/* Current settings display */}
+      {(userPreferences.dietary?.length > 0 || 
+        userPreferences.excludeIngredients?.length > 0 || 
+        userPreferences.preferHighProtein) && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {searchSource !== "both" && (
+            <Badge variant="outline" className="text-xs">
+              Source: {searchSource === "openfoods" ? "Open Food Facts" : "USDA Database"}
+            </Badge>
+          )}
+          
+          {userPreferences.preferHighProtein && (
+            <Badge variant="outline" className="text-xs">
+              High Protein
+            </Badge>
+          )}
+          
+          {userPreferences.dietary?.map(diet => (
+            <Badge key={diet} variant="outline" className="text-xs capitalize">
+              {diet}
+            </Badge>
+          ))}
+          
+          {userPreferences.excludeIngredients?.map(ingredient => (
+            <Badge key={ingredient} variant="outline" className="text-xs">
+              No {ingredient}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
