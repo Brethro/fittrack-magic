@@ -29,7 +29,6 @@ export interface UserPreferences {
 interface FoodSearchFormProps {
   onSearch: (
     query: string, 
-    searchType: "exact" | "broad", 
     searchSource: "both" | "openfoods" | "usda",
     preferences?: UserPreferences
   ) => Promise<void>;
@@ -48,7 +47,6 @@ const DIETARY_OPTIONS = [
 const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState<"exact" | "broad">("exact");
   const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("usda");
   const [showFilters, setShowFilters] = useState(false);
   
@@ -84,15 +82,10 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
     }
     
     await onSearch(
-      searchQuery, 
-      searchType, 
+      searchQuery,
       searchSource, 
       Object.keys(preferences).length > 0 ? preferences : undefined
     );
-  };
-
-  const toggleSearchType = () => {
-    setSearchType(prev => prev === "exact" ? "broad" : "exact");
   };
   
   const addExcludedIngredient = () => {
@@ -140,20 +133,6 @@ const FoodSearchForm = ({ onSearch, isLoading }: FoodSearchFormProps) => {
         </div>
         
         <div className="flex flex-wrap items-center justify-between mt-2 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              Search mode: <span className="font-medium">{searchType === "exact" ? "Exact match" : "Broad match"}</span>
-            </span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={toggleSearchType} 
-              className="text-xs h-7"
-            >
-              Switch to {searchType === "exact" ? "broad" : "exact"} search
-            </Button>
-          </div>
-          
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               Data source:

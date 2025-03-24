@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { searchUsdaFoods, UsdaFoodItem } from "@/utils/usdaApi";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -107,8 +106,57 @@ export async function searchOpenFoodFacts(
   console.log(`Open Food Facts API response (${searchType} mode):`, data);
   
   if (data.products && Array.isArray(data.products)) {
+    // Add nutritional data verification and enhancement
+    const enhancedProducts = data.products.map(product => {
+      // Fix missing or incomplete nutrient data by looking for alternative fields
+      if (product.nutriments) {
+        // Try to find energy/calories from different possible fields
+        if (!product.nutriments["energy-kcal_100g"] && !product.nutriments["energy-kcal"]) {
+          // Try to convert from kilojoules if available (1 kcal = 4.184 kJ)
+          if (product.nutriments.energy_100g) {
+            product.nutriments["energy-kcal_100g"] = product.nutriments.energy_100g / 4.184;
+          } else if (product.nutriments.energy) {
+            product.nutriments["energy-kcal"] = product.nutriments.energy / 4.184;
+          } else if (product.nutriments["energy-kj_100g"]) {
+            product.nutriments["energy-kcal_100g"] = product.nutriments["energy-kj_100g"] / 4.184;
+          } else if (product.nutriments["energy-kj"]) {
+            product.nutriments["energy-kcal"] = product.nutriments["energy-kj"] / 4.184;
+          }
+        }
+        
+        // Look for alternative protein fields
+        if (!product.nutriments.proteins_100g && !product.nutriments.proteins) {
+          if (product.nutriments.protein_100g) {
+            product.nutriments.proteins_100g = product.nutriments.protein_100g;
+          } else if (product.nutriments.protein) {
+            product.nutriments.proteins = product.nutriments.protein;
+          }
+        }
+        
+        // Look for alternative carbohydrate fields
+        if (!product.nutriments.carbohydrates_100g && !product.nutriments.carbohydrates) {
+          if (product.nutriments.carbohydrate_100g) {
+            product.nutriments.carbohydrates_100g = product.nutriments.carbohydrate_100g;
+          } else if (product.nutriments.carbohydrate) {
+            product.nutriments.carbohydrates = product.nutriments.carbohydrate;
+          }
+        }
+        
+        // Look for alternative fat fields
+        if (!product.nutriments.fat_100g && !product.nutriments.fat) {
+          if (product.nutriments["total-fat_100g"]) {
+            product.nutriments.fat_100g = product.nutriments["total-fat_100g"];
+          } else if (product.nutriments["total-fat"]) {
+            product.nutriments.fat = product.nutriments["total-fat"];
+          }
+        }
+      }
+      
+      return product;
+    });
+    
     // Enhanced scoring system with improved weighting for broad search
-    const scoredResults = data.products.map(product => {
+    const scoredResults = enhancedProducts.map(product => {
       const productName = (product.product_name || '').toLowerCase();
       const productNameEn = (product.product_name_en || '').toLowerCase();
       const brandName = (product.brands || '').toLowerCase();

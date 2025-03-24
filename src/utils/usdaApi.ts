@@ -1,4 +1,3 @@
-
 // USDA Food Data Central API utilities
 const USDA_API_KEY = "1su4bvCoKYGVSnyCBgVCwQATKgRWw9uVHqWFTsw2";
 const USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1";
@@ -180,10 +179,10 @@ export async function getUsdaFoodDetails(fdcId: number): Promise<UsdaFoodItem> {
 export function extractNutritionInfo(foodItem: UsdaFoodItem) {
   // Common nutrient IDs in USDA database
   const NUTRIENT_IDS = {
-    ENERGY_KCAL: [1008, 2047, 2048], // Different energy measurements
-    PROTEIN: [1003, 1299], // Protein  
-    TOTAL_FAT: [1004, 1300], // Total fat
-    CARBOHYDRATES: [1005, 1050, 2000], // Carbs by difference, total carbs
+    ENERGY_KCAL: [1008, 2047, 2048, 1062], // Different energy measurements
+    PROTEIN: [1003, 1299, 1162], // Protein
+    TOTAL_FAT: [1004, 1300, 1085], // Total fat
+    CARBOHYDRATES: [1005, 1050, 2000, 1072], // Carbs by difference, total carbs
     FIBER: [1079, 1082, 2033], // Dietary fiber
     SUGARS: [1063, 2000], // Total sugars
     CALCIUM: [1087, 1086], // Calcium
@@ -202,8 +201,17 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
     return null;
   };
   
-  // Extract nutritional values
-  const calories = findNutrient(NUTRIENT_IDS.ENERGY_KCAL)?.value || 0;
+  // Extract nutritional values with fallbacks
+  const calorieNutrient = findNutrient(NUTRIENT_IDS.ENERGY_KCAL);
+  // Sometimes the data is stored in different units or formats, ensure we get a meaningful value
+  let calories = calorieNutrient?.value || 0;
+  
+  // If calories seem too low (under 1.0), they might be in kJ and need conversion
+  if (calories > 0 && calories < 1.0) {
+    // Try to scale appropriately (possibly per g instead of per 100g)
+    calories = calories * 1000;
+  }
+  
   const protein = findNutrient(NUTRIENT_IDS.PROTEIN)?.value || 0;
   const fat = findNutrient(NUTRIENT_IDS.TOTAL_FAT)?.value || 0;
   const carbs = findNutrient(NUTRIENT_IDS.CARBOHYDRATES)?.value || 0;
@@ -236,6 +244,27 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
       servingSize = defaultPortion.gramWeight;
       servingUnit = "g";
     }
+  }
+  // Try to extract from household serving text if available
+  else if (foodItem.householdServingFullText) {
+    // Try to find weight in parentheses like "1 cup (240g)"
+    const weightMatch = foodItem.householdServingFullText.match(/\((\d+(?:\.\d+)?)\s*g\)/i);
+    if (weightMatch && weightMatch[1]) {
+      servingSize = parseFloat(weightMatch[1]);
+      servingUnit = "g";
+    }
+  }
+  
+  // Log what we extracted for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Extracted nutrition for ${foodItem.description}:`, {
+      calories,
+      protein,
+      carbs,
+      fat,
+      servingSize,
+      servingUnit
+    });
   }
   
   // Return a clean nutrition object with serving info

@@ -19,20 +19,41 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const { toast } = useToast();
   const { addFoodEntry } = useFoodLog();
 
-  // Extract and format nutritional information with better fallbacks
+  // Debug nutriments data
+  if (process.env.NODE_ENV === 'development') {
+    console.log("Nutriments data:", product.nutriments || {});
+  }
+
+  // Enhanced extraction of nutritional information with more fallbacks
+  // Check various ways the energy/calories can be stored
   const calories = product.nutriments?.["energy-kcal_100g"] || 
                   product.nutriments?.["energy-kcal"] || 
                   (product.nutriments?.energy_100g ? product.nutriments.energy_100g / 4.184 : 0) ||
-                  (product.nutriments?.energy ? product.nutriments.energy / 4.184 : 0);
+                  (product.nutriments?.energy ? product.nutriments.energy / 4.184 : 0) ||
+                  // Add more fallbacks for energy
+                  (product.nutriments?.["energy-kj_100g"] ? product.nutriments["energy-kj_100g"] / 4.184 : 0) ||
+                  (product.nutriments?.["energy-kj"] ? product.nutriments["energy-kj"] / 4.184 : 0);
   
+  // Check for protein in different formats
   const protein = product.nutriments?.proteins_100g || 
-                 product.nutriments?.proteins || 0;
+                 product.nutriments?.proteins || 
+                 product.nutriments?.protein_100g ||
+                 product.nutriments?.protein || 0;
   
+  // Check for carbs in different formats
   const carbs = product.nutriments?.carbohydrates_100g || 
-               product.nutriments?.carbohydrates || 0;
+               product.nutriments?.carbohydrates || 
+               product.nutriments?.["carbohydrate_100g"] ||
+               product.nutriments?.carbohydrate || 0;
   
+  // Check for fat in different formats
   const fat = product.nutriments?.fat_100g || 
-             product.nutriments?.fat || 0;
+             product.nutriments?.fat || 
+             product.nutriments?.["total-fat_100g"] ||
+             product.nutriments?.["total-fat"] || 0;
+  
+  // Track if we have valid nutritional data
+  const hasNutritionData = calories > 0 || protein > 0 || carbs > 0 || fat > 0;
   
   // Generate a name if the product name isn't available
   const productName = product.product_name || product.product_name_en || "Unnamed Product";
@@ -101,6 +122,15 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
       }
     }
     
+    // Try to extract from quantity field
+    if (product.quantity && typeof product.quantity === 'string') {
+      // Look for grams in the quantity
+      const gramsMatch = product.quantity.match(/(\d+(?:\.\d+)?)\s*g/i);
+      if (gramsMatch && gramsMatch[1]) {
+        return parseFloat(gramsMatch[1]);
+      }
+    }
+    
     // Default to 100g
     return 100;
   };
@@ -114,6 +144,18 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   const proteinPerServing = (protein * scaleFactor).toFixed(1);
   const carbsPerServing = (carbs * scaleFactor).toFixed(1);
   const fatPerServing = (fat * scaleFactor).toFixed(1);
+  
+  // Log extracted nutrition for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log("Extracted nutrition:", {
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber: product.nutriments?.fiber_100g || product.nutriments?.fiber || 0,
+      sugars: product.nutriments?.sugars_100g || product.nutriments?.sugars || 0
+    });
+  }
   
   // Format categories into a list of food types - extract main food type
   const mainCategory = product.categories
@@ -226,17 +268,17 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
             </div>
             
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                {caloriesPerServing} kcal
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                {caloriesPerServing > 0 ? `${caloriesPerServing} kcal` : 'No calorie data'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                P: {proteinPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                P: {protein > 0 ? `${proteinPerServing}g` : 'n/a'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                C: {carbsPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                C: {carbs > 0 ? `${carbsPerServing}g` : 'n/a'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                F: {fatPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                F: {fat > 0 ? `${fatPerServing}g` : 'n/a'}
               </Badge>
             </div>
             

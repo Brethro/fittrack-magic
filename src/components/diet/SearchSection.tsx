@@ -51,7 +51,6 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
 
   const handleSearch = async (
     searchQuery: string, 
-    searchType: "exact" | "broad", 
     searchSource: "both" | "openfoods" | "usda",
     userPreferences?: UserPreferences
   ) => {
@@ -61,39 +60,17 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     setLastUsdaResponse(null);
     
     try {
+      // Always use broad search for best results
+      const searchType = "broad";
+      
       // Search in Open Food Facts if selected
       if (searchSource === "openfoods" || searchSource === "both") {
-        // First attempt: search with the requested mode (exact or broad)
+        // First attempt: search with broad mode
         let offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
         
-        // If initial search with requested mode returns no results and mode is broad
-        // Try exact search first, then fallback to improved fallback search
-        if (offResults.length === 0 && searchType === "broad") {
-          console.log("Broad search returned no results, trying exact search first");
-          // Try with exact search
-          offResults = await searchOpenFoodFacts(searchQuery, "exact", userPreferences);
-          
-          // If exact search also fails, try the fallback search
-          if (offResults.length === 0) {
-            console.log("Exact search also returned no results, trying fallback search");
-            const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
-            if (fallbackResults.length > 0) {
-              offResults = fallbackResults;
-              toast({
-                title: "Limited results found",
-                description: "We found some items that might match what you're looking for.",
-              });
-            }
-          }
-        }
-        // If initial exact search failed, try fallback (maintain existing behavior)
-        else if (offResults.length === 0 && searchType === "exact") {
-          console.log("Exact search returned no results, trying fallback search");
-          toast({
-            title: "No exact matches found",
-            description: "Trying broader search criteria...",
-          });
-          // Try with broader search
+        // If broad search returns no results, try fallback search
+        if (offResults.length === 0) {
+          console.log("Broad search returned no results, trying fallback search");
           const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
           if (fallbackResults.length > 0) {
             offResults = fallbackResults;
@@ -135,6 +112,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
               foodCategory: firstItem.foodCategory,
               servingSize: firstItem.servingSize,
               servingSizeUnit: firstItem.servingSizeUnit,
+              householdServingFullText: firstItem.householdServingFullText,
               // Extract first few nutrients for display
               nutrients: firstItem.foodNutrients?.slice(0, 5).map(n => ({
                 name: n.nutrientName,

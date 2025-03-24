@@ -87,6 +87,13 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   const carbsPerServing = (nutritionValues.carbs * scaleFactor).toFixed(1);
   const fatPerServing = (nutritionValues.fat * scaleFactor).toFixed(1);
   
+  // Check if we have valid nutritional data
+  const hasNutritionData = 
+    nutritionValues.calories > 0 || 
+    nutritionValues.protein > 0 || 
+    nutritionValues.carbs > 0 || 
+    nutritionValues.fat > 0;
+  
   // Log values for debugging
   if (process.env.NODE_ENV === 'development') {
     console.log(`UsdaFoodItem "${description}": servingSize=${servingSize}, servingSizeInGrams=${servingSizeInGrams}, calories=${nutritionValues.calories}, caloriesPerServing=${caloriesPerServing}`);
@@ -133,17 +140,17 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             </div>
             
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                {caloriesPerServing} kcal
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                {nutritionValues.calories > 0 ? `${caloriesPerServing} kcal` : 'No calorie data'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                P: {proteinPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                P: {nutritionValues.protein > 0 ? `${proteinPerServing}g` : 'n/a'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                C: {carbsPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                C: {nutritionValues.carbs > 0 ? `${carbsPerServing}g` : 'n/a'}
               </Badge>
-              <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                F: {fatPerServing}g
+              <Badge className={`text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground ${!hasNutritionData ? 'opacity-60' : ''}`}>
+                F: {nutritionValues.fat > 0 ? `${fatPerServing}g` : 'n/a'}
               </Badge>
             </div>
             
