@@ -86,6 +86,7 @@ export const calculateWeightGainCalories = (
     
     // Check if the required surplus is higher than the standard for the selected pace
     if (requiredSurplusPercentage > standardPaceSurplus) {
+      // If user wants more surplus than standard pace, respect that
       isTimelineDriven = true;
       
       // Cap the maximum surplus at 35% to prevent excessive fat gain
@@ -96,8 +97,13 @@ export const calculateWeightGainCalories = (
         highSurplusWarning = true;
       }
     } else {
-      // If the timeline doesn't require a higher surplus, use the standard for selected pace
-      finalSurplusPercentage = standardPaceSurplus;
+      // If user has set a MORE LENIENT timeline (longer than needed)
+      // we should use the reduced surplus percentage calculated from their timeline
+      // rather than sticking with the standard pace surplus
+      finalSurplusPercentage = requiredSurplusPercentage;
+      
+      // Log the reduced surplus
+      console.log(`User set a more lenient timeline than standard pace requires. Reducing surplus from ${standardPaceSurplus}% to ${finalSurplusPercentage.toFixed(1)}%`);
     }
   } else {
     // If not respecting timeline, simply use the standard surplus for the selected pace
