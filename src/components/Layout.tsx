@@ -1,4 +1,3 @@
-
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { Home, Target, LineChart, User, Shield, Apple } from "lucide-react";
 import { motion } from "framer-motion";
@@ -135,7 +134,7 @@ const Layout = () => {
       
       {/* Navigation with enhanced glass effect */}
       <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-50">
-        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto glass-panel nav-gradient rounded-t-xl py-3 px-6`}>
+        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto nav-glass nav-gradient rounded-t-xl py-3 px-6`}>
           <ul className="flex justify-between items-center">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 

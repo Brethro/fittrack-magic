@@ -185,7 +185,7 @@
   
   /* Updated nav-gradient for better glass effect */
   .nav-gradient {
-    background: linear-gradient(180deg, rgba(15, 8, 28, 0.8) 0%, rgba(20, 10, 38, 0.85) 100%);
+    background: linear-gradient(180deg, rgba(15, 8, 28, 0.5) 0%, rgba(20, 10, 38, 0.55) 100%);
     @apply backdrop-blur-xl border-t border-white/5;
   }
   

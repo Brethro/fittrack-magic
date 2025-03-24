@@ -71,3 +71,12 @@
   background-origin: border-box;
   background-clip: padding-box, border-box;
 }
+
+/* More transparent nav glass effect */
+.nav-glass {
+  backdrop-filter: blur(10px);
+  background: rgba(10, 5, 20, 0.25); /* More transparent background */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
