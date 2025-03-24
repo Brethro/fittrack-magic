@@ -53,7 +53,24 @@ const FoodLogContext = createContext<FoodLogContextType | undefined>(undefined);
 
 // Provider component
 export const FoodLogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { userData } = useUserData();
+  // Make sure useUserData is properly wrapped in its provider
+  let userData;
+  try {
+    const userDataContext = useUserData();
+    userData = userDataContext.userData;
+  } catch (error) {
+    console.error("Error using UserData context:", error);
+    // Provide default values when UserDataContext is not available
+    userData = {
+      dailyCalories: 2000,
+      macros: {
+        protein: 100,
+        carbs: 200,
+        fats: 65
+      }
+    };
+  }
+
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 

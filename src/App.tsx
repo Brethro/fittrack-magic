@@ -27,9 +27,8 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BrowserRouter>
-            {/* Critical Fix: We need to make sure UserDataProvider is mounted BEFORE FoodLogProvider */}
-            <UserDataProvider>
+          <UserDataProvider>
+            <BrowserRouter>
               <FoodLogProvider>
                 <Toaster />
                 <Routes>
@@ -45,8 +44,8 @@ function App() {
                   </Route>
                 </Routes>
               </FoodLogProvider>
-            </UserDataProvider>
-          </BrowserRouter>
+            </BrowserRouter>
+          </UserDataProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
