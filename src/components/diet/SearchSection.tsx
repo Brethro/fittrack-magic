@@ -84,7 +84,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
         setSearchResults(offResults);
         
         // Show no results toast if still empty and not searching USDA
-        if (offResults.length === 0 && searchSource !== "usda") {
+        if (offResults.length === 0 && searchSource !== "both" && searchSource !== "usda") {
           toast({
             title: "No results found",
             description: "Try different search terms or check your spelling.",
@@ -152,7 +152,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
             });
           }
         }
-      } else if (searchSource === "usda" && usdaApiStatus === "rate_limited") {
+      } else if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus === "rate_limited") {
         toast({
           title: "USDA API rate limited",
           description: "Please try again later when the API rate limit resets.",
