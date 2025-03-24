@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,12 +24,13 @@ interface FoodSearchFormProps {
     userPreferences?: UserPreferences
   ) => void;
   isLoading?: boolean;
+  disableUsdaOption?: boolean; // New prop to control USDA option visibility
 }
 
-const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) => {
+const FoodSearchForm = ({ onSearch, isLoading = false, disableUsdaOption = false }: FoodSearchFormProps) => {
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("both");
+  const [searchSource, setSearchSource] = useState<"both" | "openfoods" | "usda">("openfoods"); // Default to openfoods
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   
   // User preferences
@@ -48,14 +48,19 @@ const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) =>
         setUserPreferences(JSON.parse(savedPreferences));
       }
       
-      const savedSource = localStorage.getItem("food_search_source");
-      if (savedSource) {
-        setSearchSource(savedSource as "both" | "openfoods" | "usda");
+      // If USDA is disabled, force searchSource to "openfoods" regardless of saved preference
+      if (disableUsdaOption) {
+        setSearchSource("openfoods");
+      } else {
+        const savedSource = localStorage.getItem("food_search_source");
+        if (savedSource) {
+          setSearchSource(savedSource as "both" | "openfoods" | "usda");
+        }
       }
     } catch (error) {
       console.error("Error loading search preferences:", error);
     }
-  }, []);
+  }, [disableUsdaOption]);
   
   // Save user preferences to local storage
   const savePreferences = (newPreferences: UserPreferences, newSource?: "both" | "openfoods" | "usda") => {
@@ -63,7 +68,7 @@ const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) =>
       localStorage.setItem("food_search_preferences", JSON.stringify(newPreferences));
       setUserPreferences(newPreferences);
       
-      if (newSource) {
+      if (newSource && !disableUsdaOption) {
         localStorage.setItem("food_search_source", newSource);
         setSearchSource(newSource);
       }
@@ -76,7 +81,9 @@ const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      onSearch(searchQuery, searchSource, userPreferences);
+      // Force "openfoods" as searchSource if USDA is disabled
+      const effectiveSearchSource = disableUsdaOption ? "openfoods" : searchSource;
+      onSearch(searchQuery, effectiveSearchSource, userPreferences);
     }
   };
   
@@ -160,21 +167,23 @@ const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) =>
               </SheetHeader>
               
               <div className="mt-4 space-y-4">
-                {/* Search source */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Search In</h3>
-                  <Tabs 
-                    defaultValue={searchSource} 
-                    onValueChange={(value) => savePreferences(userPreferences, value as "both" | "openfoods" | "usda")}
-                    className="w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="both">Both</TabsTrigger>
-                      <TabsTrigger value="openfoods">Open Food Facts</TabsTrigger>
-                      <TabsTrigger value="usda">USDA Database</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
+                {/* Search source - only show if USDA is not disabled */}
+                {!disableUsdaOption && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Search In</h3>
+                    <Tabs 
+                      defaultValue={searchSource} 
+                      onValueChange={(value) => savePreferences(userPreferences, value as "both" | "openfoods" | "usda")}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="both">Both</TabsTrigger>
+                        <TabsTrigger value="openfoods">Open Food Facts</TabsTrigger>
+                        <TabsTrigger value="usda">USDA Database</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
                 
                 <Separator />
                 
@@ -256,7 +265,7 @@ const FoodSearchForm = ({ onSearch, isLoading = false }: FoodSearchFormProps) =>
         userPreferences.excludeIngredients?.length > 0 || 
         userPreferences.preferHighProtein) && (
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {searchSource !== "both" && (
+          {!disableUsdaOption && searchSource !== "both" && (
             <Badge variant="outline" className="text-xs">
               Source: {searchSource === "openfoods" ? "Open Food Facts" : "USDA Database"}
             </Badge>

@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import FoodItem from "./FoodItem";
@@ -60,18 +59,11 @@ const FoodSearchResults = ({
         </Badge>
       </div>
       
-      {(hasOpenFoodResults && hasUsdaResults) ? (
-        <Tabs defaultValue="openfoods" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-2">
-            <TabsTrigger value="openfoods">
-              Open Food Facts <Badge variant="outline" className="ml-2 bg-background/20">{results.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="usda">
-              USDA Database <Badge variant="outline" className="ml-2 bg-background/20">{usdaResults.length}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="openfoods" className="space-y-2 mt-2">
+      {/* Since we're now only using OpenFoodFacts, simplify the UI */}
+      <div className="space-y-2">
+        {/* Open Food Facts results */}
+        {hasOpenFoodResults && (
+          <div className="space-y-2">
             {results.map((product, index) => (
               <motion.div
                 key={`off-${product.id || index}`}
@@ -95,9 +87,19 @@ const FoodSearchResults = ({
                 )}
               </motion.div>
             ))}
-          </TabsContent>
-          
-          <TabsContent value="usda" className="space-y-2 mt-2">
+          </div>
+        )}
+        
+        {/* USDA results - conditionally rendered, but we're no longer showing them */}
+        {hasUsdaResults && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mt-3 mb-1">
+              <h3 className="text-base font-medium text-emerald-500">USDA Database Results</h3>
+              <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+                {usdaResults.length} items
+              </Badge>
+            </div>
+            
             {usdaResults.map((foodItem, index) => (
               <motion.div
                 key={`usda-${foodItem.fdcId}`}
@@ -119,74 +121,9 @@ const FoodSearchResults = ({
                 )}
               </motion.div>
             ))}
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="space-y-2">
-          {/* Open Food Facts results */}
-          {hasOpenFoodResults && (
-            <div className="space-y-2">
-              {results.map((product, index) => (
-                <motion.div
-                  key={`off-${product.id || index}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  <FoodItem 
-                    product={product} 
-                    onSelect={(food) => {
-                      if (onSelectFood) onSelectFood(food);
-                    }} 
-                  />
-                  {/* Debug score display */}
-                  {showDebugScores && product._searchScore !== undefined && (
-                    <div className="text-xs text-muted-foreground mt-1 pl-2">
-                      Score: {Math.round(product._searchScore)}
-                      {product._nutritionalCompleteness && 
-                        ` | Nutrition data: ${product._nutritionalCompleteness}`}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-          
-          {/* USDA results */}
-          {hasUsdaResults && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mt-3 mb-1">
-                <h3 className="text-base font-medium text-emerald-500">USDA Database Results</h3>
-                <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
-                  {usdaResults.length} items
-                </Badge>
-              </div>
-              
-              {usdaResults.map((foodItem, index) => (
-                <motion.div
-                  key={`usda-${foodItem.fdcId}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  <UsdaFoodItem 
-                    foodItem={foodItem} 
-                    onSelect={(food) => {
-                      if (onSelectUsdaFood) onSelectUsdaFood(food);
-                    }}
-                  />
-                  {/* Debug score display */}
-                  {showDebugScores && (foodItem as any)._searchScore !== undefined && (
-                    <div className="text-xs text-muted-foreground mt-1 pl-2">
-                      Score: {Math.round((foodItem as any)._searchScore)}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </motion.section>
   );
 };

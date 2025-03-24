@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ import RecentFoods from "@/components/diet/RecentFoods";
 import { UsdaFoodItem } from "@/utils/usdaApi";
 import { 
   searchOpenFoodFacts, 
-  searchUsdaDatabase, 
+  // searchUsdaDatabase, - commented out
   searchWithFallback,
   trackFoodSelection
 } from "@/services/foodSearchService";
@@ -21,7 +20,7 @@ interface SearchSectionProps {
 const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
   const { toast } = useToast();
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
+  const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]); // Keep for type compatibility
   const [isLoading, setIsLoading] = useState(false);
   const [lastUsdaResponse, setLastUsdaResponse] = useState<any>(null);
   const [showRawData, setShowRawData] = useState(false);
@@ -51,7 +50,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
 
   const handleSearch = async (
     searchQuery: string, 
-    searchSource: "both" | "openfoods" | "usda",
+    searchSource: "both" | "openfoods" | "usda", // Keep param for type compatibility
     userPreferences?: UserPreferences
   ) => {
     setIsLoading(true);
@@ -63,37 +62,39 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
       // Always use broad search mode
       const searchType = "broad";
       
-      // Search in Open Food Facts if selected
-      if (searchSource === "openfoods" || searchSource === "both") {
-        // Search with broad mode
-        let offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
-        
-        // If broad search returns no results, try fallback search
-        if (offResults.length === 0) {
-          console.log("Broad search returned no results, trying fallback search");
-          const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
-          if (fallbackResults.length > 0) {
-            offResults = fallbackResults;
-            toast({
-              title: "Limited results found",
-              description: "We found some items that might match what you're looking for.",
-            });
-          }
-        }
-        
-        // Update search results
-        setSearchResults(offResults);
-        
-        // Show no results toast if still empty
-        if (offResults.length === 0) {
+      // Force search source to openfoods, ignoring passed parameter
+      const forcedSearchSource = "openfoods";
+      
+      // Search in Open Food Facts only
+      let offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
+      
+      // If broad search returns no results, try fallback search
+      if (offResults.length === 0) {
+        console.log("Broad search returned no results, trying fallback search");
+        const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
+        if (fallbackResults.length > 0) {
+          offResults = fallbackResults;
           toast({
-            title: "No results found",
-            description: "Try different search terms or check your spelling.",
-            variant: "destructive",
+            title: "Limited results found",
+            description: "We found some items that might match what you're looking for.",
           });
         }
       }
       
+      // Update search results
+      setSearchResults(offResults);
+      
+      // Show no results toast if still empty
+      if (offResults.length === 0) {
+        toast({
+          title: "No results found",
+          description: "Try different search terms or check your spelling.",
+          variant: "destructive",
+        });
+      }
+      
+      // USDA search commented out temporarily
+      /*
       // Search in USDA if selected and not rate limited
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
@@ -151,6 +152,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
           variant: "destructive",
         });
       }
+      */
     } catch (error) {
       console.error("Search error:", error);
       toast({
@@ -183,17 +185,21 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
       <FoodSearchForm 
         onSearch={handleSearch} 
         isLoading={isLoading} 
+        disableUsdaOption={true} // Pass a prop to disable USDA option
       />
       
-      {/* Show warning about rate limiting */}
+      {/* Hide USDA rate limiting warning since we're not using USDA */}
+      {/*
       {usdaApiStatus === "rate_limited" && (
         <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
           <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
           The rate limit typically resets after a few minutes.</p>
         </div>
       )}
+      */}
       
-      {/* Debug USDA API Response Data - Only visible to admin users */}
+      {/* Debug USDA API Response Data - Only visible to admin users (hidden now) */}
+      {/*
       {lastUsdaResponse && isAdmin && (
         <div className="mt-4 mb-2">
           <div className="flex items-center justify-between">
@@ -215,20 +221,21 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
           )}
         </div>
       )}
+      */}
       
       {/* Recent Foods - improved layout */}
       <RecentFoods />
       
-      {/* Search Results */}
+      {/* Search Results - pass empty usdaResults to hide USDA section */}
       {isLoading ? (
         <FoodSearchResultsSkeleton />
       ) : (
-        (searchResults.length > 0 || usdaResults.length > 0) && (
+        (searchResults.length > 0) && (
           <FoodSearchResults 
             results={searchResults} 
-            usdaResults={usdaResults}
+            usdaResults={[]} // Always pass empty array to hide USDA results
             onSelectFood={handleSelectFood}
-            onSelectUsdaFood={handleSelectUsdaFood}
+            onSelectUsdaFood={() => {}} // Empty handler
           />
         )
       )}
