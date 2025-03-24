@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion"; // Add this import for motion
+import { Badge } from "@/components/ui/badge"; // Add this import for Badge
 import FoodSearchForm, { UserPreferences } from "@/components/diet/FoodSearchForm";
 import FoodSearchResults, { FoodSearchResultsSkeleton, UnifiedFoodResults } from "@/components/diet/FoodSearchResults";
 import RecentFoods from "@/components/diet/RecentFoods";
