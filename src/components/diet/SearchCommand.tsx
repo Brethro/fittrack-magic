@@ -30,6 +30,9 @@ interface SearchCommandProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Define the search source type explicitly to avoid type errors
+type SearchSource = "both" | "openfoods" | "usda";
+
 export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const { toast } = useToast();
   const { usdaApiStatus, checkUsdaApiConnection } = useApiConnection();
@@ -143,7 +146,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     
     try {
       // Always use both sources
-      const searchSource = "both"; 
+      const searchSource: SearchSource = "both"; 
       const searchType = "broad";
       const userPreferences: UserPreferences = {}; // Default preferences
       
