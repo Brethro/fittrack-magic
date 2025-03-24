@@ -105,6 +105,9 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           parsedData.weightLog = [];
         }
         
+        // Validate required fields to ensure we have proper data
+        console.log("Loaded user data:", parsedData);
+        
         return parsedData;
       } catch (error) {
         console.error("Error parsing saved user data:", error);
@@ -118,6 +121,7 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Save user data to localStorage whenever it changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      console.log("Saving userData to localStorage:", userData);
       localStorage.setItem("fitTrackUserData", JSON.stringify(userData));
     }, 300); // Debounce saving to localStorage to prevent excessive writes
     
@@ -126,10 +130,15 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateUserData = useCallback((data: Partial<UserData>) => {
     console.log("Updating user data with:", data);
-    setUserData((prev) => ({ ...prev, ...data }));
+    setUserData((prev) => {
+      const updatedData = { ...prev, ...data };
+      console.log("Updated user data:", updatedData);
+      return updatedData;
+    });
   }, []);
 
   const clearUserData = useCallback(() => {
+    console.log("Clearing all user data");
     setUserData(initialUserData);
     localStorage.removeItem("fitTrackUserData");
   }, []);

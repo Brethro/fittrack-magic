@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,20 +17,27 @@ const PlanPage = () => {
   const [estimatedGoalBodyFat, setEstimatedGoalBodyFat] = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  // Check if necessary user data is available
+  // Check if necessary user data is available - improved validation
   const hasRequiredUserData = userData && 
     userData.age !== null && 
     userData.weight !== null && 
     userData.height !== null && 
-    userData.activityLevel !== null && 
-    userData.gender !== null && 
+    userData.activityLevel !== null;
+
+  const hasRequiredGoalData = userData &&
     userData.goalValue !== null && 
-    userData.goalDate !== null;
+    userData.goalDate !== null && 
+    userData.goalType !== null;
 
   // Always recalculate nutrition when the page loads to ensure accuracy
   useEffect(() => {
+    console.log("PlanPage useEffect - userData:", userData);
+    console.log("hasRequiredUserData:", hasRequiredUserData);
+    console.log("hasRequiredGoalData:", hasRequiredGoalData);
+    
     if (!hasRequiredUserData) {
       // If we're missing any essential user data, redirect to profile
+      console.log("Missing required user data, redirecting to onboarding");
       toast({
         title: "Missing information",
         description: "Please complete your profile first",
@@ -41,7 +47,8 @@ const PlanPage = () => {
       return;
     }
     
-    if (!userData.goalValue || !userData.goalDate) {
+    if (!hasRequiredGoalData) {
+      console.log("Missing required goal data, redirecting to goals");
       toast({
         title: "Missing information",
         description: "Please complete your goals first",
@@ -108,7 +115,7 @@ const PlanPage = () => {
     }
     
     setInitialized(true);
-  }, [userData.goalValue, userData.goalDate, userData.bodyFatPercentage, userData.weight, userData.goalPace, userData.tdee, userData.dailyCalories, userData.isWeightGain, hasRequiredUserData, navigate, toast, recalculateNutrition]);
+  }, [userData, hasRequiredUserData, hasRequiredGoalData, navigate, toast, recalculateNutrition]);
 
   // If data is incomplete, show a friendly message and redirect button
   if (!hasRequiredUserData) {
@@ -128,7 +135,7 @@ const PlanPage = () => {
     );
   }
 
-  if (!userData.dailyCalories || !userData.macros.protein) {
+  if (!hasRequiredGoalData) {
     return (
       <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
         <div className="text-center glass-panel p-6 rounded-lg">
@@ -139,6 +146,23 @@ const PlanPage = () => {
             className="px-4 py-2 bg-gradient-purple rounded-md text-white neo-btn"
           >
             Set Goals
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData.dailyCalories || !userData.macros.protein) {
+    return (
+      <div className="container px-4 py-8 flex items-center justify-center h-[80vh]">
+        <div className="text-center glass-panel p-6 rounded-lg">
+          <h2 className="text-xl font-bold mb-3 text-gradient-purple">Calculation in Progress</h2>
+          <p className="mb-4 text-muted-foreground">Please wait while we calculate your nutrition plan</p>
+          <button 
+            onClick={() => recalculateNutrition()}
+            className="px-4 py-2 bg-gradient-purple rounded-md text-white neo-btn"
+          >
+            Recalculate Now
           </button>
         </div>
       </div>

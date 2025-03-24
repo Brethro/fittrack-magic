@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Info } from "lucide-react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useUserData } from "@/contexts/UserDataContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -28,6 +28,7 @@ const OnboardingPage = () => {
     bodyFatPercentage: userData.bodyFatPercentage?.toString() || "",
     activityLevel: userData.activityLevel || "sedentary",
     useMetric: userData.useMetric || false,
+    gender: userData.gender || "male", // Add default gender
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,10 +86,19 @@ const OnboardingPage = () => {
       activityLevel: form.activityLevel,
       bodyFatPercentage: form.bodyFatPercentage ? parseFloat(form.bodyFatPercentage) : null,
       useMetric: form.useMetric,
+      gender: "male" as "male" | "female", // Set default gender value
     };
 
+    console.log("Saving user data:", formattedData);
+    
+    // Update user data and navigate after the state has been updated
     updateUserData(formattedData);
-    navigate("/goals");
+    
+    // Use a short timeout to ensure the data is saved before navigation
+    setTimeout(() => {
+      console.log("Navigating to goals page...");
+      navigate("/goals");
+    }, 100);
   };
 
   return (
