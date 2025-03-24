@@ -12,13 +12,15 @@ interface FoodSearchResultsProps {
   usdaResults?: UsdaFoodItemType[];
   onSelectFood?: (food: any) => void;
   onSelectUsdaFood?: (food: UsdaFoodItemType) => void;
+  unifiedMode?: boolean; // New prop to control unified display
 }
 
 const FoodSearchResults = ({ 
   results, 
   usdaResults = [], 
   onSelectFood, 
-  onSelectUsdaFood 
+  onSelectUsdaFood,
+  unifiedMode = false // Default to false for backward compatibility
 }: FoodSearchResultsProps) => {
   const hasOpenFoodResults = results.length > 0;
   const hasUsdaResults = usdaResults.length > 0;
@@ -60,84 +62,164 @@ const FoodSearchResults = ({
         </Badge>
       </div>
       
-      {/* Display results from both sources */}
-      <div className="space-y-2">
-        {/* Open Food Facts results */}
-        {hasOpenFoodResults && (
-          <div className="space-y-2">
-            {/* Show source header if we have results from both sources */}
-            {hasUsdaResults && (
+      {/* Unified display mode - shows all results together sorted by score */}
+      {unifiedMode && (
+        <div className="space-y-2">
+          {/* Render both types of results in the same list */}
+          {[...Array(results.length + usdaResults.length)].map((_, index) => {
+            // This is just a placeholder - the actual items will be passed 
+            // as pre-sorted merged array from the parent component
+            const itemInfo = index < results.length 
+              ? { type: 'openfoodfacts', item: results[index], index }
+              : { type: 'usda', item: usdaResults[index - results.length], index };
+              
+            return null; // This will never be used as we'll pass pre-sorted items
+          })}
+        </div>
+      )}
+      
+      {/* Regular separated display mode */}
+      {!unifiedMode && (
+        <div className="space-y-2">
+          {/* Open Food Facts results */}
+          {hasOpenFoodResults && (
+            <div className="space-y-2">
+              {/* Show source header if we have results from both sources */}
+              {hasUsdaResults && (
+                <div className="flex items-center gap-2 mt-3 mb-1">
+                  <h3 className="text-base font-medium">Open Food Facts Results</h3>
+                  <Badge variant="outline" className="text-xs">
+                    {results.length} items
+                  </Badge>
+                </div>
+              )}
+              
+              {results.map((product, index) => (
+                <motion.div
+                  key={`off-${product.id || index}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
+                  <FoodItem 
+                    product={product} 
+                    onSelect={(food) => {
+                      if (onSelectFood) onSelectFood(food);
+                    }} 
+                  />
+                  {/* Debug score display */}
+                  {showDebugScores && product._searchScore !== undefined && (
+                    <div className="text-xs text-muted-foreground mt-1 pl-2">
+                      Score: {Math.round(product._searchScore)}
+                      {product._nutritionalCompleteness && 
+                        ` | Nutrition data: ${product._nutritionalCompleteness}`}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          {/* USDA results - conditionally rendered */}
+          {hasUsdaResults && (
+            <div className="space-y-2">
               <div className="flex items-center gap-2 mt-3 mb-1">
-                <h3 className="text-base font-medium">Open Food Facts Results</h3>
-                <Badge variant="outline" className="text-xs">
-                  {results.length} items
+                <h3 className="text-base font-medium text-emerald-500">USDA Database Results</h3>
+                <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+                  {usdaResults.length} items
                 </Badge>
               </div>
-            )}
-            
-            {results.map((product, index) => (
-              <motion.div
-                key={`off-${product.id || index}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-              >
-                <FoodItem 
-                  product={product} 
-                  onSelect={(food) => {
-                    if (onSelectFood) onSelectFood(food);
-                  }} 
-                />
-                {/* Debug score display */}
-                {showDebugScores && product._searchScore !== undefined && (
-                  <div className="text-xs text-muted-foreground mt-1 pl-2">
-                    Score: {Math.round(product._searchScore)}
-                    {product._nutritionalCompleteness && 
-                      ` | Nutrition data: ${product._nutritionalCompleteness}`}
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
-        
-        {/* USDA results - conditionally rendered */}
-        {hasUsdaResults && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mt-3 mb-1">
-              <h3 className="text-base font-medium text-emerald-500">USDA Database Results</h3>
-              <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
-                {usdaResults.length} items
-              </Badge>
+              
+              {usdaResults.map((foodItem, index) => (
+                <motion.div
+                  key={`usda-${foodItem.fdcId}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
+                  <UsdaFoodItem 
+                    foodItem={foodItem} 
+                    onSelect={(food) => {
+                      if (onSelectUsdaFood) onSelectUsdaFood(food);
+                    }}
+                  />
+                  {/* Debug score display */}
+                  {showDebugScores && (foodItem as any)._searchScore !== undefined && (
+                    <div className="text-xs text-muted-foreground mt-1 pl-2">
+                      Score: {Math.round((foodItem as any)._searchScore)}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
             </div>
-            
-            {usdaResults.map((foodItem, index) => (
-              <motion.div
-                key={`usda-${foodItem.fdcId}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-              >
-                <UsdaFoodItem 
-                  foodItem={foodItem} 
-                  onSelect={(food) => {
-                    if (onSelectUsdaFood) onSelectUsdaFood(food);
-                  }}
-                />
-                {/* Debug score display */}
-                {showDebugScores && (foodItem as any)._searchScore !== undefined && (
-                  <div className="text-xs text-muted-foreground mt-1 pl-2">
-                    Score: {Math.round((foodItem as any)._searchScore)}
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </motion.section>
   );
 };
+
+// New unified display component that renders both OFF and USDA items together
+export function UnifiedFoodResults({
+  mergedResults,
+  onSelectFood,
+  onSelectUsdaFood
+}: {
+  mergedResults: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>
+  onSelectFood?: (food: any) => void;
+  onSelectUsdaFood?: (food: UsdaFoodItemType) => void;
+}) {
+  // Debug display for search scores in development mode only
+  const showDebugScores = process.env.NODE_ENV === 'development';
+  
+  return (
+    <div className="space-y-2">
+      {mergedResults.map((result, index) => (
+        <motion.div
+          key={`merged-${result.type}-${result.type === 'usda' ? result.item.fdcId : (result.item.id || index)}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: index * 0.05 }}
+        >
+          {/* Render appropriate component based on result type */}
+          {result.type === 'openfoodfacts' ? (
+            <>
+              <FoodItem 
+                product={result.item} 
+                onSelect={(food) => {
+                  if (onSelectFood) onSelectFood(food);
+                }} 
+              />
+              {/* Debug score display */}
+              {showDebugScores && result.score !== undefined && (
+                <div className="text-xs text-muted-foreground mt-1 pl-2">
+                  Score: {Math.round(result.score)}
+                  {result.item._nutritionalCompleteness && 
+                    ` | Nutrition data: ${result.item._nutritionalCompleteness}`}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <UsdaFoodItem 
+                foodItem={result.item} 
+                onSelect={(food) => {
+                  if (onSelectUsdaFood) onSelectUsdaFood(food);
+                }}
+              />
+              {/* Debug score display */}
+              {showDebugScores && result.score !== undefined && (
+                <div className="text-xs text-muted-foreground mt-1 pl-2">
+                  Score: {Math.round(result.score)} | USDA
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
 export function FoodSearchResultsSkeleton() {
   return (

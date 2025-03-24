@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useToast } from "@/hooks/use-toast";
 import FoodSearchForm, { UserPreferences } from "@/components/diet/FoodSearchForm";
-import FoodSearchResults, { FoodSearchResultsSkeleton } from "@/components/diet/FoodSearchResults";
+import FoodSearchResults, { FoodSearchResultsSkeleton, UnifiedFoodResults } from "@/components/diet/FoodSearchResults";
 import RecentFoods from "@/components/diet/RecentFoods";
 import { UsdaFoodItem } from "@/utils/usdaApi";
 import { 
@@ -22,6 +22,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
   const { toast } = useToast();
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]); 
+  const [mergedResults, setMergedResults] = useState<Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUsdaResponse, setLastUsdaResponse] = useState<any>(null);
   const [showRawData, setShowRawData] = useState(false);
@@ -44,6 +45,46 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     };
   }, []);
   
+  // Update merged results whenever search results or USDA results change
+  useEffect(() => {
+    if (searchResults.length > 0 || usdaResults.length > 0) {
+      const merged = mergeAndSortResults(searchResults, usdaResults);
+      setMergedResults(merged);
+    } else {
+      setMergedResults([]);
+    }
+  }, [searchResults, usdaResults]);
+  
+  // Function to merge and sort results by score
+  const mergeAndSortResults = (offResults: any[], usdaItems: UsdaFoodItem[]) => {
+    const merged: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}> = [];
+    
+    // Add Open Food Facts results
+    offResults.forEach(product => {
+      // Get the search score (default to 0 if not available)
+      const score = typeof product._searchScore === 'number' ? product._searchScore : 0;
+      merged.push({
+        type: 'openfoodfacts',
+        item: product,
+        score
+      });
+    });
+    
+    // Add USDA results
+    usdaItems.forEach(foodItem => {
+      // Get the search score (default to 0 if not available)
+      const score = typeof (foodItem as any)._searchScore === 'number' ? (foodItem as any)._searchScore : 0;
+      merged.push({
+        type: 'usda',
+        item: foodItem,
+        score
+      });
+    });
+    
+    // Sort by score (highest first)
+    return merged.sort((a, b) => b.score - a.score);
+  };
+  
   // Track selected food to improve future search results
   const handleFoodSelection = (foodName: string) => {
     trackFoodSelection(foodName);
@@ -57,6 +98,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     setIsLoading(true);
     setSearchResults([]);
     setUsdaResults([]);
+    setMergedResults([]);
     setLastUsdaResponse(null);
     
     try {
@@ -234,12 +276,28 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
         <FoodSearchResultsSkeleton />
       ) : (
         (searchResults.length > 0 || usdaResults.length > 0) && (
-          <FoodSearchResults 
-            results={searchResults} 
-            usdaResults={usdaResults}
-            onSelectFood={handleSelectFood}
-            onSelectUsdaFood={handleSelectUsdaFood}
-          />
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-3 mt-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Search Results</h2>
+              
+              {/* Results count summary */}
+              <Badge variant="outline" className="bg-background">
+                {mergedResults.length} found
+              </Badge>
+            </div>
+            
+            {/* Use the new unified results display */}
+            <UnifiedFoodResults 
+              mergedResults={mergedResults}
+              onSelectFood={handleSelectFood}
+              onSelectUsdaFood={handleSelectUsdaFood}
+            />
+          </motion.section>
         )
       )}
     </div>
