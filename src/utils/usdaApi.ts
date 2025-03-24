@@ -14,6 +14,7 @@ export interface UsdaFoodItem {
   description: string;
   dataType: string;
   brandName?: string;
+  brandOwner?: string;
   ingredients?: string;
   servingSize?: number;
   servingSizeUnit?: string;
@@ -21,6 +22,7 @@ export interface UsdaFoodItem {
   foodPortions?: UsdaFoodPortion[];
   foodCategory?: string;
   foodCategoryId?: number;
+  householdServingFullText?: string; // Added this property
 }
 
 export interface UsdaFoodNutrient {
