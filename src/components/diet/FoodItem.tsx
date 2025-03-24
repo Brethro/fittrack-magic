@@ -68,6 +68,40 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   
   const servingSize = getServingSize();
   
+  // Extract numeric serving size for calculations
+  const getNumericServingSize = (): number => {
+    // If serving_size_g exists, use it directly
+    if (product.serving_size_g && !isNaN(product.serving_size_g)) {
+      return parseFloat(product.serving_size_g);
+    }
+    
+    // Try to parse numeric part from serving_quantity
+    if (product.serving_quantity && !isNaN(product.serving_quantity)) {
+      return parseFloat(product.serving_quantity);
+    }
+    
+    // Try to parse numeric part from serving_size string
+    if (product.serving_size && typeof product.serving_size === 'string') {
+      const match = product.serving_size.match(/(\d+(\.\d+)?)/);
+      if (match && match[1]) {
+        return parseFloat(match[1]);
+      }
+    }
+    
+    // Default to 100g
+    return 100;
+  };
+  
+  // Calculate the scale factor for nutrition values
+  const servingSizeInGrams = getNumericServingSize();
+  const scaleFactor = servingSizeInGrams / 100;
+  
+  // Scale nutrition values to the actual serving size
+  const caloriesPerServing = Math.round(calories * scaleFactor);
+  const proteinPerServing = (protein * scaleFactor).toFixed(1);
+  const carbsPerServing = (carbs * scaleFactor).toFixed(1);
+  const fatPerServing = (fat * scaleFactor).toFixed(1);
+  
   // Format categories into a list of food types - extract main food type
   const mainCategory = product.categories
     ? product.categories
@@ -175,16 +209,16 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
             
             <div className="flex flex-wrap gap-1.5 mt-2">
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                {Math.round(calories)} kcal
+                {caloriesPerServing} kcal
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                P: {protein.toFixed(1)}g
+                P: {proteinPerServing}g
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                C: {carbs.toFixed(1)}g
+                C: {carbsPerServing}g
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                F: {fat.toFixed(1)}g
+                F: {fatPerServing}g
               </Badge>
             </div>
             
