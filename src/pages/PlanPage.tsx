@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -118,6 +119,15 @@ const PlanPage = () => {
           </h1>
           
           <section className="space-y-4 mb-8">
+            {/* Daily Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <DailyStats />
+            </motion.div>
+            
             {/* Nutrition panel */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -153,16 +163,6 @@ const PlanPage = () => {
               className="glass-panel rounded-lg p-4"
             >
               <WeightLogList />
-            </motion.div>
-          </section>
-          
-          <section>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
-              <DailyStats />
             </motion.div>
           </section>
         </motion.div>
