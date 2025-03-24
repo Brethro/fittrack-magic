@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useToast } from "@/hooks/use-toast";
 import FoodSearchForm, { UserPreferences } from "@/components/diet/FoodSearchForm";
@@ -25,6 +25,24 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastUsdaResponse, setLastUsdaResponse] = useState<any>(null);
   const [showRawData, setShowRawData] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Check if user is admin on component mount
+  useEffect(() => {
+    const checkAdminStatus = () => {
+      const adminAuth = localStorage.getItem("fittrack_admin_auth");
+      setIsAdmin(adminAuth === "true");
+    };
+    
+    checkAdminStatus();
+    
+    // Listen for storage events to update admin status if changed in another tab
+    window.addEventListener("storage", checkAdminStatus);
+    
+    return () => {
+      window.removeEventListener("storage", checkAdminStatus);
+    };
+  }, []);
   
   // Track selected food to improve future search results
   const handleFoodSelection = (foodName: string) => {
@@ -169,8 +187,8 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
         </div>
       )}
       
-      {/* Debug USDA API Response Data */}
-      {lastUsdaResponse && (
+      {/* Debug USDA API Response Data - Only visible to admin users */}
+      {lastUsdaResponse && isAdmin && (
         <div className="mt-4 mb-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-emerald-600">USDA API Response Data</h3>
