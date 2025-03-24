@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { differenceInCalendarDays, addDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -95,6 +96,7 @@ export const useNutritionCalculator = (
     
     // Check if we should respect the user-set timeline
     const respectUserTimeline = userData.userSetGoalDate === true;
+    console.log("Respecting user timeline:", respectUserTimeline);
     
     if (isWeightGain) {
       // Use our refactored weight gain calculator

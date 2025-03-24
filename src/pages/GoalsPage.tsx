@@ -103,17 +103,9 @@ const GoalsPage = () => {
 
   // When user changes pace
   const handlePaceChange = (pace: GoalPaceType) => {
-    // If user has already set a custom date, don't change the date
-    if (form.customDateSelected) {
-      console.log("Keeping user-selected date when changing pace");
-      setForm((prev) => ({
-        ...prev,
-        goalPace: pace
-      }));
-      return;
-    }
+    // Always calculate a new date when pace changes, regardless of whether a custom date was previously selected
+    console.log(`Pace changed to ${pace}, calculating new date...`);
     
-    // Otherwise, calculate an appropriate date based on the pace
     let newDate;
     
     if (isWeightGain()) {
@@ -199,7 +191,7 @@ const GoalsPage = () => {
       ...prev,
       goalPace: pace,
       goalDate: newDate,
-      customDateSelected: false // Reset this flag since date is auto-calculated
+      customDateSelected: false // Reset this flag when pace changes
     }));
   };
 
