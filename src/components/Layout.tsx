@@ -34,13 +34,10 @@ const Layout = () => {
         const isHomePage = location.pathname === "/";
         
         // Determine if scrolling is needed - with special handling for home page
-        // For home page, we need to check if there's REAL content that overflows
-        // We do this by checking if scrollHeight > clientHeight significantly
         let shouldScroll;
         
         if (isHomePage) {
-          // For home page, only enable scroll if actual content (not min-height)
-          // exceeds available space by more than a small threshold
+          // For home page, only enable scroll if actual content exceeds available space
           const contentExceedsContainer = mainHeight > mainClientHeight + 10;
           shouldScroll = contentExceedsContainer && mainHeight > availableHeight;
         } else {
@@ -50,7 +47,6 @@ const Layout = () => {
         
         setIsScrollable(shouldScroll);
         
-        // More detailed debug info
         console.log({
           path: location.pathname,
           mainHeight,
@@ -119,11 +115,11 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen gradient-bg">
+    <div className="flex flex-col min-h-screen bg-gradient-main animated-gradient">
       {/* Decorative elements */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-[100px]" />
-        <div className="absolute top-[30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute top-[30%] left-[-10%] w-[400px] h-[400px] rounded-full bg-fuchsia-500/10 blur-[120px]" />
         <div className="absolute bottom-[-5%] right-[10%] w-[350px] h-[350px] rounded-full bg-violet-500/10 blur-[100px]" />
       </div>
       
@@ -138,7 +134,7 @@ const Layout = () => {
       </div>
       
       <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-50">
-        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto nav-gradient rounded-t-xl py-3 px-6 border-t border-white/10`}>
+        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto nav-gradient rounded-t-xl py-3 px-6 border-t border-white/5`}>
           <ul className="flex justify-between items-center">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 
@@ -149,13 +145,13 @@ const Layout = () => {
                   <Link
                     to={item.path}
                     className={`flex flex-col items-center p-2 transition-colors duration-200 relative ${
-                      isActive ? "text-purple-400" : "text-muted-foreground hover:text-foreground"
+                      isActive ? "text-fuchsia-400" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="navigation-pill"
-                        className="absolute inset-0 bg-white/5 rounded-lg glow-effect"
+                        className="absolute inset-0 bg-white/5 rounded-lg purple-glow"
                         initial={false}
                         transition={{ type: "spring", duration: 0.5 }}
                       />

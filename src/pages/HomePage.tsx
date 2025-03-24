@@ -32,7 +32,7 @@ const HomePage = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-[120px] h-[120px] purple-glass rounded-full flex items-center justify-center glow-effect"
+            className="w-[120px] h-[120px] pink-purple-gradient rounded-full flex items-center justify-center purple-glow"
           >
             <LineChart size={60} className="text-white" />
           </motion.div>
@@ -91,8 +91,8 @@ const HomePage = () => {
           >
             <Link to={hasStarted ? "/plan" : "/onboarding"} className="w-full">
               <Button 
-                variant="purple" 
-                className="w-full py-6 glow-effect" 
+                variant="gradient" 
+                className="w-full py-6 purple-glow" 
                 size="lg"
               >
                 {hasStarted ? "View My Plan" : "Get Started"}
@@ -126,18 +126,18 @@ const FeatureCard = ({
     <Dialog>
       <DialogTrigger asChild>
         <div className={cn(
-          "glassmorphism rounded-xl p-4 flex flex-col items-center justify-center gap-2",
-          "cursor-pointer hover:bg-white/15 transition-colors"
+          "card-gradient rounded-xl p-4 flex flex-col items-center justify-center gap-2 card-hover",
+          "cursor-pointer transition-all duration-300"
         )}>
-          <Icon size={24} className="text-purple-400" />
+          <Icon size={24} className="text-fuchsia-400" />
           <p className="text-sm text-center">{title}</p>
           <Info size={14} className="text-white/60 mt-1" />
         </div>
       </DialogTrigger>
-      <DialogContent className="dark-glass border border-white/20">
+      <DialogContent className="dark-glass border border-white/5">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Icon size={18} className="text-purple-400" />
+            <Icon size={18} className="text-fuchsia-400" />
             <span>{title}</span>
           </DialogTitle>
           <DialogDescription className="pt-4 text-white/80">

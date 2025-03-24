@@ -9,18 +9,18 @@
 
 /* Utility classes for glass morphism design */
 .glass-effect {
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 }
 
 .purple-glow {
-  box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
+  box-shadow: 0 5px 20px rgba(191, 90, 242, 0.4);
 }
 
 .gradient-background {
-  background: linear-gradient(135deg, hsl(270, 50%, 15%) 0%, hsl(250, 40%, 10%) 100%);
+  background: linear-gradient(135deg, #1a042d 0%, #0c0324 100%);
   background-attachment: fixed;
 }
 
@@ -63,4 +63,19 @@
 
 .scale-hover:hover {
   transform: scale(1.05);
+}
+
+/* Custom button styles */
+.button-gradient {
+  background: linear-gradient(90deg, #c026d3 0%, #7e22ce 100%);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.button-gradient:hover {
+  opacity: 0.9;
+  box-shadow: 0 5px 15px rgba(191, 90, 242, 0.4);
 }
