@@ -5,6 +5,7 @@
   padding: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 /* Utility classes for glass morphism design */
@@ -79,4 +80,3 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
-
