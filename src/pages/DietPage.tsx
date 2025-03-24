@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import ApiStatusIndicators from "@/components/diet/ApiStatusIndicators";
@@ -8,13 +8,16 @@ import FoodLog from "@/components/diet/FoodLog";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import SearchSection from "@/components/diet/SearchSection";
 import { useUserData } from "@/contexts/UserDataContext";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, PlusCircle, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SearchCommand } from "@/components/diet/SearchCommand";
 
 const DietPage = () => {
   const { apiStatus, usdaApiStatus, checkUsdaApiConnection } = useApiConnection();
   const { currentDate, setCurrentDate } = useFoodLog();
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Check USDA API connection when selected
   useEffect(() => {
@@ -60,13 +63,24 @@ const DietPage = () => {
           <FoodLogSummary onDateChange={handleDateChange} />
         </div>
         
-        {/* 2. Food Search Section - in the middle */}
-        <SearchSection usdaApiStatus={usdaApiStatus} />
-
-        {/* 3. Food Log Section - at the bottom */}
-        <div className="glass-panel p-4 rounded-lg">
+        {/* 2. Food Log Section - in the middle */}
+        <div className="glass-panel p-4 rounded-lg h-[500px]">
           <FoodLog />
         </div>
+        
+        {/* Floating action button for quick search */}
+        <div className="fixed bottom-6 right-6 z-10">
+          <Button 
+            size="lg" 
+            className="h-14 w-14 rounded-full shadow-lg"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search className="h-6 w-6" />
+          </Button>
+        </div>
+        
+        {/* Global search command */}
+        <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       </motion.div>
     </div>
   );
