@@ -93,9 +93,8 @@ export const useNutritionCalculator = (
     let isTimelineDriven = false;
     let updatedGoalDate = userData.goalDate;
     
-    // Check if we should respect the user-set timeline 
-    // If userData has a userSetGoalDate flag or the goalCustomDate property exists
-    const respectUserTimeline = userData.userSetGoalDate || userData.goalCustomDate;
+    // Check if we should respect the user-set timeline
+    const respectUserTimeline = userData.userSetGoalDate === true;
     
     if (isWeightGain) {
       // Use our refactored weight gain calculator
@@ -117,10 +116,9 @@ export const useNutritionCalculator = (
       isTimelineDriven = result.isTimelineDriven;
       
       // Only update the goal date if we're NOT respecting user timeline
-      // and we have a calculated days required value
-      if (!respectUserTimeline && userData.goalPace === "aggressive" && result.daysRequiredToReachGoal) {
+      if (!respectUserTimeline && result.daysRequiredToReachGoal) {
         updatedGoalDate = addDays(new Date(), result.daysRequiredToReachGoal);
-        console.log(`Adjusted goal date to: ${updatedGoalDate} based on fixed 20% surplus`);
+        console.log(`Adjusted goal date to: ${updatedGoalDate} based on standard pace surplus`);
       } else {
         // If we're respecting user timeline, keep the original date
         updatedGoalDate = userData.goalDate;

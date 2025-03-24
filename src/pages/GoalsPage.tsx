@@ -34,11 +34,9 @@ const GoalsPage = () => {
     bodyFatGoal: userData.goalType === "bodyFat" ? userData.goalValue?.toString() || "" : "",
     goalDate: userData.goalDate || addMonths(new Date(), 3),
     goalPace: userData.goalPace || "moderate" as GoalPaceType,
-    customDateSelected: false // New flag to track if user manually set a date
+    customDateSelected: userData.userSetGoalDate || false // Initialize with existing user preference
   });
 
-  const defaultEndDate = addMonths(new Date(), 3);
-  
   // Calculate if this is a weight gain goal
   const isWeightGain = () => {
     if (form.goalType === "weight" && userData.weight && form.weightGoal) {
@@ -74,15 +72,6 @@ const GoalsPage = () => {
     return Math.ceil(totalCalorieAdjustment / dailySurplus);
   };
 
-  // Calculate optimal timeframe for weight gain based on the given surplus percentage
-  const calculateOptimalBulkingTimeframe = (surplusPercentage: number = 20) => {
-    const daysNeeded = calculateDaysNeeded(surplusPercentage);
-    if (!daysNeeded) return null;
-    
-    // Convert to weeks (rounded up)
-    return Math.ceil(daysNeeded / 7);
-  };
-
   // This function calculates days needed for weight loss based on deficit percentage
   const calculateDaysNeededForWeightLoss = (deficitPercentage: number) => {
     if (isWeightGain() || !userData.weight || !form.weightGoal || !userData.tdee) return null;
@@ -100,17 +89,31 @@ const GoalsPage = () => {
     return Math.ceil(totalCalorieAdjustment / dailyDeficit);
   };
 
+  // When user explicitly selects a date
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
+      console.log("User selected custom date:", date);
       setForm((prev) => ({ 
         ...prev, 
         goalDate: date,
-        customDateSelected: true // Set flag when user manually selects a date
+        customDateSelected: true // Always set to true when user manually selects a date
       }));
     }
   };
 
+  // When user changes pace
   const handlePaceChange = (pace: GoalPaceType) => {
+    // If user has already set a custom date, don't change the date
+    if (form.customDateSelected) {
+      console.log("Keeping user-selected date when changing pace");
+      setForm((prev) => ({
+        ...prev,
+        goalPace: pace
+      }));
+      return;
+    }
+    
+    // Otherwise, calculate an appropriate date based on the pace
     let newDate;
     
     if (isWeightGain()) {
@@ -125,7 +128,7 @@ const GoalsPage = () => {
           surplusPercentage = 15; // 15% surplus
           break;
         case "aggressive":
-          surplusPercentage = 20; // 20% surplus (optimal maximum)
+          surplusPercentage = 20; // 20% surplus
           break;
         default:
           surplusPercentage = 15; // Default to moderate
@@ -191,10 +194,12 @@ const GoalsPage = () => {
       }
     }
     
+    console.log(`Setting new date for ${pace} pace:`, newDate);
     setForm((prev) => ({
       ...prev,
       goalPace: pace,
-      goalDate: newDate
+      goalDate: newDate,
+      customDateSelected: false // Reset this flag since date is auto-calculated
     }));
   };
 
@@ -204,33 +209,6 @@ const GoalsPage = () => {
       handlePaceChange(form.goalPace);
     }
   }, [form.weightGoal, form.bodyFatGoal, form.goalType]);
-
-  const calculateTargetGoal = () => {
-    if (!userData.weight) return null;
-    
-    const currentWeight = userData.weight;
-    
-    let recommendedGoal;
-    
-    if (form.goalType === "weight") {
-      // Recommend 10-15% weight loss for moderate goal
-      const reductionFactor = 0.1; // 10%
-      recommendedGoal = Math.round(currentWeight * (1 - reductionFactor));
-      
-      return userData.useMetric 
-        ? `${recommendedGoal} kg`
-        : `${recommendedGoal} lbs`;
-    } else {
-      // If body fat goal
-      if (!userData.bodyFatPercentage) return "Complete body fat % for recommendations";
-      
-      const currentBF = userData.bodyFatPercentage;
-      // Recommend reducing body fat by about 5-7 percentage points
-      recommendedGoal = Math.max(currentBF - 5, 10); // Don't go below 10%
-      
-      return `${recommendedGoal}%`;
-    }
-  };
 
   // Calculate if the weight gain pace is potentially unrealistic
   const calculateWeightGainWarning = () => {
@@ -250,12 +228,11 @@ const GoalsPage = () => {
     // Calculate surplus as percentage of TDEE
     const surplusPercent = (dailySurplus / userData.tdee) * 100;
     
-    // Only show warning if surplus is more than 20%
-    if (surplusPercent > 20) {
-      const optimalWeeks = calculateOptimalBulkingTimeframe();
+    // Only show warning if surplus is more than 25%
+    if (surplusPercent > 25) {
       return {
         show: true,
-        message: `This timeline requires a ${Math.round(surplusPercent)}% caloric surplus, which is likely to result in more fat gain than muscle. For optimal muscle-to-fat ratio, consider a longer timeframe (about ${optimalWeeks} weeks).`
+        message: `This timeline requires a ${Math.round(surplusPercent)}% caloric surplus, which is likely to result in more fat gain than muscle. For optimal muscle-to-fat ratio, consider a longer timeframe or a less aggressive goal.`
       };
     }
     
@@ -304,40 +281,45 @@ const GoalsPage = () => {
     console.log("Goal date:", form.goalDate);
     console.log("Custom date selected:", form.customDateSelected);
     
-    // Determine the maximum surplus percentage based on the goal pace
-    // This is crucial to ensure we don't exceed the intended surplus
-    let maxSurplusPercentage;
-    if (isWeightGain()) {
-      switch (form.goalPace) {
-        case "aggressive":
-          maxSurplusPercentage = 20; // Exactly 20% for aggressive
-          break;
-        case "moderate":
-          maxSurplusPercentage = 15; // 15% for moderate
-          break;
-        case "conservative":
-          maxSurplusPercentage = 10; // 10% for conservative
-          break;
-        default:
-          maxSurplusPercentage = 15; // Default to moderate
-      }
-    }
-    
     // Update user data with new goals
     updateUserData({
       goalType: form.goalType,
       goalValue,
       goalDate: form.goalDate,
       goalPace: form.goalPace,
-      // Store the maximum surplus percentage to ensure consistency
-      maxSurplusPercentage: isWeightGain() ? maxSurplusPercentage : undefined,
       // Add flag indicating if this was a custom user-set date
-      userSetGoalDate: form.customDateSelected,
-      goalCustomDate: form.customDateSelected ? form.goalDate : null
+      userSetGoalDate: form.customDateSelected
     });
     
     // Navigate to the plan page
     navigate("/plan");
+  };
+
+  const calculateTargetGoal = () => {
+    if (!userData.weight) return null;
+    
+    const currentWeight = userData.weight;
+    
+    let recommendedGoal;
+    
+    if (form.goalType === "weight") {
+      // Recommend 10-15% weight loss for moderate goal
+      const reductionFactor = 0.1; // 10%
+      recommendedGoal = Math.round(currentWeight * (1 - reductionFactor));
+      
+      return userData.useMetric 
+        ? `${recommendedGoal} kg`
+        : `${recommendedGoal} lbs`;
+    } else {
+      // If body fat goal
+      if (!userData.bodyFatPercentage) return "Complete body fat % for recommendations";
+      
+      const currentBF = userData.bodyFatPercentage;
+      // Recommend reducing body fat by about 5-7 percentage points
+      recommendedGoal = Math.max(currentBF - 5, 10); // Don't go below 10%
+      
+      return `${recommendedGoal}%`;
+    }
   };
 
   return (
