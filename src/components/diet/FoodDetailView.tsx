@@ -74,16 +74,23 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Get initial nutrition values
   const baseNutrition = getNutritionValues();
   
-  // Default to a reasonable portion size
+  // Set initial amount based on source and available serving information
   useEffect(() => {
-    if (food.serving_size_g && !isNaN(food.serving_size_g)) {
-      setAmount(Number(food.serving_size_g));
-    } else if (food.servingSize && !isNaN(food.servingSize)) {
-      setAmount(Number(food.servingSize));
-    } else if (food.serving_qty && !isNaN(food.serving_qty)) {
-      setAmount(Number(food.serving_qty));
+    if (source === 'usda') {
+      // For USDA, use the serving info from extractNutritionInfo
+      const { servingInfo } = extractNutritionInfo(food as UsdaFoodItem);
+      if (servingInfo && servingInfo.size) {
+        setAmount(servingInfo.size);
+      }
+    } else if (source === 'openfoodfacts') {
+      // For Open Food Facts, use existing logic
+      if (food.serving_size_g && !isNaN(food.serving_size_g)) {
+        setAmount(Number(food.serving_size_g));
+      } else if (food.serving_qty && !isNaN(food.serving_qty)) {
+        setAmount(Number(food.serving_qty));
+      }
     }
-  }, [food]);
+  }, [food, source]);
   
   // Form setup for food entry
   const { control, handleSubmit, setValue, formState: { errors } } = useForm({

@@ -27,9 +27,9 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   const description = foodItem.description || "Unnamed Food";
   const category = foodItem.foodCategory || "";
   
-  // Handle serving size information
-  const servingSize = foodItem.servingSize
-    ? `${foodItem.servingSize}${foodItem.servingSizeUnit || "g"}`
+  // Handle serving size information - use extracted serving info
+  const servingSize = servingInfo.size 
+    ? `${servingInfo.size}${servingInfo.unit || "g"}`
     : "100g";
 
   const handleSelectFood = () => {
@@ -41,6 +41,13 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
       console.log("Selected USDA food:", foodItem);
     }
   };
+  
+  // Calculate per-serving nutrition values
+  const scaleFactor = servingInfo.size / 100;
+  const caloriesPerServing = Math.round(nutritionValues.calories * scaleFactor);
+  const proteinPerServing = (nutritionValues.protein * scaleFactor).toFixed(1);
+  const carbsPerServing = (nutritionValues.carbs * scaleFactor).toFixed(1);
+  const fatPerServing = (nutritionValues.fat * scaleFactor).toFixed(1);
   
   return (
     <>
@@ -84,16 +91,16 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
             
             <div className="flex flex-wrap gap-1.5 mt-2">
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                {Math.round(nutritionValues.calories)} kcal
+                {caloriesPerServing} kcal
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                P: {nutritionValues.protein.toFixed(1)}g
+                P: {proteinPerServing}g
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                C: {nutritionValues.carbs.toFixed(1)}g
+                C: {carbsPerServing}g
               </Badge>
               <Badge className="text-xs px-1.5 py-0 h-5 bg-secondary text-secondary-foreground">
-                F: {nutritionValues.fat.toFixed(1)}g
+                F: {fatPerServing}g
               </Badge>
             </div>
             

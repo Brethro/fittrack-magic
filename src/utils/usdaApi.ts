@@ -208,7 +208,35 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
   const fiber = findNutrient(NUTRIENT_IDS.FIBER)?.value || 0;
   const sugars = findNutrient(NUTRIENT_IDS.SUGARS)?.value || 0;
   
-  // Return a clean nutrition object with optional serving info
+  // Determine serving size and unit
+  let servingSize = 100; // Default to 100g if no serving info available
+  let servingUnit = "g";
+  
+  // Use the provided serving size if available
+  if (foodItem.servingSize && !isNaN(foodItem.servingSize)) {
+    servingSize = foodItem.servingSize;
+    servingUnit = foodItem.servingSizeUnit || "g";
+  } 
+  // Look for standard portions if available
+  else if (foodItem.foodPortions && foodItem.foodPortions.length > 0) {
+    // Find a reasonable default portion (prefer household measures)
+    const defaultPortion = foodItem.foodPortions.find(p => 
+      p.measureUnit && (
+        p.measureUnit.name.toLowerCase().includes("cup") || 
+        p.measureUnit.name.toLowerCase().includes("tablespoon") ||
+        p.measureUnit.name.toLowerCase().includes("teaspoon") ||
+        p.measureUnit.name.toLowerCase().includes("piece") ||
+        p.measureUnit.name.toLowerCase().includes("serving")
+      )
+    ) || foodItem.foodPortions[0];
+    
+    if (defaultPortion) {
+      servingSize = defaultPortion.gramWeight;
+      servingUnit = "g";
+    }
+  }
+  
+  // Return a clean nutrition object with serving info
   return {
     nutritionValues: {
       calories,
@@ -219,8 +247,8 @@ export function extractNutritionInfo(foodItem: UsdaFoodItem) {
       sugars,
     },
     servingInfo: {
-      size: 100,
-      unit: "g"
+      size: servingSize,
+      unit: servingUnit
     }
   };
 }
