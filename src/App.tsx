@@ -28,6 +28,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
+            {/* Critical Fix: We need to make sure UserDataProvider is mounted BEFORE FoodLogProvider */}
             <UserDataProvider>
               <FoodLogProvider>
                 <Toaster />
