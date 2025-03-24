@@ -70,12 +70,16 @@ export async function searchOpenFoodFacts(
       `&sort_by=popularity_key` +
       `&page_size=100`; // Get more results to filter through
   } else {
-    // Broad search with fewer restrictions
+    // Improved broad search with better relevance
     searchUrl = 
       `https://world.openfoodfacts.org/api/v2/search` +
       `?search_terms=${encodedQuery}` +
       `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade,product_name_en` +
+      // Add relevance boosting parameters
       `&sort_by=popularity_key` +
+      // Ensure at least some relevance by adding a tag filter with the main search term
+      `&tag_contains_0=contains` +
+      `&tag_0=${searchTerms[0]}` + // Use the first search term as a tag requirement
       `&page_size=50`;
   }
   
@@ -113,16 +117,17 @@ export async function searchOpenFoodFacts(
       let score = 0;
       let exactMatch = false;
       let partialMatch = false;
+      let matchedTermCount = 0;
       
       // ===== EXACT MATCH SCORING =====
       // Check for exact phrase match first (highest priority)
       if (productName === searchQuery.toLowerCase() || 
           productNameEn === searchQuery.toLowerCase()) {
-        score += 1200; // Increased from 1000 to give even higher priority to exact matches
+        score += 1200; // Highest priority to exact matches
         exactMatch = true;
       } else if (productName.includes(searchQuery.toLowerCase()) || 
                  productNameEn.includes(searchQuery.toLowerCase())) {
-        score += 600; // Increased from 500 for full phrase inclusion
+        score += 600; // High priority for full phrase inclusion
         partialMatch = true;
       }
       
@@ -146,29 +151,30 @@ export async function searchOpenFoodFacts(
       }
       
       // ===== INDIVIDUAL TERM MATCHING =====
-      let matchedTermCount = 0;
       searchTerms.forEach(term => {
+        if (term.length < 2) return; // Skip single-character terms
+        
         // Direct matches in product name (highest priority)
         if (productName.includes(term)) {
           // Give higher score to matches at the beginning
           const position = productName.indexOf(term);
           const positionBonus = Math.max(0, 35 - position); // Higher bonus for earlier position
           
-          score += 90 + positionBonus; // Increased from 80
+          score += 90 + positionBonus;
           matchedTermCount++;
           partialMatch = true;
         }
         
         // Match in English name if available
         if (productNameEn && productNameEn.includes(term)) {
-          score += 80; // Increased from 70
+          score += 80;
           matchedTermCount++;
           partialMatch = true;
         }
         
         // Category matches
         if (categories.includes(term)) {
-          score += 60; // Increased from 50
+          score += 60;
           partialMatch = true;
         }
         
@@ -177,17 +183,17 @@ export async function searchOpenFoodFacts(
           // Better matching with word boundaries
           const wordBoundaryRegex = new RegExp(`\\b${term}\\b`, 'i');
           if (wordBoundaryRegex.test(ingredients)) {
-            score += 70; // Increased from 60
+            score += 70;
             partialMatch = true;
           } else if (ingredients.includes(term)) {
-            score += 45; // Increased from 40
+            score += 45;
             partialMatch = true;
           }
         }
         
         // Brand matches
         if (brandName.includes(term)) {
-          score += 30; // Increased from 20
+          score += 30;
           partialMatch = true;
         }
       });
@@ -257,7 +263,30 @@ export async function searchOpenFoodFacts(
       // ===== ALL TERMS MATCH BONUS =====
       // Boost for matching all search terms
       if (matchedTermCount === searchTerms.length && searchTerms.length > 1) {
-        score += 150; // Increased from 100
+        score += 150;
+      }
+      
+      // ===== IMPROVED BROAD SEARCH RELEVANCE FILTER =====
+      // Penalize obviously irrelevant results in broad search
+      if (searchType === "broad" && matchedTermCount === 0) {
+        // Heavily penalize items that don't match any search terms
+        score -= 1000;
+      }
+      
+      // In broad search, give bonus for partial name matches based on term length
+      if (searchType === "broad" && partialMatch) {
+        // Calculate percentage of search query covered in product name
+        const searchQueryLength = searchQuery.length;
+        const commonTerms = searchTerms.filter(term => 
+          productName.includes(term) || 
+          (productNameEn && productNameEn.includes(term))
+        );
+        
+        const commonTermsLength = commonTerms.reduce((sum, term) => sum + term.length, 0);
+        const coveragePercent = Math.min(100, (commonTermsLength / searchQueryLength) * 100);
+        
+        // Boost score based on coverage
+        score += coveragePercent * 2;
       }
       
       // ===== DATA QUALITY BONUS =====
@@ -286,9 +315,10 @@ export async function searchOpenFoodFacts(
         item.exactMatch || (item.partialMatch && item.matchedTermCount >= Math.max(1, searchTerms.length - 1))
       );
     } else {
-      // For broad search, include anything with some relevance
+      // For broad search, include anything with positive relevance, but ensure some matching
       filteredResults = scoredResults.filter(item => 
-        item.partialMatch || item.score > 0
+        (item.partialMatch && item.score > 0) || // Must have some relevance
+        (item.matchedTermCount > 0 && item.score > 0) // Or match at least one term with positive score
       );
     }
     
@@ -300,6 +330,9 @@ export async function searchOpenFoodFacts(
         if (process.env.NODE_ENV === 'development') {
           item.product._searchScore = item.score;
           item.product._nutritionalCompleteness = item.nutritionalCompleteness;
+          item.product._matchedTermCount = item.matchedTermCount; // Add for debugging
+          item.product._exactMatch = item.exactMatch;
+          item.product._partialMatch = item.partialMatch;
         }
         return item.product;
       });
