@@ -109,12 +109,16 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     }
   };
   
-  // Perform search when query changes
-  const handleSearch = useCallback(async (query: string) => {
+  // Method to handle search with specific options
+  const handleSearchWithOptions = useCallback(async (
+    query: string,
+    searchSource: SearchSource = "both",
+    userPreferences?: UserPreferences
+  ) => {
     if (!query || query.trim().length < 2) {
       setSearchResults([]);
       setUsdaResults([]);
-      return;
+      return null;
     }
     
     setIsLoading(true);
@@ -123,14 +127,11 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     saveRecentSearch(query);
     
     try {
-      // Always use both sources
-      const searchSource: SearchSource = "both"; 
       const searchType = "broad";
-      const userPreferences: UserPreferences = {}; // Default preferences
       
       // Search in Open Food Facts
       if (searchSource === "openfoods" || searchSource === "both") {
-        let offResults = await searchOpenFoodFacts(query, searchType, userPreferences);
+        let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
         
         // If broad search returns no results, try fallback search
         if (offResults.length === 0) {
@@ -152,7 +153,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       // Search in USDA if not rate limited
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
-          const usdaSearchResults = await searchUsdaDatabase(query, userPreferences);
+          const usdaSearchResults = await searchUsdaDatabase(query, userPreferences || {});
           setUsdaResults(usdaSearchResults);
         } catch (error) {
           console.error("USDA search error:", error);
@@ -176,6 +177,17 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
           }
         }
       }
+      
+      // Show no results toast if both searches returned empty
+      if (searchResults.length === 0 && usdaResults.length === 0) {
+        toast({
+          title: "No results found",
+          description: "Try different search terms or check your spelling.",
+          variant: "destructive",
+        });
+      }
+      
+      return { searchResults, usdaResults };
     } catch (error) {
       console.error("Search error:", error);
       toast({
@@ -183,22 +195,23 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         description: `Could not fetch food data: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
+      return null;
     } finally {
       setIsLoading(false);
     }
   }, [toast, usdaApiStatus, saveRecentSearch]);
   
-  // Trigger the search with a debounce
+  // Perform search when query changes
   useEffect(() => {
     // Debounce search to avoid too many API calls
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim().length >= 2) {
-        handleSearch(searchQuery);
+        handleSearchWithOptions(searchQuery);
       }
     }, 500);
     
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery, handleSearchWithOptions]);
 
   // Clear results when command dialog is closed
   useEffect(() => {
@@ -218,6 +231,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     mergedResults,
     recentSearches,
     handleSelectFood,
-    handleSelectUsdaFood
+    handleSelectUsdaFood,
+    handleSearchWithOptions
   };
 }
