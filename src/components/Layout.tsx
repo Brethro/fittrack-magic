@@ -115,7 +115,7 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-main animated-gradient">
+    <div className="flex flex-col min-h-screen bg-gradient-main">
       {/* Decorative elements */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-[100px]" />
@@ -133,8 +133,9 @@ const Layout = () => {
         </main>
       </div>
       
+      {/* Navigation with enhanced glass effect */}
       <nav ref={navRef} className="fixed bottom-0 left-0 right-0 z-50">
-        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto nav-gradient rounded-t-xl py-3 px-6 border-t border-white/5`}>
+        <div className={`${isMobile ? "max-w-full" : "max-w-md"} mx-auto glass-panel nav-gradient rounded-t-xl py-3 px-6`}>
           <ul className="flex justify-between items-center">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path || 
