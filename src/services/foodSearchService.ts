@@ -332,6 +332,11 @@ export async function searchUsdaDatabase(
   console.log("USDA API response:", response);
   
   if (response && response.foods && Array.isArray(response.foods)) {
+    // Log complete first result for debugging
+    if (response.foods.length > 0) {
+      console.log("USDA first result details:", response.foods[0]);
+    }
+    
     // Extract search terms for better matching
     const searchTerms = searchQuery.toLowerCase().split(' ');
     

@@ -12,6 +12,7 @@ import {
   searchWithFallback,
   trackFoodSelection
 } from "@/services/foodSearchService";
+import { Button } from "@/components/ui/button";
 
 interface SearchSectionProps {
   usdaApiStatus: "idle" | "checking" | "connected" | "error" | "rate_limited";
@@ -22,6 +23,8 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUsdaResponse, setLastUsdaResponse] = useState<any>(null);
+  const [showRawData, setShowRawData] = useState(false);
   
   // Track selected food to improve future search results
   const handleFoodSelection = (foodName: string) => {
@@ -37,6 +40,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     setIsLoading(true);
     setSearchResults([]);
     setUsdaResults([]);
+    setLastUsdaResponse(null);
     
     try {
       // Search in Open Food Facts if selected
@@ -71,6 +75,29 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
           const usdaSearchResults = await searchUsdaDatabase(searchQuery, userPreferences);
+          
+          // Store the raw response for debugging
+          if (usdaSearchResults.length > 0) {
+            // Get the first result for display
+            const firstItem = usdaSearchResults[0];
+            setLastUsdaResponse({
+              fdcId: firstItem.fdcId,
+              description: firstItem.description,
+              dataType: firstItem.dataType,
+              brandName: firstItem.brandName,
+              ingredients: firstItem.ingredients,
+              foodCategory: firstItem.foodCategory,
+              servingSize: firstItem.servingSize,
+              servingSizeUnit: firstItem.servingSizeUnit,
+              // Extract first few nutrients for display
+              nutrients: firstItem.foodNutrients?.slice(0, 5).map(n => ({
+                name: n.nutrientName,
+                value: n.value,
+                unit: n.unitName
+              }))
+            });
+          }
+          
           setUsdaResults(usdaSearchResults);
         } catch (error) {
           console.error("USDA search error:", error);
@@ -139,6 +166,29 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
         <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
           <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
           The rate limit typically resets after a few minutes.</p>
+        </div>
+      )}
+      
+      {/* Debug USDA API Response Data */}
+      {lastUsdaResponse && (
+        <div className="mt-4 mb-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-emerald-600">USDA API Response Data</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowRawData(!showRawData)}
+              className="text-xs h-7 px-2"
+            >
+              {showRawData ? "Hide Details" : "Show Details"}
+            </Button>
+          </div>
+          
+          {showRawData && (
+            <div className="mt-2 p-3 bg-slate-800 text-slate-100 rounded-md overflow-auto max-h-[300px] text-xs">
+              <pre>{JSON.stringify(lastUsdaResponse, null, 2)}</pre>
+            </div>
+          )}
         </div>
       )}
       
