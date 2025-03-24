@@ -84,7 +84,8 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
         setSearchResults(offResults);
         
         // Show no results toast if still empty and not searching USDA
-        if (offResults.length === 0 && searchSource !== "both" && searchSource !== "usda") {
+        // Fix the type error by simplifying the condition
+        if (offResults.length === 0 && searchSource === "openfoods") {
           toast({
             title: "No results found",
             description: "Try different search terms or check your spelling.",
