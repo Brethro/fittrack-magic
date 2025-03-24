@@ -64,7 +64,7 @@ const DietPage = () => {
         <SearchSection usdaApiStatus={usdaApiStatus} />
 
         {/* 3. Food Log Section - at the bottom */}
-        <div className="glass-panel p-4 rounded-lg h-[500px]">
+        <div className="glass-panel p-4 rounded-lg">
           <FoodLog />
         </div>
       </motion.div>

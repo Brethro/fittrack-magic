@@ -35,10 +35,10 @@ const FoodLog = () => {
           <TabsTrigger value="add">Quick Add</TabsTrigger>
         </TabsList>
         
-        <div className="flex-1 overflow-hidden h-[calc(100%-42px)]">
+        <div className="h-full">
           <TabsContent 
             value="log" 
-            className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col overflow-hidden"
+            className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col"
           >
             <FoodLogList onEditEntry={handleEditEntry} />
           </TabsContent>

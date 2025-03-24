@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { format, isToday, isYesterday } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Utensils } from "lucide-react";
 import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
 import FoodLogEntryComponent from "./FoodLogEntry";
@@ -57,13 +56,13 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
   };
   
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-card">
+    <Card className="h-full flex flex-col bg-card">
       <div className="px-4 py-3 border-b bg-muted/30 text-center">
         <h3 className="text-lg font-medium">Food Log: {getDateHeader()}</h3>
       </div>
       
       {dailyEntries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
           <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
           <p className="text-base font-medium">No foods logged yet</p>
           <p className="text-xs text-muted-foreground max-w-[220px] mt-1">
@@ -71,85 +70,83 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
           </p>
         </div>
       ) : (
-        <ScrollArea className="flex-1 w-full">
-          <div className="w-full max-w-full">
-            {/* Breakfast */}
-            {mealGroups.breakfast.length > 0 && (
+        <div className="w-full max-w-full">
+          {/* Breakfast */}
+          {mealGroups.breakfast.length > 0 && (
+            <div className="w-full">
+              <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                Breakfast
+              </h4>
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
-                  Breakfast
-                </h4>
-                <div className="w-full">
-                  {mealGroups.breakfast.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`breakfast-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
+                {mealGroups.breakfast.map((entry) => (
+                  <FoodLogEntryComponent
+                    key={`breakfast-${entry.id}`}
+                    entry={entry}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            )}
-            
-            {/* Lunch */}
-            {mealGroups.lunch.length > 0 && (
+            </div>
+          )}
+          
+          {/* Lunch */}
+          {mealGroups.lunch.length > 0 && (
+            <div className="w-full">
+              <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                Lunch
+              </h4>
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
-                  Lunch
-                </h4>
-                <div className="w-full">
-                  {mealGroups.lunch.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`lunch-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
+                {mealGroups.lunch.map((entry) => (
+                  <FoodLogEntryComponent
+                    key={`lunch-${entry.id}`}
+                    entry={entry}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            )}
-            
-            {/* Dinner */}
-            {mealGroups.dinner.length > 0 && (
+            </div>
+          )}
+          
+          {/* Dinner */}
+          {mealGroups.dinner.length > 0 && (
+            <div className="w-full">
+              <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                Dinner
+              </h4>
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
-                  Dinner
-                </h4>
-                <div className="w-full">
-                  {mealGroups.dinner.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`dinner-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
+                {mealGroups.dinner.map((entry) => (
+                  <FoodLogEntryComponent
+                    key={`dinner-${entry.id}`}
+                    entry={entry}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            )}
-            
-            {/* Snacks */}
-            {mealGroups.snack.length > 0 && (
+            </div>
+          )}
+          
+          {/* Snacks */}
+          {mealGroups.snack.length > 0 && (
+            <div className="w-full">
+              <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
+                Snacks
+              </h4>
               <div className="w-full">
-                <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-xl border-b border-border/20 text-center`}>
-                  Snacks
-                </h4>
-                <div className="w-full">
-                  {mealGroups.snack.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`snack-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
+                {mealGroups.snack.map((entry) => (
+                  <FoodLogEntryComponent
+                    key={`snack-${entry.id}`}
+                    entry={entry}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          )}
+        </div>
       )}
     </Card>
   );
