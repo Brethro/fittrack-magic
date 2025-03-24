@@ -159,7 +159,7 @@ const FoodSearchResults = ({
   );
 };
 
-// New unified display component that renders both OFF and USDA items together
+// Unified display component that renders both OFF and USDA items together
 export function UnifiedFoodResults({
   mergedResults,
   onSelectFood,
@@ -180,7 +180,15 @@ export function UnifiedFoodResults({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: index * 0.05 }}
+          className="relative"
         >
+          {/* Source badge indicating which database the result is from */}
+          <div className="absolute top-2 right-3 z-10">
+            <Badge variant={result.type === 'usda' ? 'secondary' : 'outline'} className={`text-xs ${result.type === 'usda' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-300/20' : ''}`}>
+              {result.type === 'usda' ? 'USDA' : 'OFF'}
+            </Badge>
+          </div>
+          
           {/* Render appropriate component based on result type */}
           {result.type === 'openfoodfacts' ? (
             <>

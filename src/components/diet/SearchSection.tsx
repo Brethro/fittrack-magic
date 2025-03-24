@@ -273,11 +273,11 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
       {/* Recent Foods - improved layout */}
       <RecentFoods />
       
-      {/* Search Results */}
+      {/* Search Results - Now using unified results display */}
       {isLoading ? (
         <FoodSearchResultsSkeleton />
       ) : (
-        (searchResults.length > 0 || usdaResults.length > 0) && (
+        (mergedResults.length > 0) && (
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -293,7 +293,7 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
               </Badge>
             </div>
             
-            {/* Use the new unified results display */}
+            {/* Use the unified results display */}
             <UnifiedFoodResults 
               mergedResults={mergedResults}
               onSelectFood={handleSelectFood}
