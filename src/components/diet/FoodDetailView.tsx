@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useForm, Controller } from "react-hook-form";
@@ -47,16 +48,47 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
       const { nutritionValues } = extractNutritionInfo(food as UsdaFoodItem);
       return nutritionValues;
     } else if (source === 'openfoodfacts') {
-      // OpenFoodFacts format
-      return {
-        calories: food.nutriments?.['energy-kcal_100g'] || 
+      // OpenFoodFacts format - better extraction with fallbacks
+      console.log("Nutriments data:", food.nutriments);
+      
+      // Energy in kcal - check different potential fields
+      const calories = food.nutriments?.['energy-kcal_100g'] || 
                 food.nutriments?.['energy-kcal'] || 
-                (food.nutriments?.['energy_100g'] || food.nutriments?.energy || 0) / 4.184,
-        protein: food.nutriments?.proteins_100g || food.nutriments?.proteins || 0,
-        carbs: food.nutriments?.carbohydrates_100g || food.nutriments?.carbohydrates || 0,
-        fat: food.nutriments?.fat_100g || food.nutriments?.fat || 0,
-        fiber: food.nutriments?.fiber_100g || food.nutriments?.fiber || 0,
-        sugars: food.nutriments?.sugars_100g || food.nutriments?.sugars || 0
+                (food.nutriments?.['energy_100g'] ? food.nutriments['energy_100g'] / 4.184 : 0) ||
+                (food.nutriments?.energy ? food.nutriments.energy / 4.184 : 0);
+      
+      // Macronutrients with fallbacks
+      const protein = food.nutriments?.proteins_100g || 
+                     food.nutriments?.proteins || 
+                     0;
+      
+      const carbs = food.nutriments?.carbohydrates_100g || 
+                   food.nutriments?.carbohydrates || 
+                   0;
+      
+      const fat = food.nutriments?.fat_100g || 
+                 food.nutriments?.fat || 
+                 0;
+      
+      const fiber = food.nutriments?.fiber_100g || 
+                   food.nutriments?.fiber || 
+                   0;
+      
+      const sugars = food.nutriments?.sugars_100g || 
+                    food.nutriments?.sugars || 
+                    0;
+      
+      console.log("Extracted nutrition:", {
+        calories, protein, carbs, fat, fiber, sugars
+      });
+      
+      return {
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugars
       };
     }
     
@@ -287,6 +319,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
         {/* Header */}
         <DialogHeader className="px-4 py-3 border-b flex justify-between items-center space-y-0">
           <DialogTitle className="text-xl">Food Details</DialogTitle>
+          <DialogDescription className="sr-only">Nutrition information and portion controls</DialogDescription>
         </DialogHeader>
         
         {/* Content - scrollable */}

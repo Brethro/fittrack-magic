@@ -22,8 +22,8 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   // Extract and format nutritional information with better fallbacks
   const calories = product.nutriments?.["energy-kcal_100g"] || 
                   product.nutriments?.["energy-kcal"] || 
-                  product.nutriments?.energy_100g || 
-                  product.nutriments?.energy || 0;
+                  (product.nutriments?.energy_100g ? product.nutriments.energy_100g / 4.184 : 0) ||
+                  (product.nutriments?.energy ? product.nutriments.energy / 4.184 : 0);
   
   const protein = product.nutriments?.proteins_100g || 
                  product.nutriments?.proteins || 0;
