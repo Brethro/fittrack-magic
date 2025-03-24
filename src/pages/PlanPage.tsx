@@ -8,7 +8,6 @@ import { WeightLogList } from "@/components/WeightLogList";
 import WeightLogDialog from "@/components/WeightLogDialog";
 import NutritionPanel from "@/components/NutritionPanel";
 import WeightChart from "@/components/WeightChart";
-import DailyStats from "@/components/DailyStats";
 import { calculateBodyFatPercentage } from "@/utils/bodyFatCalculator";
 
 const PlanPage = () => {
@@ -119,15 +118,6 @@ const PlanPage = () => {
           </h1>
           
           <section className="space-y-4 mb-8">
-            {/* Daily Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              <DailyStats />
-            </motion.div>
-            
             {/* Nutrition panel */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
