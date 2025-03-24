@@ -75,13 +75,14 @@ export const calculateWeightGainCalories = (
   goalPace: 'conservative' | 'moderate' | 'aggressive' | null,
   bodyFatPercentage: number | null,
   gender: 'male' | 'female' | null,
-  useMetric: boolean
+  useMetric: boolean,
+  respectTimeline: boolean = false // NEW parameter to respect user-set timeline
 ): {
   dailyCalories: number,
   surplusPercentage: number,
   highSurplusWarning: boolean,
-  isTimelineDriven: boolean,  // Flag to indicate if timeline is driving the surplus
-  daysRequiredToReachGoal?: number // Added to return the actual days needed
+  isTimelineDriven: boolean,
+  daysRequiredToReachGoal?: number
 } => {
   // Calculate weight change needed and caloric adjustment
   const weightDifference = Math.abs(targetWeight - startWeight);
@@ -99,16 +100,34 @@ export const calculateWeightGainCalories = (
   let finalAdjustPercentage: number;
   let daysRequiredToReachGoal: number | undefined = undefined;
   
-  // FIXED: For aggressive pace, ALWAYS use exactly 20% regardless of timeline requirements
-  if (goalPace === "aggressive") {
-    // For aggressive pace, EXACTLY 20.0% (0.20) surplus, NEVER override with timeline
-    finalAdjustPercentage = 0.20; // Exactly 20% as decimal
-    isTimelineDriven = false; // Never timeline-driven for aggressive pace
+  // For aggressive pace with fixed 20% surplus
+  if (goalPace === "aggressive" && !respectTimeline) {
+    // Fixed 20% (0.20) surplus for aggressive pace
+    finalAdjustPercentage = 0.20;
+    isTimelineDriven = false;
     
     // Calculate the actual days required with a fixed 20% surplus
     const dailySurplusCalories = tdee * 0.20;
     daysRequiredToReachGoal = Math.ceil(totalCalorieAdjustment / dailySurplusCalories);
   } 
+  // For aggressive pace WITH timeline respect (when user manually sets a date)
+  else if (goalPace === "aggressive" && respectTimeline) {
+    // Calculate the surplus needed to meet the timeline
+    const dailyCalorieAdjustment = totalCalorieAdjustment / daysUntilGoal;
+    let calculatedAdjustPercent = dailyCalorieAdjustment / tdee;
+    
+    // For aggressive pace with timeline respect, we still try to keep close to 20%
+    // but will adjust if user timeline requires it
+    if (calculatedAdjustPercent > 0.20) {
+      // Timeline requires more than 20% surplus
+      isTimelineDriven = true;
+      finalAdjustPercentage = Math.min(0.50, calculatedAdjustPercent); // Cap at 50% maximum
+    } else {
+      // Timeline doesn't require more than 20%, so use 20%
+      finalAdjustPercentage = 0.20;
+      isTimelineDriven = false;
+    }
+  }
   // For other paces (moderate, conservative)
   else {
     // Calculate adjustment percentage based on required daily adjustment for the given timeline
@@ -129,16 +148,13 @@ export const calculateWeightGainCalories = (
   let dailyCalories: number;
   let displaySurplusPercentage: number;
   
-  if (goalPace === "aggressive") {
-    // FIXED: For aggressive pace, ALWAYS use exactly 20% regardless of timeline
-    // Use exact 20% surplus calories, with no rounding that could cause deviation
+  if (goalPace === "aggressive" && !respectTimeline) {
+    // For aggressive pace without timeline respect, use exactly 20% surplus
     dailyCalories = Math.round(tdee * 1.20);
-    
-    // Hard-code exactly 20.0% for display
     displaySurplusPercentage = 20.0;
   } else {
-    dailyCalories = Math.floor(tdee * (1 + finalAdjustPercentage));
-    // Calculate the actual percentage for non-aggressive pace
+    dailyCalories = Math.round(tdee * (1 + finalAdjustPercentage));
+    // Calculate the actual percentage
     displaySurplusPercentage = ((dailyCalories - tdee) / tdee) * 100;
   }
   

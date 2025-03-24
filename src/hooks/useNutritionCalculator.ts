@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { differenceInCalendarDays, addDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -94,6 +93,10 @@ export const useNutritionCalculator = (
     let isTimelineDriven = false;
     let updatedGoalDate = userData.goalDate;
     
+    // Check if we should respect the user-set timeline 
+    // If userData has a userSetGoalDate flag or the goalCustomDate property exists
+    const respectUserTimeline = userData.userSetGoalDate || userData.goalCustomDate;
+    
     if (isWeightGain) {
       // Use our refactored weight gain calculator
       const result = calculateWeightGainCalories(
@@ -104,7 +107,8 @@ export const useNutritionCalculator = (
         userData.goalPace,
         userData.bodyFatPercentage,
         userData.gender,
-        userData.useMetric
+        userData.useMetric,
+        respectUserTimeline // Pass the flag to respect user timeline
       );
       
       dailyCalories = result.dailyCalories;
@@ -112,10 +116,15 @@ export const useNutritionCalculator = (
       calculatedAdjustPercent = result.surplusPercentage;
       isTimelineDriven = result.isTimelineDriven;
       
-      // FIXED: Update the goal date if we're using an aggressive pace with fixed 20% surplus
-      if (userData.goalPace === "aggressive" && result.daysRequiredToReachGoal) {
+      // Only update the goal date if we're NOT respecting user timeline
+      // and we have a calculated days required value
+      if (!respectUserTimeline && userData.goalPace === "aggressive" && result.daysRequiredToReachGoal) {
         updatedGoalDate = addDays(new Date(), result.daysRequiredToReachGoal);
         console.log(`Adjusted goal date to: ${updatedGoalDate} based on fixed 20% surplus`);
+      } else {
+        // If we're respecting user timeline, keep the original date
+        updatedGoalDate = userData.goalDate;
+        console.log(`Keeping user-set goal date: ${updatedGoalDate}`);
       }
       
       console.log("Weight gain calculation result:", result);
@@ -170,7 +179,7 @@ export const useNutritionCalculator = (
       highSurplusWarning,
       isTimelineDriven,
       macros,
-      goalDate: updatedGoalDate, // FIXED: Update the goal date based on calculation
+      goalDate: updatedGoalDate,
       // Store the actual calculated percentage for display purposes
       calculatedDeficitPercentage: isWeightGain ? null : calculatedAdjustPercent,
       calculatedSurplusPercentage: isWeightGain ? calculatedAdjustPercent : null

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -35,6 +34,7 @@ const GoalsPage = () => {
     bodyFatGoal: userData.goalType === "bodyFat" ? userData.goalValue?.toString() || "" : "",
     goalDate: userData.goalDate || addMonths(new Date(), 3),
     goalPace: userData.goalPace || "moderate" as GoalPaceType,
+    customDateSelected: false // New flag to track if user manually set a date
   });
 
   const defaultEndDate = addMonths(new Date(), 3);
@@ -102,7 +102,11 @@ const GoalsPage = () => {
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      setForm((prev) => ({ ...prev, goalDate: date }));
+      setForm((prev) => ({ 
+        ...prev, 
+        goalDate: date,
+        customDateSelected: true // Set flag when user manually selects a date
+      }));
     }
   };
 
@@ -194,9 +198,9 @@ const GoalsPage = () => {
     }));
   };
 
-  // Recalculate goal date when target weight changes
+  // Recalculate goal date when target weight changes, but only if user hasn't set a custom date
   useEffect(() => {
-    if (form.goalPace && (form.weightGoal || form.bodyFatGoal)) {
+    if (form.goalPace && (form.weightGoal || form.bodyFatGoal) && !form.customDateSelected) {
       handlePaceChange(form.goalPace);
     }
   }, [form.weightGoal, form.bodyFatGoal, form.goalType]);
@@ -298,6 +302,7 @@ const GoalsPage = () => {
     
     console.log("Submitting goal form with pace:", form.goalPace);
     console.log("Goal date:", form.goalDate);
+    console.log("Custom date selected:", form.customDateSelected);
     
     // Determine the maximum surplus percentage based on the goal pace
     // This is crucial to ensure we don't exceed the intended surplus
@@ -325,7 +330,10 @@ const GoalsPage = () => {
       goalDate: form.goalDate,
       goalPace: form.goalPace,
       // Store the maximum surplus percentage to ensure consistency
-      maxSurplusPercentage: isWeightGain() ? maxSurplusPercentage : undefined
+      maxSurplusPercentage: isWeightGain() ? maxSurplusPercentage : undefined,
+      // Add flag indicating if this was a custom user-set date
+      userSetGoalDate: form.customDateSelected,
+      goalCustomDate: form.customDateSelected ? form.goalDate : null
     });
     
     // Navigate to the plan page

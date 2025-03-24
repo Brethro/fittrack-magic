@@ -35,6 +35,8 @@ export type UserData = {
   maxSurplusPercentage?: number;
   calculatedDeficitPercentage?: number;
   calculatedSurplusPercentage?: number;
+  userSetGoalDate?: boolean; // New property to track if user manually set the date
+  goalCustomDate?: Date | null; // Store the original user-set date
 };
 
 const initialUserData: UserData = {
@@ -58,6 +60,8 @@ const initialUserData: UserData = {
   },
   weightLog: [],
   maxSurplusPercentage: null,
+  userSetGoalDate: false,
+  goalCustomDate: null,
 };
 
 type UserDataContextType = {
