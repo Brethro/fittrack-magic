@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { searchUsdaFoods, UsdaFoodItem } from "@/utils/usdaApi";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -70,17 +71,21 @@ export async function searchOpenFoodFacts(
       `&sort_by=popularity_key` +
       `&page_size=100`; // Get more results to filter through
   } else {
-    // Improved broad search with better relevance
+    // Significantly improved broad search with better relevance
+    // For broad search, create a more targeted query with main search terms
+    const mainTerm = searchTerms[0]; // Use first term as primary filter
+    
     searchUrl = 
       `https://world.openfoodfacts.org/api/v2/search` +
       `?search_terms=${encodedQuery}` +
       `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade,product_name_en` +
       // Add relevance boosting parameters
       `&sort_by=popularity_key` +
-      // Ensure at least some relevance by adding a tag filter with the main search term
+      // Ensure relevance by requiring the main search term in the product name
       `&tag_contains_0=contains` +
-      `&tag_0=${searchTerms[0]}` + // Use the first search term as a tag requirement
-      `&page_size=50`;
+      `&tag_0=${mainTerm}` +
+      `&tagtype_0=product_name` + // Force the tag to be in product name
+      `&page_size=75`; // Increased to get more candidates for filtering
   }
   
   // Add dietary preference filters if provided
@@ -90,7 +95,7 @@ export async function searchOpenFoodFacts(
     });
   }
   
-  console.log("Searching Open Food Facts with URL:", searchUrl);
+  console.log(`Searching Open Food Facts with URL (${searchType} mode):`, searchUrl);
   
   const response = await fetch(searchUrl);
   
@@ -99,10 +104,10 @@ export async function searchOpenFoodFacts(
   }
   
   const data = await response.json();
-  console.log("Open Food Facts API response:", data);
+  console.log(`Open Food Facts API response (${searchType} mode):`, data);
   
   if (data.products && Array.isArray(data.products)) {
-    // Enhanced scoring system with improved weighting and preference factors
+    // Enhanced scoring system with improved weighting for broad search
     const scoredResults = data.products.map(product => {
       const productName = (product.product_name || '').toLowerCase();
       const productNameEn = (product.product_name_en || '').toLowerCase();
@@ -267,10 +272,26 @@ export async function searchOpenFoodFacts(
       }
       
       // ===== IMPROVED BROAD SEARCH RELEVANCE FILTER =====
-      // Penalize obviously irrelevant results in broad search
-      if (searchType === "broad" && matchedTermCount === 0) {
-        // Heavily penalize items that don't match any search terms
-        score -= 1000;
+      // Much more aggressive penalization for irrelevant results in broad search
+      if (searchType === "broad") {
+        // Base requirement for broad search: must match primary term
+        const primaryTermMatch = productName.includes(searchTerms[0]) || 
+                              (productNameEn && productNameEn.includes(searchTerms[0]));
+                              
+        if (!primaryTermMatch) {
+          // Heavily penalize items that don't contain the primary search term
+          score -= 2000;
+        }
+        
+        // Penalize items that don't match any terms at all
+        if (matchedTermCount === 0) {
+          score -= 1500;
+        }
+        
+        // Significantly penalize items with very low match ratios
+        if (matchedTermCount < Math.max(1, Math.floor(searchTerms.length * 0.25))) {
+          score -= 1000;
+        }
       }
       
       // In broad search, give bonus for partial name matches based on term length
@@ -285,8 +306,8 @@ export async function searchOpenFoodFacts(
         const commonTermsLength = commonTerms.reduce((sum, term) => sum + term.length, 0);
         const coveragePercent = Math.min(100, (commonTermsLength / searchQueryLength) * 100);
         
-        // Boost score based on coverage
-        score += coveragePercent * 2;
+        // Boost score based on coverage - higher bonus for broad search
+        score += coveragePercent * 3;
       }
       
       // ===== DATA QUALITY BONUS =====
@@ -315,10 +336,12 @@ export async function searchOpenFoodFacts(
         item.exactMatch || (item.partialMatch && item.matchedTermCount >= Math.max(1, searchTerms.length - 1))
       );
     } else {
-      // For broad search, include anything with positive relevance, but ensure some matching
+      // For broad search, more aggressive filtering
       filteredResults = scoredResults.filter(item => 
-        (item.partialMatch && item.score > 0) || // Must have some relevance
-        (item.matchedTermCount > 0 && item.score > 0) // Or match at least one term with positive score
+        // Must have a positive score (after all penalties)
+        item.score > 0 && 
+        // Must either be an exact/partial match, OR match at least one term with positive score
+        ((item.partialMatch || item.exactMatch) || item.matchedTermCount > 0)
       );
     }
     
@@ -330,12 +353,21 @@ export async function searchOpenFoodFacts(
         if (process.env.NODE_ENV === 'development') {
           item.product._searchScore = item.score;
           item.product._nutritionalCompleteness = item.nutritionalCompleteness;
-          item.product._matchedTermCount = item.matchedTermCount; // Add for debugging
+          item.product._matchedTermCount = item.matchedTermCount;
           item.product._exactMatch = item.exactMatch;
           item.product._partialMatch = item.partialMatch;
+          item.product._searchType = searchType; // Add search type for debugging
         }
         return item.product;
       });
+    
+    console.log(`Scored and filtered results (${searchType} mode):`, 
+      sortedResults.map(r => ({
+        name: r.product_name,
+        score: r._searchScore,
+        matchCount: r._matchedTermCount
+      })).slice(0, 5)
+    );
     
     return sortedResults;
   }
@@ -507,7 +539,9 @@ export async function fetchBroadResults(encodedQuery: string): Promise<any[]> {
 // Fallback search approach for when the primary search returns no results
 export async function searchWithFallback(encodedQuery: string): Promise<any[]> {
   try {
-    // Use the legacy search endpoint with more permissive parameters
+    // Use both API endpoints to maximize chances of finding results
+    
+    // 1. Try the legacy CGI search endpoint first (often finds more results)
     const fallbackSearchUrl = 
       `https://world.openfoodfacts.org/cgi/search.pl` +
       `?search_terms=${encodedQuery}` +
@@ -528,8 +562,31 @@ export async function searchWithFallback(encodedQuery: string): Promise<any[]> {
     const data = await response.json();
     console.log("Fallback search API response:", data);
     
-    if (data.products && Array.isArray(data.products)) {
+    if (data.products && Array.isArray(data.products) && data.products.length > 0) {
       return data.products;
+    }
+    
+    // 2. If the first attempt failed, try the v2 API with more lenient settings
+    const v2FallbackUrl = 
+      `https://world.openfoodfacts.org/api/v2/search` +
+      `?search_terms=${encodedQuery}` +
+      `&fields=product_name,brands,serving_size,nutriments,image_url,categories,ingredients_text,labels,quantity,ecoscore_grade,nova_group,nutriscore_grade` +
+      `&sort_by=popularity_key` +
+      `&page_size=75`;
+      
+    console.log("Secondary fallback search with URL:", v2FallbackUrl);
+    
+    const v2Response = await fetch(v2FallbackUrl);
+    
+    if (!v2Response.ok) {
+      throw new Error(`Network response was not ok (${v2Response.status})`);
+    }
+    
+    const v2Data = await v2Response.json();
+    console.log("Secondary fallback search API response:", v2Data);
+    
+    if (v2Data.products && Array.isArray(v2Data.products)) {
+      return v2Data.products;
     }
     
     return [];

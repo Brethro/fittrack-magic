@@ -63,10 +63,32 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
     try {
       // Search in Open Food Facts if selected
       if (searchSource === "openfoods" || searchSource === "both") {
-        const offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
-        setSearchResults(offResults);
+        // First attempt: search with the requested mode (exact or broad)
+        let offResults = await searchOpenFoodFacts(searchQuery, searchType, userPreferences);
         
-        if (offResults.length === 0 && searchType === "exact" && searchSource === "openfoods") {
+        // If initial search with requested mode returns no results and mode is broad
+        // Try exact search first, then fallback to improved fallback search
+        if (offResults.length === 0 && searchType === "broad") {
+          console.log("Broad search returned no results, trying exact search first");
+          // Try with exact search
+          offResults = await searchOpenFoodFacts(searchQuery, "exact", userPreferences);
+          
+          // If exact search also fails, try the fallback search
+          if (offResults.length === 0) {
+            console.log("Exact search also returned no results, trying fallback search");
+            const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
+            if (fallbackResults.length > 0) {
+              offResults = fallbackResults;
+              toast({
+                title: "Limited results found",
+                description: "We found some items that might match what you're looking for.",
+              });
+            }
+          }
+        }
+        // If initial exact search failed, try fallback (maintain existing behavior)
+        else if (offResults.length === 0 && searchType === "exact") {
+          console.log("Exact search returned no results, trying fallback search");
           toast({
             title: "No exact matches found",
             description: "Trying broader search criteria...",
@@ -74,18 +96,24 @@ const SearchSection = ({ usdaApiStatus }: SearchSectionProps) => {
           // Try with broader search
           const fallbackResults = await searchWithFallback(encodeURIComponent(searchQuery.trim()));
           if (fallbackResults.length > 0) {
-            setSearchResults(fallbackResults);
+            offResults = fallbackResults;
             toast({
               title: "Limited results found",
               description: "We found some items that might match what you're looking for.",
             });
-          } else {
-            toast({
-              title: "No results found",
-              description: "Try different search terms or check your spelling.",
-              variant: "destructive",
-            });
           }
+        }
+        
+        // Update search results
+        setSearchResults(offResults);
+        
+        // Show no results toast if still empty
+        if (offResults.length === 0) {
+          toast({
+            title: "No results found",
+            description: "Try different search terms or check your spelling.",
+            variant: "destructive",
+          });
         }
       }
       
