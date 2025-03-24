@@ -74,6 +74,30 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   // Get initial nutrition values
   const baseNutrition = getNutritionValues();
   
+  // Helper to extract serving size from OpenFoodFacts product
+  const getOpenFoodFactsServingSize = (product: any): number => {
+    // Try serving_size_g first (most precise)
+    if (product.serving_size_g && !isNaN(product.serving_size_g)) {
+      return Number(product.serving_size_g);
+    }
+    
+    // Try serving_quantity 
+    if (product.serving_quantity && !isNaN(product.serving_quantity)) {
+      return Number(product.serving_quantity);
+    }
+    
+    // Try parsing numeric part from serving_size string
+    if (product.serving_size && typeof product.serving_size === 'string') {
+      const numericMatch = product.serving_size.match(/(\d+(\.\d+)?)/);
+      if (numericMatch && numericMatch[1]) {
+        return Number(numericMatch[1]);
+      }
+    }
+    
+    // Default to 100g
+    return 100;
+  };
+  
   // Set initial amount based on source and available serving information
   useEffect(() => {
     if (source === 'usda') {
@@ -83,12 +107,9 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
         setAmount(servingInfo.size);
       }
     } else if (source === 'openfoodfacts') {
-      // For Open Food Facts, use existing logic
-      if (food.serving_size_g && !isNaN(food.serving_size_g)) {
-        setAmount(Number(food.serving_size_g));
-      } else if (food.serving_qty && !isNaN(food.serving_qty)) {
-        setAmount(Number(food.serving_qty));
-      }
+      // For Open Food Facts, use enhanced extraction logic
+      const servingSize = getOpenFoodFactsServingSize(food);
+      setAmount(servingSize);
     }
   }, [food, source]);
   
@@ -193,6 +214,30 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
   const brandName = source === 'usda' 
     ? food.brandOwner || food.brandName || "USDA Database" 
     : food.brands || "Unknown Brand";
+  
+  // Helper to get unit based on source
+  const getDefaultUnit = (): string => {
+    if (source === 'openfoodfacts') {
+      // Check for specific unit in OpenFoodFacts
+      if (food.serving_unit) return food.serving_unit;
+      
+      // Try to extract unit from serving_size string
+      if (food.serving_size && typeof food.serving_size === 'string') {
+        const unitMatch = food.serving_size.match(/[0-9.]+\s*([a-zA-Z]+)/);
+        if (unitMatch && unitMatch[1]) {
+          // Standardize common units
+          const unit = unitMatch[1].toLowerCase();
+          if (["g", "gram", "grams"].includes(unit)) return "g";
+          if (["ml", "milliliter", "milliliters"].includes(unit)) return "ml";
+          if (["oz", "ounce", "ounces"].includes(unit)) return "oz";
+          return unitMatch[1];
+        }
+      }
+    }
+    
+    // Default to g
+    return 'g';
+  };
   
   // Handle form submission
   const onSubmit = (data: any) => {
@@ -366,6 +411,7 @@ const FoodDetailView: React.FC<FoodDetailViewProps> = ({
                   <Controller
                     name="unit"
                     control={control}
+                    defaultValue={getDefaultUnit()}
                     render={({ field }) => (
                       <Popover>
                         <PopoverTrigger asChild>

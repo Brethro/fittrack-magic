@@ -27,10 +27,10 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
   const description = foodItem.description || "Unnamed Food";
   const category = foodItem.foodCategory || "";
   
-  // Handle serving size information - use extracted serving info
-  const servingSize = servingInfo.size 
-    ? `${servingInfo.size}${servingInfo.unit || "g"}`
-    : "100g";
+  // Handle serving size information - use extracted serving info with proper formatting
+  const servingSize = servingInfo.size && servingInfo.unit
+    ? `${servingInfo.size}${servingInfo.unit}`
+    : (servingInfo.size ? `${servingInfo.size}g` : "100g");
 
   const handleSelectFood = () => {
     setShowDetailView(true);
@@ -42,7 +42,7 @@ const UsdaFoodItem = ({ foodItem, onSelect }: UsdaFoodItemProps) => {
     }
   };
   
-  // Calculate per-serving nutrition values
+  // Calculate per-serving nutrition values based on the actual serving size
   const scaleFactor = servingInfo.size / 100;
   const caloriesPerServing = Math.round(nutritionValues.calories * scaleFactor);
   const proteinPerServing = (nutritionValues.protein * scaleFactor).toFixed(1);

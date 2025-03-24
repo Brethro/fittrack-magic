@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,36 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   // Generate a name if the product name isn't available
   const productName = product.product_name || product.product_name_en || "Unnamed Product";
   const brand = product.brands || "Unknown Brand";
-  const servingSize = product.serving_size || product.quantity || "100g";
+  
+  // Get actual serving size information with fallbacks
+  const getServingSize = () => {
+    // First, try to use the serving_size field directly
+    if (product.serving_size && typeof product.serving_size === 'string' && product.serving_size.trim()) {
+      return product.serving_size;
+    }
+    
+    // Next, check for numeric serving size with unit
+    if (product.serving_quantity && !isNaN(product.serving_quantity)) {
+      const quantity = parseFloat(product.serving_quantity);
+      const unit = product.serving_unit || 'g';
+      return `${quantity}${unit}`;
+    }
+    
+    // If serving_size_g exists, use it
+    if (product.serving_size_g && !isNaN(product.serving_size_g)) {
+      return `${product.serving_size_g}g`;
+    }
+    
+    // Fall back to quantity field
+    if (product.quantity && typeof product.quantity === 'string' && product.quantity.trim()) {
+      return product.quantity;
+    }
+    
+    // Default fallback
+    return "100g";
+  };
+  
+  const servingSize = getServingSize();
   
   // Format categories into a list of food types - extract main food type
   const mainCategory = product.categories
