@@ -26,7 +26,6 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   // Fixed UserPreferences object to match the expected type
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     preferHighProtein: false,
-    // Remove preferVegan as it doesn't exist in UserPreferences type
   });
   
   // Initialize search hook
@@ -124,13 +123,13 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             </div>
           </div>
           
-          {/* Content area with scrolling */}
+          {/* Content area with scrolling - ensure Command is directly wrapping the CommandList */}
           <Command className="flex-1 overflow-hidden">
             <CommandList className="overflow-y-auto p-3 h-full">
-              {/* Recent Foods - at the top of the search panel */}
+              {/* Recent Foods */}
               <RecentFoods />
               
-              {/* Recent searches - fixed prop name from onSelect to onSelectSearch */}
+              {/* Recent searches */}
               {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
                 <RecentSearches
                   recentSearches={recentSearches}
@@ -149,7 +148,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             </CommandList>
           </Command>
           
-          {/* Footer - removed className prop as it's not part of SearchFooterProps */}
+          {/* Footer */}
           <SearchFooter 
             usdaApiStatus={usdaApiStatus}
             className="border-t"
