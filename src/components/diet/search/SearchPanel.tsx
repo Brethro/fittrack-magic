@@ -4,6 +4,7 @@ import { X, Search, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Command, CommandList } from "@/components/ui/command";
 import { SearchInput } from "@/components/diet/search/SearchInput";
 import { SearchResults } from "@/components/diet/search/SearchResults";
 import { SearchFooter } from "@/components/diet/search/SearchFooter";
@@ -25,8 +26,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   // Fixed UserPreferences object to match the expected type
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     preferHighProtein: false,
-    preferVegan: false
-    // We removed 'preferLowCalorie' as it's not part of the UserPreferences type
+    // Remove preferVegan as it doesn't exist in UserPreferences type
   });
   
   // Initialize search hook
@@ -125,31 +125,34 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           </div>
           
           {/* Content area with scrolling */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {/* Recent Foods - at the top of the search panel */}
-            <RecentFoods />
-            
-            {/* Recent searches - fixed prop name from onSelect to onSelectSearch */}
-            {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-              <RecentSearches
-                recentSearches={recentSearches}
-                onSelectSearch={handleSearch}
+          <Command className="flex-1 overflow-hidden">
+            <CommandList className="overflow-y-auto p-3 h-full">
+              {/* Recent Foods - at the top of the search panel */}
+              <RecentFoods />
+              
+              {/* Recent searches - fixed prop name from onSelect to onSelectSearch */}
+              {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+                <RecentSearches
+                  recentSearches={recentSearches}
+                  onSelectSearch={handleSearch}
+                />
+              )}
+              
+              {/* Search results */}
+              <SearchResults 
+                isLoading={isLoading}
+                searchQuery={searchQuery}
+                mergedResults={mergedResults}
+                onSelectFood={handleSelectFood}
+                onSelectUsdaFood={handleSelectUsdaFood}
               />
-            )}
-            
-            {/* Search results */}
-            <SearchResults 
-              isLoading={isLoading}
-              searchQuery={searchQuery}
-              mergedResults={mergedResults}
-              onSelectFood={handleSelectFood}
-              onSelectUsdaFood={handleSelectUsdaFood}
-            />
-          </div>
+            </CommandList>
+          </Command>
           
           {/* Footer - removed className prop as it's not part of SearchFooterProps */}
           <SearchFooter 
             usdaApiStatus={usdaApiStatus}
+            className="border-t"
           />
         </motion.div>
       )}

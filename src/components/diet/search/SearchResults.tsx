@@ -31,10 +31,10 @@ export function SearchResults({
   // Show empty state when there's a search but no results
   if (searchQuery.length >= 2 && !isLoading && mergedResults.length === 0) {
     return (
-      <div className="py-8 text-center">
+      <CommandEmpty className="py-6">
         <p className="text-muted-foreground">No results found.</p>
         <p className="text-sm text-muted-foreground">Try different search terms.</p>
-      </div>
+      </CommandEmpty>
     );
   }
   
@@ -45,7 +45,7 @@ export function SearchResults({
   
   // Show results
   return (
-    <div className="mt-4">
+    <CommandGroup className="mt-4">
       <h3 className="text-sm font-medium mb-2">Results</h3>
       <div className="space-y-2">
         <UnifiedFoodResults 
@@ -54,6 +54,6 @@ export function SearchResults({
           onSelectUsdaFood={onSelectUsdaFood}
         />
       </div>
-    </div>
+    </CommandGroup>
   );
 }
