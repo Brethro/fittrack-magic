@@ -22,10 +22,11 @@ interface SearchPanelProps {
 export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps) {
   const { toast } = useToast();
   const [searchSource, setSearchSource] = useState<SearchSource>("both");
+  // Fixed UserPreferences object to match the expected type
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
-    preferLowCalorie: false,
     preferHighProtein: false,
     preferVegan: false
+    // We removed 'preferLowCalorie' as it's not part of the UserPreferences type
   });
   
   // Initialize search hook
@@ -128,11 +129,11 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             {/* Recent Foods - at the top of the search panel */}
             <RecentFoods />
             
-            {/* Recent searches */}
+            {/* Recent searches - fixed prop name from onSelect to onSelectSearch */}
             {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
               <RecentSearches
                 recentSearches={recentSearches}
-                onSelect={handleSearch}
+                onSelectSearch={handleSearch}
               />
             )}
             
@@ -146,10 +147,9 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             />
           </div>
           
-          {/* Footer */}
+          {/* Footer - removed className prop as it's not part of SearchFooterProps */}
           <SearchFooter 
-            usdaApiStatus={usdaApiStatus} 
-            className="p-3 border-t"
+            usdaApiStatus={usdaApiStatus}
           />
         </motion.div>
       )}

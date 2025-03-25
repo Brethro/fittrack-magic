@@ -4,7 +4,7 @@ import { Clock } from "lucide-react";
 
 interface RecentSearchesProps {
   recentSearches: string[];
-  onSelectSearch: (search: string) => void;
+  onSelectSearch: (search: string) => void; // Changed from onSelect to onSelectSearch
 }
 
 export function RecentSearches({ recentSearches, onSelectSearch }: RecentSearchesProps) {
