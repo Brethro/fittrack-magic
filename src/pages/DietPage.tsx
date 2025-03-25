@@ -8,16 +8,13 @@ import FoodLog from "@/components/diet/FoodLog";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import SearchSection from "@/components/diet/SearchSection";
 import { useUserData } from "@/contexts/UserDataContext";
-import { AlertTriangle, PlusCircle, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SearchCommand } from "@/components/diet/SearchCommand";
+import { AlertTriangle } from "lucide-react";
 
 const DietPage = () => {
   const { apiStatus, usdaApiStatus, checkUsdaApiConnection } = useApiConnection();
   const { currentDate, setCurrentDate } = useFoodLog();
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
-  const [searchOpen, setSearchOpen] = useState(false);
 
   // Check USDA API connection when selected
   useEffect(() => {
@@ -67,20 +64,6 @@ const DietPage = () => {
         <div className="glass-panel p-4 rounded-lg h-[500px]">
           <FoodLog />
         </div>
-        
-        {/* Floating action button for quick search */}
-        <div className="fixed bottom-6 right-6 z-10">
-          <Button 
-            size="lg" 
-            className="h-14 w-14 rounded-full shadow-lg"
-            onClick={() => setSearchOpen(true)}
-          >
-            <Search className="h-6 w-6" />
-          </Button>
-        </div>
-        
-        {/* Global search command */}
-        <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       </motion.div>
     </div>
   );
