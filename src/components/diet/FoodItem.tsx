@@ -227,7 +227,10 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
 
   return (
     <>
-      <div className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
+      <div 
+        className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''} cursor-pointer`}
+        onClick={handleSelectFood}
+      >
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 max-w-[calc(100%-90px)]">
             <div className="flex items-center">
@@ -285,7 +288,10 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
               size="icon"
               variant="ghost" 
               className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-              onClick={() => setShowDetailView(true)}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click event
+                setShowDetailView(true);
+              }}
             >
               <Info size={16} />
             </Button>
@@ -294,7 +300,10 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
               size="icon"
               variant="outline" 
               className="h-8 w-8 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-              onClick={handleSelectFood}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click event
+                handleSelectFood();
+              }}
             >
               <Plus size={16} />
             </Button>
