@@ -91,17 +91,14 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
               </Button>
             </div>
             
-            <div className="border-b shadow-sm">
-              <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Search foods..."
-                />
-              </div>
-            </div>
+            <Command className="rounded-lg border shadow-md">
+              <CommandInput
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                placeholder="Search foods..."
+                className="h-11"
+              />
+            </Command>
             
             {/* Search filters */}
             <div className="flex items-center space-x-2 mt-2">
@@ -134,12 +131,35 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             {/* Recent Foods */}
             <RecentFoods />
             
-            {/* Recent searches */}
+            <Command className="hidden">
+              <CommandList>
+                {/* Recent searches */}
+                {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+                  <RecentSearches
+                    recentSearches={recentSearches}
+                    onSelectSearch={handleSearch}
+                  />
+                )}
+              </CommandList>
+            </Command>
+            
+            {/* Use a different approach for recent searches since we're outside CommandList */}
             {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-              <RecentSearches
-                recentSearches={recentSearches}
-                onSelectSearch={handleSearch}
-              />
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-2">Recent Searches</h3>
+                <div className="space-y-1">
+                  {recentSearches.map((search, index) => (
+                    <div 
+                      key={`recent-${index}`}
+                      className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent cursor-pointer"
+                      onClick={() => handleSearch(search)}
+                    >
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>{search}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
             
             {/* Search results */}

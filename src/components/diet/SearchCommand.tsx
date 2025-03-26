@@ -51,20 +51,18 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <div className="max-h-[80vh] overflow-hidden flex flex-col">
+      <Command className="flex flex-col h-full">
         {/* Search Input */}
         <div className="border-b shadow-sm">
-          <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Search foods..."
-            />
-          </div>
+          <CommandInput 
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+            placeholder="Search foods..."
+            className="h-11"
+          />
         </div>
         
-        <div className="overflow-y-auto flex-1 p-3">
+        <CommandList className="flex-1 overflow-y-auto p-3">
           {/* Recent Searches */}
           {!isLoading && searchQuery.length < 2 && recentSearches.length > 0 && (
             <RecentSearches 
@@ -81,11 +79,13 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             onSelectFood={handleSelectFood}
             onSelectUsdaFood={handleSelectUsdaFood}
           />
-        </div>
+        </CommandList>
         
         {/* Footer with API status */}
-        <SearchFooter usdaApiStatus={usdaApiStatus} className="border-t" />
-      </div>
+        <div className="mt-auto">
+          <SearchFooter usdaApiStatus={usdaApiStatus} className="border-t" />
+        </div>
+      </Command>
     </CommandDialog>
   );
 }
