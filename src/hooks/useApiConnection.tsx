@@ -11,39 +11,45 @@ export function useApiConnection() {
   const [usdaApiStatus, setUsdaApiStatus] = useState<ApiStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const lastUsdaCheckRef = useRef<number>(0);
+  const isInitialMount = useRef(true);
   
-  // Check Open Food Facts API connection
+  // Check Open Food Facts API connection only once on initial mount
   useEffect(() => {
-    const checkApiConnection = async () => {
-      setApiStatus("checking");
-      try {
-        // Using a more reliable endpoint for testing connection
-        const response = await fetch(
-          "https://world.openfoodfacts.org/api/v2/search?fields=product_name,brands&page_size=1"
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("API connection test response:", data);
+    // Only check on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      
+      const checkApiConnection = async () => {
+        setApiStatus("checking");
+        try {
+          // Using a more reliable endpoint for testing connection
+          const response = await fetch(
+            "https://world.openfoodfacts.org/api/v2/search?fields=product_name,brands&page_size=1"
+          );
           
-          if (data && data.products && Array.isArray(data.products)) {
-            setApiStatus("connected");
+          if (response.ok) {
+            const data = await response.json();
+            console.log("API connection test response:", data);
+            
+            if (data && data.products && Array.isArray(data.products)) {
+              setApiStatus("connected");
+            } else {
+              setApiStatus("error");
+              setErrorMessage("API responded but returned unexpected data format");
+            }
           } else {
             setApiStatus("error");
-            setErrorMessage("API responded but returned unexpected data format");
+            setErrorMessage(`API returned status: ${response.status}`);
           }
-        } else {
+        } catch (error) {
           setApiStatus("error");
-          setErrorMessage(`API returned status: ${response.status}`);
+          setErrorMessage(`Connection error: ${error instanceof Error ? error.message : String(error)}`);
+          console.error("API connection error:", error);
         }
-      } catch (error) {
-        setApiStatus("error");
-        setErrorMessage(`Connection error: ${error instanceof Error ? error.message : String(error)}`);
-        console.error("API connection error:", error);
-      }
-    };
+      };
 
-    checkApiConnection();
+      checkApiConnection();
+    }
   }, []);
 
   // Check USDA API connection with rate limiting
@@ -54,6 +60,12 @@ export function useApiConnection() {
     
     if (now - lastUsdaCheckRef.current < minimumInterval) {
       console.log("Skipping USDA API check due to rate limiting");
+      return;
+    }
+    
+    // If we've already successfully connected, don't check again
+    if (usdaApiStatus === "connected") {
+      console.log("USDA API already connected, skipping check");
       return;
     }
     
@@ -100,7 +112,7 @@ export function useApiConnection() {
         });
       }
     }
-  }, [toast]);
+  }, [toast, usdaApiStatus]);
 
   return {
     apiStatus,

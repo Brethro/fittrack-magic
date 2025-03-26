@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import ApiStatusIndicators from "@/components/diet/ApiStatusIndicators";
@@ -15,10 +15,14 @@ const DietPage = () => {
   const { currentDate, setCurrentDate } = useFoodLog();
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
+  const hasCheckedAPI = useRef(false);
 
-  // Check USDA API connection when selected
+  // Check USDA API connection once when component mounts
   useEffect(() => {
-    checkUsdaApiConnection();
+    if (!hasCheckedAPI.current) {
+      checkUsdaApiConnection();
+      hasCheckedAPI.current = true;
+    }
   }, [checkUsdaApiConnection]);
   
   // Handler for date changes in the summary

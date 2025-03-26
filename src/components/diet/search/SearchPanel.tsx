@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useRef } from "react";
-import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,20 +35,23 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     recentSearches = [],
     handleSelectFood,
     handleSelectUsdaFood,
-    handleSearchWithOptions
+    handleSearchWithOptions,
+    clearSearchResults
   } = useSearch({ 
     open: isOpen, 
     toast, 
     usdaApiStatus 
   });
   
-  // Focus the input when the panel opens
+  // Focus the input when the panel opens - with proper dependency
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       // Short timeout to ensure the animation has started
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
   
@@ -69,18 +72,25 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     };
   }, [isOpen, onClose]);
 
-  // Handle search
-  const handleSearch = async (query: string) => {
+  // Clear results when panel is closed
+  useEffect(() => {
+    if (!isOpen) {
+      clearSearchResults();
+    }
+  }, [isOpen, clearSearchResults]);
+
+  // Handle search - wrapped in useCallback to prevent recreation on every render
+  const handleSearch = useCallback(async (query: string) => {
     await handleSearchWithOptions(query, searchSource, userPreferences);
-  };
+  }, [handleSearchWithOptions, searchSource, userPreferences]);
   
-  // Handle search source change
-  const handleSourceChange = (source: SearchSource) => {
+  // Handle search source change - wrapped in useCallback
+  const handleSourceChange = useCallback((source: SearchSource) => {
     setSearchSource(source);
     if (searchQuery.length >= 2) {
       handleSearchWithOptions(searchQuery, source, userPreferences);
     }
-  };
+  }, [searchQuery, handleSearchWithOptions, userPreferences]);
   
   return (
     <AnimatePresence>

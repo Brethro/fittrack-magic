@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import { UsdaFoodItem } from "@/utils/usdaApi";
@@ -27,6 +27,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
   const [mergedResults, setMergedResults] = useState<Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Load recent searches from localStorage
   useEffect(() => {
@@ -120,6 +121,13 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     }
   };
   
+  // Clear search results
+  const clearSearchResults = useCallback(() => {
+    setSearchResults([]);
+    setUsdaResults([]);
+    setMergedResults([]);
+  }, []);
+  
   // Method to handle search with specific options
   const handleSearchWithOptions = useCallback(async (
     query: string,
@@ -133,8 +141,6 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     }
     
     setIsLoading(true);
-    setSearchResults([]);
-    setUsdaResults([]);
     saveRecentSearch(query);
     
     try {
@@ -189,16 +195,6 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         }
       }
       
-      // Show no results toast if both searches returned empty
-      if ((searchResults?.length === 0 || !searchResults) && 
-          (usdaResults?.length === 0 || !usdaResults)) {
-        toast({
-          title: "No results found",
-          description: "Try different search terms or check your spelling.",
-          variant: "destructive",
-        });
-      }
-      
       return { searchResults, usdaResults };
     } catch (error) {
       console.error("Search error:", error);
@@ -211,28 +207,41 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, usdaApiStatus, saveRecentSearch, searchResults, usdaResults]);
+  }, [toast, usdaApiStatus, saveRecentSearch]);
   
-  // Perform search when query changes
+  // Perform search when query changes with debounce
   useEffect(() => {
-    // Debounce search to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
-        handleSearchWithOptions(searchQuery);
-      }
-    }, 500);
+    // Clear previous timeout to prevent multiple searches
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
     
-    return () => clearTimeout(timeoutId);
+    // Only search if query is at least 2 characters
+    if (searchQuery.trim().length >= 2) {
+      // Set a new timeout
+      searchTimeoutRef.current = setTimeout(() => {
+        handleSearchWithOptions(searchQuery);
+      }, 800); // Increased debounce time to 800ms
+    } else {
+      // Clear results if query is too short
+      setSearchResults([]);
+      setUsdaResults([]);
+    }
+    
+    // Cleanup function to clear timeout
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, [searchQuery, handleSearchWithOptions]);
 
   // Clear results when search panel is closed
   useEffect(() => {
     if (!open) {
-      setSearchResults([]);
-      setUsdaResults([]);
-      setMergedResults([]);
+      clearSearchResults();
     }
-  }, [open]);
+  }, [open, clearSearchResults]);
   
   return {
     searchQuery,
@@ -244,6 +253,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     recentSearches: Array.isArray(recentSearches) ? recentSearches : [],
     handleSelectFood,
     handleSelectUsdaFood,
-    handleSearchWithOptions
+    handleSearchWithOptions,
+    clearSearchResults
   };
 }
