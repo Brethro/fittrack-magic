@@ -24,6 +24,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     preferHighProtein: false,
   });
+  const [inputValue, setInputValue] = useState(""); // Track input value separately
   const searchInputRef = useRef<HTMLInputElement>(null);
   const shouldInitiateSearch = useRef(false);
   
@@ -78,11 +79,28 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     if (!isOpen) {
       clearSearchResults();
       setSearchQuery("");
+      setInputValue("");
     }
   }, [isOpen, clearSearchResults, setSearchQuery]);
 
+  // Handle input changes with debounce in the component
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    
+    // Only update the search query (which triggers API calls) when we have at least 2 chars
+    if (value.trim().length >= 2) {
+      setSearchQuery(value);
+    } else if (value.trim().length === 0) {
+      setSearchQuery("");
+    }
+  };
+
   // Explicitly trigger search (used by recent searches)
   const handleExplicitSearch = useCallback((query: string) => {
+    // Update input field
+    setInputValue(query);
+    
     // Set the query which will trigger the useEffect in useSearch
     setSearchQuery(query);
     
@@ -95,13 +113,13 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     setSearchSource(source);
     
     // Only trigger a search if there's already a query
-    if (searchQuery.trim().length >= 2) {
+    if (inputValue.trim().length >= 2) {
       // Use setTimeout to ensure state is updated before search
       setTimeout(() => {
-        handleSearchWithOptions(searchQuery, source, userPreferences);
+        handleSearchWithOptions(inputValue, source, userPreferences);
       }, 10);
     }
-  }, [searchQuery, handleSearchWithOptions, userPreferences]);
+  }, [inputValue, handleSearchWithOptions, userPreferences]);
   
   return (
     <div className="w-full h-full glass-panel bg-card rounded-lg shadow-lg z-40 overflow-hidden flex flex-col">
@@ -120,17 +138,20 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           <input
             ref={searchInputRef}
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={inputValue}
+            onChange={handleInputChange}
             placeholder="Search foods..."
             className="flex-1 bg-transparent border-none outline-none text-sm h-9 px-2"
           />
-          {searchQuery && (
+          {inputValue && (
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setInputValue("");
+                setSearchQuery("");
+              }}
             >
               <X className="h-3 w-3" />
             </Button>
@@ -166,12 +187,12 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
       {/* Content area */}
       <div className="flex-1 overflow-y-auto p-3">
         {/* Recent Foods */}
-        {searchQuery.length < 2 && (
+        {inputValue.length < 2 && (
           <RecentFoods />
         )}
         
         {/* Recent searches */}
-        {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+        {Array.isArray(recentSearches) && recentSearches.length > 0 && inputValue.length < 2 && !isLoading && (
           <RecentSearches 
             recentSearches={recentSearches} 
             onSelectSearch={handleExplicitSearch} 

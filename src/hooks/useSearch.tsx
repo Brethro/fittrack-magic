@@ -31,6 +31,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const lastSearchQuery = useRef<string>("");
   const searchInProgress = useRef<boolean>(false);
   const lastSearchTime = useRef<number>(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Load recent searches from localStorage
   useEffect(() => {
@@ -131,6 +132,24 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     setMergedResults([]);
   }, []);
   
+  // Method to cancel any ongoing search requests
+  const cancelOngoingSearches = useCallback(() => {
+    // Cancel any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+    
+    // Cancel any ongoing fetch requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // Reset search state
+    searchInProgress.current = false;
+  }, []);
+  
   // Method to handle search with specific options
   const handleSearchWithOptions = useCallback(async (
     query: string,
@@ -149,7 +168,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     // Prevent duplicate searches and implement rate limiting
     if (
       (trimmedQuery === lastSearchQuery.current && searchInProgress.current) || 
-      (now - lastSearchTime.current < 1500) // 1.5 second cooldown between searches
+      (now - lastSearchTime.current < 3000) // 3 second cooldown between searches
     ) {
       console.log("Search prevented:", { 
         isDuplicate: trimmedQuery === lastSearchQuery.current, 
@@ -158,6 +177,12 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       });
       return null;
     }
+    
+    // Cancel any ongoing searches
+    cancelOngoingSearches();
+    
+    // Create a new abort controller for this search
+    abortControllerRef.current = new AbortController();
     
     lastSearchQuery.current = trimmedQuery;
     searchInProgress.current = true;
@@ -175,10 +200,23 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         try {
           let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
           
+          // Check if the search was aborted
+          if (abortControllerRef.current?.signal.aborted) {
+            console.log("Search aborted for Open Food Facts");
+            return null;
+          }
+          
           // If broad search returns no results, try fallback search
           if (!Array.isArray(offResults) || offResults.length === 0) {
             console.log("Broad search returned no results, trying fallback search");
             const fallbackResults = await searchWithFallback(encodeURIComponent(trimmedQuery));
+            
+            // Check if the search was aborted
+            if (abortControllerRef.current?.signal.aborted) {
+              console.log("Fallback search aborted");
+              return null;
+            }
+            
             if (Array.isArray(fallbackResults) && fallbackResults.length > 0) {
               offResults = fallbackResults;
               toast({
@@ -203,6 +241,13 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
           const usdaSearchResults = await searchUsdaDatabase(query, userPreferences || {});
+          
+          // Check if the search was aborted
+          if (abortControllerRef.current?.signal.aborted) {
+            console.log("Search aborted for USDA");
+            return null;
+          }
+          
           setUsdaResults(Array.isArray(usdaSearchResults) ? usdaSearchResults : []);
         } catch (error) {
           console.error("USDA search error:", error);
@@ -246,28 +291,26 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       setIsLoading(false);
       searchInProgress.current = false;
     }
-  }, [toast, usdaApiStatus, saveRecentSearch, clearSearchResults]);
+  }, [toast, usdaApiStatus, saveRecentSearch, clearSearchResults, cancelOngoingSearches]);
   
   // Perform search when query changes with debounce
   useEffect(() => {
     // Only run this effect if search component is open
     if (!open) return;
     
-    // Clear previous timeout to prevent multiple searches
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    // Cancel any previous searches
+    cancelOngoingSearches();
     
     // Only search if query is at least 2 characters
     if (searchQuery.trim().length >= 2) {
-      // Set a new timeout
+      // Set a new timeout with a longer debounce period
       searchTimeoutRef.current = setTimeout(() => {
         // Don't search if query is the same as the last one or search is already in progress
         if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
           console.log(`Debounced search for: "${searchQuery.trim()}"`);
           handleSearchWithOptions(searchQuery);
         }
-      }, 1500); // Increased debounce time to 1500ms
+      }, 2500); // Increased debounce time to 2.5 seconds
     } else {
       // Clear results if query is too short
       clearSearchResults();
@@ -275,11 +318,9 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     // Cleanup function to clear timeout
     return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
+      cancelOngoingSearches();
     };
-  }, [searchQuery, handleSearchWithOptions, open, clearSearchResults]);
+  }, [searchQuery, handleSearchWithOptions, open, clearSearchResults, cancelOngoingSearches]);
 
   // Clear results when search panel is closed
   useEffect(() => {
@@ -287,8 +328,11 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       clearSearchResults();
       lastSearchQuery.current = "";
       searchInProgress.current = false;
+      
+      // Cancel any ongoing searches
+      cancelOngoingSearches();
     }
-  }, [open, clearSearchResults]);
+  }, [open, clearSearchResults, cancelOngoingSearches]);
   
   return {
     searchQuery,
