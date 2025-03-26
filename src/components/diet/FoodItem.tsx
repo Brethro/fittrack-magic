@@ -242,7 +242,7 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
                 </Badge>
               )}
               
-              {/* Source badge moved here next to category */}
+              {/* Source badge always shown next to category */}
               <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
                 OFF
               </Badge>

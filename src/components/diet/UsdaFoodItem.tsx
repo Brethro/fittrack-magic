@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 interface UsdaFoodItemProps {
   foodItem: UsdaFoodItemType;
   onSelect?: (foodItem: UsdaFoodItemType) => void;
-  showSourceBadge?: boolean;
+  showSourceBadge?: boolean; // Default to showing the source badge
 }
 
 const UsdaFoodItem = ({ 
@@ -120,7 +120,7 @@ const UsdaFoodItem = ({
                 </Badge>
               )}
               
-              {/* Source badge moved next to category */}
+              {/* Source badge always shown next to category */}
               {showSourceBadge && (
                 <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
                   USDA
@@ -145,7 +145,6 @@ const UsdaFoodItem = ({
             
             <div className="flex justify-between items-center mt-1.5 text-xs">
               <p>Serving: {servingSize}</p>
-              {/* Removed duplicate source display here */}
             </div>
           </div>
           
