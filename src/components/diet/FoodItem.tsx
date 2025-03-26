@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -228,8 +227,8 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   return (
     <>
       <div className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex-1 max-w-[calc(100%-80px)]">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1 max-w-[calc(100%-100px)]">
             <div className="flex items-center">
               <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{productName}</h3>
               {highlighted && <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" />}
@@ -277,7 +276,7 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
             </div>
           </div>
           
-          <div className="flex flex-col items-center gap-2 min-w-[70px]">
+          <div className="flex flex-col items-center gap-2 min-w-[70px] mr-2">
             <Button 
               size="icon"
               variant="ghost" 

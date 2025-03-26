@@ -185,8 +185,8 @@ export function UnifiedFoodResults({
           {/* Render appropriate component based on result type */}
           {result.type === 'openfoodfacts' ? (
             <div className="relative">
-              {/* Source badge in top-right corner */}
-              <div className="absolute top-3 right-3 z-10">
+              {/* Source badge positioned absolutely in the top-right corner with z-index to ensure visibility */}
+              <div className="absolute top-3 right-16 z-10">
                 <Badge variant="outline" className="text-xs">
                   OFF
                 </Badge>
@@ -208,8 +208,8 @@ export function UnifiedFoodResults({
             </div>
           ) : (
             <div className="relative">
-              {/* Source badge in top-right corner */}
-              <div className="absolute top-3 right-3 z-10">
+              {/* Source badge positioned absolutely in the top-right corner with z-index to ensure visibility */}
+              <div className="absolute top-3 right-16 z-10">
                 <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
                   USDA
                 </Badge>
