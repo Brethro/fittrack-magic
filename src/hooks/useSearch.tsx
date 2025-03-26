@@ -303,14 +303,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     // Only search if query is at least 2 characters
     if (searchQuery.trim().length >= 2) {
-      // Set a new timeout with a longer debounce period
+      // Set a new timeout with a reduced debounce period (50% of original)
       searchTimeoutRef.current = setTimeout(() => {
         // Don't search if query is the same as the last one or search is already in progress
         if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
           console.log(`Debounced search for: "${searchQuery.trim()}"`);
           handleSearchWithOptions(searchQuery);
         }
-      }, 2500); // Increased debounce time to 2.5 seconds
+      }, 1250); // Reduced from 2500ms to 1250ms (50% reduction)
     } else {
       // Clear results if query is too short
       clearSearchResults();
