@@ -11,10 +11,14 @@ import { AlertTriangle } from "lucide-react";
 
 const DietPage = () => {
   const { apiStatus, usdaApiStatus, checkUsdaApiConnection } = useApiConnection();
-  const { currentDate, setCurrentDate } = useFoodLog();
+  const { currentDate, setCurrentDate, getDailyFoodLog } = useFoodLog();
   const { userData } = useUserData();
   const isWeightGain = userData.isWeightGain || false;
   const hasCheckedAPI = useRef(false);
+  
+  // Check if there are any food entries for the current date
+  const dailyEntries = getDailyFoodLog(currentDate);
+  const hasFoodEntries = dailyEntries.length > 0;
 
   // Check USDA API connection once when component mounts
   useEffect(() => {
@@ -69,13 +73,13 @@ const DietPage = () => {
           <FoodLogSummary onDateChange={handleDateChange} />
         </div>
         
-        {/* 2. Food Log Section - in the middle - increased height to accommodate search panel */}
-        <div className="glass-panel p-4 rounded-lg h-auto min-h-[600px]">
+        {/* 2. Food Log Section - adjusted height based on content */}
+        <div className={`glass-panel p-4 rounded-lg ${hasFoodEntries ? 'h-auto min-h-[600px]' : 'h-auto'}`}>
           <FoodLog />
         </div>
       </motion.div>
     </div>
   );
-}
+};
 
 export default DietPage;

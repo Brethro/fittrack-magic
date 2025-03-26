@@ -12,7 +12,7 @@ import { SearchPanel } from "./search/SearchPanel";
 import { useApiConnection } from "@/hooks/useApiConnection";
 
 const FoodLog = () => {
-  const { updateFoodEntry, getDailyTotals, currentDate } = useFoodLog();
+  const { updateFoodEntry, getDailyTotals, currentDate, getDailyFoodLog } = useFoodLog();
   const { usdaApiStatus } = useApiConnection();
   const [activeTab, setActiveTab] = useState("log");
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
@@ -20,6 +20,10 @@ const FoodLog = () => {
   
   // Daily nutrition totals
   const dailyTotals = getDailyTotals(currentDate);
+  
+  // Check if there are any food entries
+  const dailyEntries = getDailyFoodLog(currentDate);
+  const hasFoodEntries = dailyEntries.length > 0;
   
   // This function will be passed to QuickFoodEntry to switch tabs after adding food
   const handleFoodAdded = () => {
@@ -49,7 +53,7 @@ const FoodLog = () => {
   }, []);
   
   return (
-    <div className="flex flex-col w-full h-full relative">
+    <div className={`flex flex-col w-full h-full relative ${!hasFoodEntries && !searchOpen ? 'max-h-[450px]' : ''}`}>
       {!searchOpen ? (
         <>
           <Tabs 

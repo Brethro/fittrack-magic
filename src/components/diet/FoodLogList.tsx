@@ -70,7 +70,7 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
       
       <div className="flex-1 overflow-y-auto">
         {dailyEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-6 text-center h-full">
+          <div className="flex flex-col items-center justify-center py-8 px-6 text-center h-auto">
             <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
             <p className="text-base font-medium">No foods logged yet</p>
             <p className="text-xs text-muted-foreground max-w-[220px] mt-1 mb-4">
