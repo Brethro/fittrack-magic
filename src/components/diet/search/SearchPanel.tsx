@@ -1,11 +1,12 @@
 
 import { useState, useEffect, useRef } from "react";
-import { X, Search, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchResults } from "@/components/diet/search/SearchResults";
 import { SearchFooter } from "@/components/diet/search/SearchFooter";
+import { RecentSearches } from "@/components/diet/search/RecentSearches";
 import RecentFoods from "@/components/diet/RecentFoods";
 import { useSearch, SearchSource } from "@/hooks/useSearch";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +32,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     setSearchQuery, 
     isLoading, 
     mergedResults = [],
-    recentSearches,
+    recentSearches = [],
     handleSelectFood,
     handleSelectUsdaFood,
     handleSearchWithOptions
@@ -157,21 +158,10 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             
             {/* Recent searches */}
             {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium mb-2">Recent Searches</h3>
-                <div className="space-y-1">
-                  {recentSearches.map((search, index) => (
-                    <div 
-                      key={`recent-${index}`}
-                      className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent cursor-pointer"
-                      onClick={() => handleSearch(search)}
-                    >
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{search}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <RecentSearches 
+                recentSearches={recentSearches} 
+                onSelectSearch={handleSearch} 
+              />
             )}
             
             {/* Search results */}
