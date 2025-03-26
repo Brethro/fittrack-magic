@@ -44,7 +44,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     usdaApiStatus 
   });
   
-  // Focus the input when the panel opens - with proper dependency
+  // Focus the input when the panel opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       // Short timeout to ensure the animation has started
@@ -81,19 +81,25 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     }
   }, [isOpen, clearSearchResults, setSearchQuery]);
 
-  // Handle search - wrapped in useCallback to prevent recreation on every render
-  const handleSearch = useCallback(async (query: string) => {
-    if (query.length >= 2) {
-      shouldInitiateSearch.current = true;
-      await handleSearchWithOptions(query, searchSource, userPreferences);
-    }
-  }, [handleSearchWithOptions, searchSource, userPreferences]);
+  // Explicitly trigger search (used by recent searches)
+  const handleExplicitSearch = useCallback((query: string) => {
+    // Set the query which will trigger the useEffect in useSearch
+    setSearchQuery(query);
+    
+    // Also mark that the search should be initiated
+    shouldInitiateSearch.current = true;
+  }, [setSearchQuery]);
   
-  // Handle search source change - wrapped in useCallback
+  // Handle search source change
   const handleSourceChange = useCallback((source: SearchSource) => {
     setSearchSource(source);
-    if (searchQuery.length >= 2 && shouldInitiateSearch.current) {
-      handleSearchWithOptions(searchQuery, source, userPreferences);
+    
+    // Only trigger a search if there's already a query
+    if (searchQuery.trim().length >= 2) {
+      // Use setTimeout to ensure state is updated before search
+      setTimeout(() => {
+        handleSearchWithOptions(searchQuery, source, userPreferences);
+      }, 10);
     }
   }, [searchQuery, handleSearchWithOptions, userPreferences]);
   
@@ -168,7 +174,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
         {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
           <RecentSearches 
             recentSearches={recentSearches} 
-            onSelectSearch={handleSearch} 
+            onSelectSearch={handleExplicitSearch} 
           />
         )}
         

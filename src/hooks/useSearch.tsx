@@ -30,6 +30,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSearchQuery = useRef<string>("");
   const searchInProgress = useRef<boolean>(false);
+  const lastSearchTime = useRef<number>(0);
   
   // Load recent searches from localStorage
   useEffect(() => {
@@ -136,21 +137,35 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     searchSource: SearchSource = "both",
     userPreferences?: UserPreferences
   ) => {
-    // If query is too short or identical to last search, don't proceed
+    // If query is too short, don't proceed
     if (!query || query.trim().length < 2) {
       clearSearchResults();
       return null;
     }
     
-    // Prevent duplicate searches
-    if (query.trim() === lastSearchQuery.current && searchInProgress.current) {
+    const trimmedQuery = query.trim();
+    const now = Date.now();
+    
+    // Prevent duplicate searches and implement rate limiting
+    if (
+      (trimmedQuery === lastSearchQuery.current && searchInProgress.current) || 
+      (now - lastSearchTime.current < 1500) // 1.5 second cooldown between searches
+    ) {
+      console.log("Search prevented:", { 
+        isDuplicate: trimmedQuery === lastSearchQuery.current, 
+        inProgress: searchInProgress.current,
+        timeSinceLastSearch: now - lastSearchTime.current
+      });
       return null;
     }
     
-    lastSearchQuery.current = query.trim();
+    lastSearchQuery.current = trimmedQuery;
     searchInProgress.current = true;
+    lastSearchTime.current = now;
     setIsLoading(true);
     saveRecentSearch(query);
+    
+    console.log(`Executing search for "${trimmedQuery}" using source: ${searchSource}`);
     
     try {
       const searchType = "broad";
@@ -163,7 +178,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
           // If broad search returns no results, try fallback search
           if (!Array.isArray(offResults) || offResults.length === 0) {
             console.log("Broad search returned no results, trying fallback search");
-            const fallbackResults = await searchWithFallback(encodeURIComponent(query.trim()));
+            const fallbackResults = await searchWithFallback(encodeURIComponent(trimmedQuery));
             if (Array.isArray(fallbackResults) && fallbackResults.length > 0) {
               offResults = fallbackResults;
               toast({
@@ -247,11 +262,12 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     if (searchQuery.trim().length >= 2) {
       // Set a new timeout
       searchTimeoutRef.current = setTimeout(() => {
-        // Don't search if query is the same as the last one
+        // Don't search if query is the same as the last one or search is already in progress
         if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
+          console.log(`Debounced search for: "${searchQuery.trim()}"`);
           handleSearchWithOptions(searchQuery);
         }
-      }, 1000); // Increased debounce time to 1000ms
+      }, 1500); // Increased debounce time to 1500ms
     } else {
       // Clear results if query is too short
       clearSearchResults();
