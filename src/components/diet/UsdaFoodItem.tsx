@@ -110,8 +110,8 @@ const UsdaFoodItem = ({
         className="glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 cursor-pointer"
         onClick={handleSelectFood}
       >
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 max-w-[calc(100%-90px)]">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center">
               <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{description}</h3>
             </div>
@@ -151,7 +151,7 @@ const UsdaFoodItem = ({
             </div>
           </div>
           
-          <div className="flex flex-col items-center gap-2 min-w-[70px]">
+          <div className="flex flex-col items-center gap-2 ml-1">
             <Button 
               size="icon"
               variant="ghost" 
