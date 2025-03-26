@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -303,14 +302,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     // Only search if query is at least 2 characters
     if (searchQuery.trim().length >= 2) {
-      // Set a new timeout with a reduced debounce period (50% of original)
+      // Set a new timeout with a further reduced debounce period (75% of original)
       searchTimeoutRef.current = setTimeout(() => {
         // Don't search if query is the same as the last one or search is already in progress
         if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
           console.log(`Debounced search for: "${searchQuery.trim()}"`);
           handleSearchWithOptions(searchQuery);
         }
-      }, 1250); // Reduced from 2500ms to 1250ms (50% reduction)
+      }, 940); // Reduced from 1250ms to 940ms (25% further reduction)
     } else {
       // Clear results if query is too short
       clearSearchResults();
