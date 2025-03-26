@@ -30,7 +30,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     searchQuery, 
     setSearchQuery, 
     isLoading, 
-    mergedResults,
+    mergedResults = [],
     recentSearches,
     handleSelectFood,
     handleSelectUsdaFood,
@@ -99,7 +99,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
               </Button>
             </div>
             
-            {/* Direct input field instead of Command component */}
+            {/* Direct input field */}
             <div className="flex items-center border rounded-lg p-2 bg-background">
               <Search className="h-4 w-4 text-muted-foreground ml-2 mr-2" />
               <input
@@ -156,7 +156,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             )}
             
             {/* Recent searches */}
-            {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+            {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
               <div className="mt-4">
                 <h3 className="text-sm font-medium mb-2">Recent Searches</h3>
                 <div className="space-y-1">

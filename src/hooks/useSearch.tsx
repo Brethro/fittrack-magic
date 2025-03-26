@@ -34,9 +34,10 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     if (savedSearches) {
       try {
         const parsedSearches = JSON.parse(savedSearches);
-        setRecentSearches(parsedSearches);
+        setRecentSearches(Array.isArray(parsedSearches) ? parsedSearches : []);
       } catch (error) {
         console.error("Error parsing recent searches:", error);
+        setRecentSearches([]);
       }
     }
   }, []);
@@ -45,15 +46,21 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const saveRecentSearch = useCallback((query: string) => {
     if (!query || query.trim().length < 2) return;
     
-    const updatedSearches = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+    // Ensure recentSearches is an array
+    const currentSearches = Array.isArray(recentSearches) ? recentSearches : [];
+    const updatedSearches = [query, ...currentSearches.filter(s => s !== query)].slice(0, 5);
     setRecentSearches(updatedSearches);
     localStorage.setItem("fitTrackRecentSearches", JSON.stringify(updatedSearches));
   }, [recentSearches]);
   
   // Update merged results whenever search results or USDA results change
   useEffect(() => {
-    if (searchResults.length > 0 || usdaResults.length > 0) {
-      const merged = mergeAndSortResults(searchResults, usdaResults);
+    // Ensure both arrays are defined before merging
+    const offResultsArray = Array.isArray(searchResults) ? searchResults : [];
+    const usdaResultsArray = Array.isArray(usdaResults) ? usdaResults : [];
+    
+    if (offResultsArray.length > 0 || usdaResultsArray.length > 0) {
+      const merged = mergeAndSortResults(offResultsArray, usdaResultsArray);
       setMergedResults(merged);
     } else {
       setMergedResults([]);
@@ -65,26 +72,30 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     const merged: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}> = [];
     
     // Add Open Food Facts results
-    offResults.forEach(product => {
-      // Get the search score (default to 0 if not available)
-      const score = typeof product._searchScore === 'number' ? product._searchScore : 0;
-      merged.push({
-        type: 'openfoodfacts',
-        item: product,
-        score
+    if (Array.isArray(offResults)) {
+      offResults.forEach(product => {
+        // Get the search score (default to 0 if not available)
+        const score = typeof product._searchScore === 'number' ? product._searchScore : 0;
+        merged.push({
+          type: 'openfoodfacts',
+          item: product,
+          score
+        });
       });
-    });
+    }
     
     // Add USDA results
-    usdaItems.forEach(foodItem => {
-      // Get the search score (default to 0 if not available)
-      const score = typeof (foodItem as any)._searchScore === 'number' ? (foodItem as any)._searchScore : 0;
-      merged.push({
-        type: 'usda',
-        item: foodItem,
-        score
+    if (Array.isArray(usdaItems)) {
+      usdaItems.forEach(foodItem => {
+        // Get the search score (default to 0 if not available)
+        const score = typeof (foodItem as any)._searchScore === 'number' ? (foodItem as any)._searchScore : 0;
+        merged.push({
+          type: 'usda',
+          item: foodItem,
+          score
+        });
       });
-    });
+    }
     
     // Sort by score (highest first)
     return merged.sort((a, b) => b.score - a.score);
@@ -134,10 +145,10 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
         
         // If broad search returns no results, try fallback search
-        if (offResults.length === 0) {
+        if (!Array.isArray(offResults) || offResults.length === 0) {
           console.log("Broad search returned no results, trying fallback search");
           const fallbackResults = await searchWithFallback(encodeURIComponent(query.trim()));
-          if (fallbackResults.length > 0) {
+          if (Array.isArray(fallbackResults) && fallbackResults.length > 0) {
             offResults = fallbackResults;
             toast({
               title: "Limited results found",
@@ -147,14 +158,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         }
         
         // Update search results
-        setSearchResults(offResults);
+        setSearchResults(Array.isArray(offResults) ? offResults : []);
       }
       
       // Search in USDA if not rate limited
       if ((searchSource === "usda" || searchSource === "both") && usdaApiStatus !== "rate_limited") {
         try {
           const usdaSearchResults = await searchUsdaDatabase(query, userPreferences || {});
-          setUsdaResults(usdaSearchResults);
+          setUsdaResults(Array.isArray(usdaSearchResults) ? usdaSearchResults : []);
         } catch (error) {
           console.error("USDA search error:", error);
           
@@ -179,7 +190,8 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       }
       
       // Show no results toast if both searches returned empty
-      if (searchResults.length === 0 && usdaResults.length === 0) {
+      if ((searchResults?.length === 0 || !searchResults) && 
+          (usdaResults?.length === 0 || !usdaResults)) {
         toast({
           title: "No results found",
           description: "Try different search terms or check your spelling.",
@@ -199,7 +211,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, usdaApiStatus, saveRecentSearch]);
+  }, [toast, usdaApiStatus, saveRecentSearch, searchResults, usdaResults]);
   
   // Perform search when query changes
   useEffect(() => {
@@ -213,7 +225,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, handleSearchWithOptions]);
 
-  // Clear results when command dialog is closed
+  // Clear results when search panel is closed
   useEffect(() => {
     if (!open) {
       setSearchResults([]);
@@ -229,7 +241,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     searchResults,
     usdaResults,
     mergedResults,
-    recentSearches,
+    recentSearches: Array.isArray(recentSearches) ? recentSearches : [],
     handleSelectFood,
     handleSelectUsdaFood,
     handleSearchWithOptions

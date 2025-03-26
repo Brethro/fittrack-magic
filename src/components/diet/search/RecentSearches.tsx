@@ -1,5 +1,4 @@
 
-import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { Clock } from "lucide-react";
 
 interface RecentSearchesProps {
@@ -8,22 +7,23 @@ interface RecentSearchesProps {
 }
 
 export function RecentSearches({ recentSearches, onSelectSearch }: RecentSearchesProps) {
-  if (recentSearches.length === 0) {
+  if (!Array.isArray(recentSearches) || recentSearches.length === 0) {
     return null;
   }
 
   return (
-    <CommandGroup heading="Recent Searches">
+    <div className="space-y-1">
+      <h3 className="text-sm font-medium mb-2">Recent Searches</h3>
       {recentSearches.map((search, index) => (
-        <CommandItem 
+        <div 
           key={`recent-${index}`}
-          onSelect={() => onSelectSearch(search)}
-          className="flex items-center gap-2 py-3"
+          className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent cursor-pointer"
+          onClick={() => onSelectSearch(search)}
         >
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span>{search}</span>
-        </CommandItem>
+        </div>
       ))}
-    </CommandGroup>
+    </div>
   );
 }
