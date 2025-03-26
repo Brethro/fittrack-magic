@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { X, Search, Filter } from "lucide-react";
+import { X, Search, Filter, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
