@@ -89,7 +89,7 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
   
   const servingSize = getServingSize();
   
-  // Extract numeric serving size for calculations - IMPROVED to handle formats like "1 scoop (31g)"
+  // Extract numeric serving size for calculations
   const getNumericServingSize = (): number => {
     // If serving_size_g exists, use it directly
     if (product.serving_size_g && !isNaN(product.serving_size_g)) {
@@ -231,12 +231,12 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 mr-2">
                 <h3 className="font-medium text-sm sm:text-base line-clamp-1">{productName}</h3>
-                {highlighted && <Star className="h-3 w-3 text-yellow-500" fill="currentColor" />}
+                {highlighted && <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" />}
               </div>
               
-              <div className="flex gap-1">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button 
                   size="icon"
                   variant="ghost" 

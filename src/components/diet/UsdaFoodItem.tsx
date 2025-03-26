@@ -110,8 +110,8 @@ const UsdaFoodItem = ({
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm sm:text-base line-clamp-1">{description}</h3>
-              <div className="flex gap-1">
+              <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2 flex-1">{description}</h3>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button 
                   size="icon"
                   variant="ghost" 
