@@ -10,6 +10,8 @@ interface SearchCommandProps {
 export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const { usdaApiStatus } = useApiConnection();
   
+  if (!open) return null;
+  
   return (
     <div className="w-full h-full">
       <SearchPanel 

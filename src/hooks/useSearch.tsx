@@ -28,6 +28,8 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const [mergedResults, setMergedResults] = useState<Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSearchQuery = useRef<string>("");
+  const searchInProgress = useRef<boolean>(false);
   
   // Load recent searches from localStorage
   useEffect(() => {
@@ -134,12 +136,19 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     searchSource: SearchSource = "both",
     userPreferences?: UserPreferences
   ) => {
+    // If query is too short or identical to last search, don't proceed
     if (!query || query.trim().length < 2) {
-      setSearchResults([]);
-      setUsdaResults([]);
+      clearSearchResults();
       return null;
     }
     
+    // Prevent duplicate searches
+    if (query.trim() === lastSearchQuery.current && searchInProgress.current) {
+      return null;
+    }
+    
+    lastSearchQuery.current = query.trim();
+    searchInProgress.current = true;
     setIsLoading(true);
     saveRecentSearch(query);
     
@@ -148,23 +157,31 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       
       // Search in Open Food Facts
       if (searchSource === "openfoods" || searchSource === "both") {
-        let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
-        
-        // If broad search returns no results, try fallback search
-        if (!Array.isArray(offResults) || offResults.length === 0) {
-          console.log("Broad search returned no results, trying fallback search");
-          const fallbackResults = await searchWithFallback(encodeURIComponent(query.trim()));
-          if (Array.isArray(fallbackResults) && fallbackResults.length > 0) {
-            offResults = fallbackResults;
-            toast({
-              title: "Limited results found",
-              description: "We found some items that might match what you're looking for.",
-            });
+        try {
+          let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
+          
+          // If broad search returns no results, try fallback search
+          if (!Array.isArray(offResults) || offResults.length === 0) {
+            console.log("Broad search returned no results, trying fallback search");
+            const fallbackResults = await searchWithFallback(encodeURIComponent(query.trim()));
+            if (Array.isArray(fallbackResults) && fallbackResults.length > 0) {
+              offResults = fallbackResults;
+              toast({
+                title: "Limited results found",
+                description: "We found some items that might match what you're looking for.",
+              });
+            }
           }
+          
+          // Update search results
+          setSearchResults(Array.isArray(offResults) ? offResults : []);
+        } catch (error) {
+          console.error("Search error:", error);
+          // Continue with USDA search even if Open Food Facts fails
         }
-        
-        // Update search results
-        setSearchResults(Array.isArray(offResults) ? offResults : []);
+      } else {
+        // Clear Open Food Facts results if not searching there
+        setSearchResults([]);
       }
       
       // Search in USDA if not rate limited
@@ -192,7 +209,13 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
               variant: "destructive",
             });
           }
+          
+          // Clear USDA results if search fails
+          setUsdaResults([]);
         }
+      } else if (searchSource !== "usda") {
+        // Clear USDA results if not searching there
+        setUsdaResults([]);
       }
       
       return { searchResults, usdaResults };
@@ -206,11 +229,15 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       return null;
     } finally {
       setIsLoading(false);
+      searchInProgress.current = false;
     }
-  }, [toast, usdaApiStatus, saveRecentSearch]);
+  }, [toast, usdaApiStatus, saveRecentSearch, clearSearchResults]);
   
   // Perform search when query changes with debounce
   useEffect(() => {
+    // Only run this effect if search component is open
+    if (!open) return;
+    
     // Clear previous timeout to prevent multiple searches
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -220,12 +247,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     if (searchQuery.trim().length >= 2) {
       // Set a new timeout
       searchTimeoutRef.current = setTimeout(() => {
-        handleSearchWithOptions(searchQuery);
-      }, 800); // Increased debounce time to 800ms
+        // Don't search if query is the same as the last one
+        if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
+          handleSearchWithOptions(searchQuery);
+        }
+      }, 1000); // Increased debounce time to 1000ms
     } else {
       // Clear results if query is too short
-      setSearchResults([]);
-      setUsdaResults([]);
+      clearSearchResults();
     }
     
     // Cleanup function to clear timeout
@@ -234,12 +263,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, handleSearchWithOptions]);
+  }, [searchQuery, handleSearchWithOptions, open, clearSearchResults]);
 
   // Clear results when search panel is closed
   useEffect(() => {
     if (!open) {
       clearSearchResults();
+      lastSearchQuery.current = "";
+      searchInProgress.current = false;
     }
   }, [open, clearSearchResults]);
   

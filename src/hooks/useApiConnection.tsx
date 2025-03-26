@@ -12,19 +12,26 @@ export function useApiConnection() {
   const [errorMessage, setErrorMessage] = useState("");
   const lastUsdaCheckRef = useRef<number>(0);
   const isInitialMount = useRef(true);
+  const apiCheckAttempted = useRef(false);
   
   // Check Open Food Facts API connection only once on initial mount
   useEffect(() => {
-    // Only check on initial mount
-    if (isInitialMount.current) {
+    // Only check on initial mount and if not already attempted
+    if (isInitialMount.current && !apiCheckAttempted.current) {
       isInitialMount.current = false;
+      apiCheckAttempted.current = true;
       
       const checkApiConnection = async () => {
         setApiStatus("checking");
         try {
           // Using a more reliable endpoint for testing connection
           const response = await fetch(
-            "https://world.openfoodfacts.org/api/v2/search?fields=product_name,brands&page_size=1"
+            "https://world.openfoodfacts.org/api/v2/search?fields=product_name,brands&page_size=1",
+            { 
+              method: 'GET',
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(5000) // Timeout after 5 seconds
+            }
           );
           
           if (response.ok) {

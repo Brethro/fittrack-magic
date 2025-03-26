@@ -25,6 +25,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     preferHighProtein: false,
   });
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const shouldInitiateSearch = useRef(false);
   
   // Initialize search hook
   const { 
@@ -76,29 +77,28 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   useEffect(() => {
     if (!isOpen) {
       clearSearchResults();
+      setSearchQuery("");
     }
-  }, [isOpen, clearSearchResults]);
+  }, [isOpen, clearSearchResults, setSearchQuery]);
 
   // Handle search - wrapped in useCallback to prevent recreation on every render
   const handleSearch = useCallback(async (query: string) => {
-    await handleSearchWithOptions(query, searchSource, userPreferences);
+    if (query.length >= 2) {
+      shouldInitiateSearch.current = true;
+      await handleSearchWithOptions(query, searchSource, userPreferences);
+    }
   }, [handleSearchWithOptions, searchSource, userPreferences]);
   
   // Handle search source change - wrapped in useCallback
   const handleSourceChange = useCallback((source: SearchSource) => {
     setSearchSource(source);
-    if (searchQuery.length >= 2) {
+    if (searchQuery.length >= 2 && shouldInitiateSearch.current) {
       handleSearchWithOptions(searchQuery, source, userPreferences);
     }
   }, [searchQuery, handleSearchWithOptions, userPreferences]);
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="w-full h-full glass-panel bg-card rounded-lg shadow-lg z-40 overflow-hidden flex flex-col"
-    >
+    <div className="w-full h-full glass-panel bg-card rounded-lg shadow-lg z-40 overflow-hidden flex flex-col">
       {/* Header with search bar */}
       <div className="p-3 border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-3">
@@ -187,6 +187,6 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
         usdaApiStatus={usdaApiStatus}
         className="border-t"
       />
-    </motion.div>
+    </div>
   );
 }

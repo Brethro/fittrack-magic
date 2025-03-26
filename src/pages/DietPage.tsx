@@ -19,8 +19,14 @@ const DietPage = () => {
   // Check USDA API connection once when component mounts
   useEffect(() => {
     if (!hasCheckedAPI.current) {
-      checkUsdaApiConnection();
       hasCheckedAPI.current = true;
+      
+      // Delay API check slightly to avoid immediate API call on page load
+      const timeoutId = setTimeout(() => {
+        checkUsdaApiConnection();
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [checkUsdaApiConnection]);
   
@@ -70,6 +76,6 @@ const DietPage = () => {
       </motion.div>
     </div>
   );
-};
+}
 
 export default DietPage;
