@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Info, Plus } from "lucide-react";
@@ -107,22 +108,22 @@ const UsdaFoodItem = ({
     <>
       <div className="glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200">
         <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 max-w-[calc(100%-100px)]">
+          <div className="flex-1 max-w-[calc(100%-90px)]">
             <div className="flex items-center">
               <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{description}</h3>
             </div>
             
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {/* Only show these badges when not in unified view (where source badge is shown elsewhere) */}
-              {showSourceBadge && (
-                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
-                  USDA Database
-                </Badge>
-              )}
-              
               {category && (
                 <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
                   {category}
+                </Badge>
+              )}
+              
+              {/* Source badge moved next to category */}
+              {showSourceBadge && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
+                  USDA
                 </Badge>
               )}
             </div>
@@ -144,11 +145,11 @@ const UsdaFoodItem = ({
             
             <div className="flex justify-between items-center mt-1.5 text-xs">
               <p>Serving: {servingSize}</p>
-              {showSourceBadge && <p className="text-emerald-500 text-xs">Source: USDA</p>}
+              {/* Removed duplicate source display here */}
             </div>
           </div>
           
-          <div className="flex flex-col items-center gap-2 min-w-[70px] mr-2">
+          <div className="flex flex-col items-center gap-2 min-w-[70px]">
             <Button 
               size="icon"
               variant="ghost" 

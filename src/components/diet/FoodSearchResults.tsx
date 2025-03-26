@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import FoodItem from "./FoodItem";
@@ -185,12 +184,7 @@ export function UnifiedFoodResults({
           {/* Render appropriate component based on result type */}
           {result.type === 'openfoodfacts' ? (
             <div className="relative">
-              {/* Source badge positioned absolutely in the top-right corner with z-index to ensure visibility */}
-              <div className="absolute top-3 right-16 z-10">
-                <Badge variant="outline" className="text-xs">
-                  OFF
-                </Badge>
-              </div>
+              {/* Source badge is now integrated inside the FoodItem component */}
               <FoodItem 
                 product={result.item} 
                 onSelect={(food) => {
@@ -208,15 +202,10 @@ export function UnifiedFoodResults({
             </div>
           ) : (
             <div className="relative">
-              {/* Source badge positioned absolutely in the top-right corner with z-index to ensure visibility */}
-              <div className="absolute top-3 right-16 z-10">
-                <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-300/20">
-                  USDA
-                </Badge>
-              </div>
+              {/* Source badge is now integrated inside the UsdaFoodItem component */}
               <UsdaFoodItem 
                 foodItem={result.item}
-                showSourceBadge={false} // Hide redundant source badge
+                showSourceBadge={true} // Always show the source badge
                 onSelect={(food) => {
                   if (onSelectUsdaFood) onSelectUsdaFood(food);
                 }}

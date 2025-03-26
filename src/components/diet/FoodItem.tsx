@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -228,20 +229,23 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
     <>
       <div className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
         <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 max-w-[calc(100%-100px)]">
+          <div className="flex-1 max-w-[calc(100%-90px)]">
             <div className="flex items-center">
               <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{productName}</h3>
               {highlighted && <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" />}
             </div>
             
-            <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-xs text-muted-foreground">{brand}</p>
-              
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               {mainCategory && (
                 <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
                   {mainCategory}
                 </Badge>
               )}
+              
+              {/* Source badge moved here next to category */}
+              <Badge variant="outline" className="text-xs px-1.5 py-0 h-5 bg-primary/10 text-primary border-primary/20">
+                OFF
+              </Badge>
             </div>
             
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -276,7 +280,7 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
             </div>
           </div>
           
-          <div className="flex flex-col items-center gap-2 min-w-[70px] mr-2">
+          <div className="flex flex-col items-center gap-2 min-w-[70px]">
             <Button 
               size="icon"
               variant="ghost" 
