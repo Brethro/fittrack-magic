@@ -1,5 +1,4 @@
 
-import { CommandEmpty, CommandGroup } from "@/components/ui/command";
 import { Loader } from "lucide-react";
 import { UsdaFoodItem } from "@/utils/usdaApi";
 import { UnifiedFoodResults } from "@/components/diet/FoodSearchResults";

@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { X, Search, Filter, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Search, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { SearchResults } from "@/components/diet/search/SearchResults";
 import { SearchFooter } from "@/components/diet/search/SearchFooter";
-import { RecentSearches } from "@/components/diet/search/RecentSearches";
 import RecentFoods from "@/components/diet/RecentFoods";
 import { useSearch, SearchSource } from "@/hooks/useSearch";
 import { useToast } from "@/hooks/use-toast";
@@ -22,10 +20,10 @@ interface SearchPanelProps {
 export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps) {
   const { toast } = useToast();
   const [searchSource, setSearchSource] = useState<SearchSource>("both");
-  // Fixed UserPreferences object to match the expected type
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     preferHighProtein: false,
   });
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Initialize search hook
   const { 
@@ -42,6 +40,16 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     toast, 
     usdaApiStatus 
   });
+  
+  // Focus the input when the panel opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      // Short timeout to ensure the animation has started
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
   
   // Close panel when ESC key is pressed
   useEffect(() => {
@@ -91,14 +99,28 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
               </Button>
             </div>
             
-            <Command className="rounded-lg border shadow-md">
-              <CommandInput
+            {/* Direct input field instead of Command component */}
+            <div className="flex items-center border rounded-lg p-2 bg-background">
+              <Search className="h-4 w-4 text-muted-foreground ml-2 mr-2" />
+              <input
+                ref={searchInputRef}
+                type="text"
                 value={searchQuery}
-                onValueChange={setSearchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search foods..."
-                className="h-11"
+                className="flex-1 bg-transparent border-none outline-none text-sm h-9 px-2"
               />
-            </Command>
+              {searchQuery && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
             
             {/* Search filters */}
             <div className="flex items-center space-x-2 mt-2">
@@ -129,21 +151,11 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           {/* Content area */}
           <div className="flex-1 overflow-y-auto p-3">
             {/* Recent Foods */}
-            <RecentFoods />
+            {searchQuery.length < 2 && (
+              <RecentFoods />
+            )}
             
-            <Command className="hidden">
-              <CommandList>
-                {/* Recent searches */}
-                {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-                  <RecentSearches
-                    recentSearches={recentSearches}
-                    onSelectSearch={handleSearch}
-                  />
-                )}
-              </CommandList>
-            </Command>
-            
-            {/* Use a different approach for recent searches since we're outside CommandList */}
+            {/* Recent searches */}
             {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
               <div className="mt-4">
                 <h3 className="text-sm font-medium mb-2">Recent Searches</h3>

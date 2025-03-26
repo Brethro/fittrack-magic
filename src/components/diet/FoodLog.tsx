@@ -37,7 +37,7 @@ const FoodLog = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        setSearchOpen(true);
+        setSearchOpen(prev => !prev);
       }
     };
     
@@ -108,7 +108,10 @@ const FoodLog = () => {
       
       {/* Persistent search bar at the bottom */}
       <div className="mt-3">
-        <PersistentSearchBar onClick={() => setSearchOpen(true)} />
+        <PersistentSearchBar 
+          onClick={() => setSearchOpen(true)} 
+          isActive={searchOpen}
+        />
       </div>
       
       {/* Search panel that appears when search is opened */}

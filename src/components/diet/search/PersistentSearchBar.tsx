@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 
 interface PersistentSearchBarProps {
   onClick: () => void;
+  isActive?: boolean;
 }
 
-export function PersistentSearchBar({ onClick }: PersistentSearchBarProps) {
+export function PersistentSearchBar({ onClick, isActive = false }: PersistentSearchBarProps) {
   return (
     <div 
-      className="border border-border/50 rounded-full p-2 px-4 bg-background shadow-sm cursor-pointer flex items-center gap-2 hover:bg-accent/10 transition-colors"
+      className={`border ${isActive ? 'border-primary' : 'border-border/50'} rounded-full p-2 px-4 bg-background shadow-sm cursor-pointer flex items-center gap-2 hover:bg-accent/10 transition-colors`}
       onClick={onClick}
     >
       <Search className="h-4 w-4 text-muted-foreground" />
