@@ -4,8 +4,7 @@ import { X, Search, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandList } from "@/components/ui/command";
-import { SearchInput } from "@/components/diet/search/SearchInput";
+import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { SearchResults } from "@/components/diet/search/SearchResults";
 import { SearchFooter } from "@/components/diet/search/SearchFooter";
 import { RecentSearches } from "@/components/diet/search/RecentSearches";
@@ -92,10 +91,17 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
               </Button>
             </div>
             
-            <SearchInput 
-              searchQuery={searchQuery} 
-              setSearchQuery={setSearchQuery} 
-            />
+            <div className="border-b shadow-sm">
+              <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Search foods..."
+                />
+              </div>
+            </div>
             
             {/* Search filters */}
             <div className="flex items-center space-x-2 mt-2">
@@ -123,30 +129,28 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             </div>
           </div>
           
-          {/* Content area with scrolling - ensure Command is directly wrapping the CommandList */}
-          <Command className="flex-1 overflow-hidden">
-            <CommandList className="overflow-y-auto p-3 h-full">
-              {/* Recent Foods */}
-              <RecentFoods />
-              
-              {/* Recent searches */}
-              {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-                <RecentSearches
-                  recentSearches={recentSearches}
-                  onSelectSearch={handleSearch}
-                />
-              )}
-              
-              {/* Search results */}
-              <SearchResults 
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                mergedResults={mergedResults}
-                onSelectFood={handleSelectFood}
-                onSelectUsdaFood={handleSelectUsdaFood}
+          {/* Content area */}
+          <div className="flex-1 overflow-y-auto p-3">
+            {/* Recent Foods */}
+            <RecentFoods />
+            
+            {/* Recent searches */}
+            {recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+              <RecentSearches
+                recentSearches={recentSearches}
+                onSelectSearch={handleSearch}
               />
-            </CommandList>
-          </Command>
+            )}
+            
+            {/* Search results */}
+            <SearchResults 
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              mergedResults={mergedResults}
+              onSelectFood={handleSelectFood}
+              onSelectUsdaFood={handleSelectUsdaFood}
+            />
+          </div>
           
           {/* Footer */}
           <SearchFooter 

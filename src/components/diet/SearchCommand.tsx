@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFoodLog } from "@/contexts/FoodLogContext";
 import {
   CommandDialog,
+  CommandInput,
   CommandList,
   Command,
 } from "@/components/ui/command";
@@ -52,36 +53,38 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <div className="max-h-[80vh] overflow-hidden flex flex-col">
         {/* Search Input */}
-        <SearchInput 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
+        <div className="border-b shadow-sm">
+          <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Search foods..."
+            />
+          </div>
+        </div>
         
-        <div className="overflow-y-auto flex-1">
-          <Command className="h-full">
-            <CommandList>
-              {/* Recent Searches */}
-              {!isLoading && searchQuery.length < 2 && recentSearches.length > 0 && (
-                <RecentSearches 
-                  recentSearches={recentSearches} 
-                  onSelectSearch={setSearchQuery} 
-                />
-              )}
-              
-              {/* Search Results */}
-              <SearchResults 
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                mergedResults={mergedResults}
-                onSelectFood={handleSelectFood}
-                onSelectUsdaFood={handleSelectUsdaFood}
-              />
-            </CommandList>
-          </Command>
+        <div className="overflow-y-auto flex-1 p-3">
+          {/* Recent Searches */}
+          {!isLoading && searchQuery.length < 2 && recentSearches.length > 0 && (
+            <RecentSearches 
+              recentSearches={recentSearches} 
+              onSelectSearch={setSearchQuery} 
+            />
+          )}
+          
+          {/* Search Results */}
+          <SearchResults 
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            mergedResults={mergedResults}
+            onSelectFood={handleSelectFood}
+            onSelectUsdaFood={handleSelectUsdaFood}
+          />
         </div>
         
         {/* Footer with API status */}
-        <SearchFooter usdaApiStatus={usdaApiStatus} />
+        <SearchFooter usdaApiStatus={usdaApiStatus} className="border-t" />
       </div>
     </CommandDialog>
   );
