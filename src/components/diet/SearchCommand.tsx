@@ -11,7 +11,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const { usdaApiStatus } = useApiConnection();
   
   return (
-    <div className="relative">
+    <div className="w-full h-full">
       <SearchPanel 
         isOpen={open} 
         onClose={() => onOpenChange(false)}

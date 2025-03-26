@@ -93,104 +93,100 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   }, [searchQuery, handleSearchWithOptions, userPreferences]);
   
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="absolute inset-x-0 bottom-0 max-h-[80vh] glass-panel bg-card border-t border-border/50 rounded-b-xl shadow-lg z-40 overflow-hidden flex flex-col"
-        >
-          {/* Header with search bar */}
-          <div className="p-3 border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-medium">Search Foods</h2>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Direct input field */}
-            <div className="flex items-center border rounded-lg p-2 bg-background">
-              <Search className="h-4 w-4 text-muted-foreground ml-2 mr-2" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search foods..."
-                className="flex-1 bg-transparent border-none outline-none text-sm h-9 px-2"
-              />
-              {searchQuery && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-            
-            {/* Search filters */}
-            <div className="flex items-center space-x-2 mt-2">
-              <Badge 
-                variant={searchSource === "both" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => handleSourceChange("both")}
-              >
-                All Sources
-              </Badge>
-              <Badge 
-                variant={searchSource === "openfoods" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => handleSourceChange("openfoods")}
-              >
-                Open Food Facts
-              </Badge>
-              <Badge 
-                variant={searchSource === "usda" ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => handleSourceChange("usda")}
-              >
-                USDA
-              </Badge>
-            </div>
-          </div>
-          
-          {/* Content area */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {/* Recent Foods */}
-            {searchQuery.length < 2 && (
-              <RecentFoods />
-            )}
-            
-            {/* Recent searches */}
-            {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
-              <RecentSearches 
-                recentSearches={recentSearches} 
-                onSelectSearch={handleSearch} 
-              />
-            )}
-            
-            {/* Search results */}
-            <SearchResults 
-              isLoading={isLoading}
-              searchQuery={searchQuery}
-              mergedResults={mergedResults}
-              onSelectFood={handleSelectFood}
-              onSelectUsdaFood={handleSelectUsdaFood}
-            />
-          </div>
-          
-          {/* Footer */}
-          <SearchFooter 
-            usdaApiStatus={usdaApiStatus}
-            className="border-t"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="w-full h-full glass-panel bg-card rounded-lg shadow-lg z-40 overflow-hidden flex flex-col"
+    >
+      {/* Header with search bar */}
+      <div className="p-3 border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium">Search Foods</h2>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Direct input field */}
+        <div className="flex items-center border rounded-lg p-2 bg-background">
+          <Search className="h-4 w-4 text-muted-foreground ml-2 mr-2" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search foods..."
+            className="flex-1 bg-transparent border-none outline-none text-sm h-9 px-2"
           />
-        </motion.div>
-      )}
-    </AnimatePresence>
+          {searchQuery && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        
+        {/* Search filters */}
+        <div className="flex items-center space-x-2 mt-2">
+          <Badge 
+            variant={searchSource === "both" ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => handleSourceChange("both")}
+          >
+            All Sources
+          </Badge>
+          <Badge 
+            variant={searchSource === "openfoods" ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => handleSourceChange("openfoods")}
+          >
+            Open Food Facts
+          </Badge>
+          <Badge 
+            variant={searchSource === "usda" ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => handleSourceChange("usda")}
+          >
+            USDA
+          </Badge>
+        </div>
+      </div>
+      
+      {/* Content area */}
+      <div className="flex-1 overflow-y-auto p-3">
+        {/* Recent Foods */}
+        {searchQuery.length < 2 && (
+          <RecentFoods />
+        )}
+        
+        {/* Recent searches */}
+        {Array.isArray(recentSearches) && recentSearches.length > 0 && searchQuery.length < 2 && !isLoading && (
+          <RecentSearches 
+            recentSearches={recentSearches} 
+            onSelectSearch={handleSearch} 
+          />
+        )}
+        
+        {/* Search results */}
+        <SearchResults 
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          mergedResults={mergedResults}
+          onSelectFood={handleSelectFood}
+          onSelectUsdaFood={handleSelectUsdaFood}
+        />
+      </div>
+      
+      {/* Footer */}
+      <SearchFooter 
+        usdaApiStatus={usdaApiStatus}
+        className="border-t"
+      />
+    </motion.div>
   );
 }

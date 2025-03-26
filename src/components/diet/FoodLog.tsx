@@ -5,7 +5,7 @@ import FoodLogList from "./FoodLogList";
 import QuickFoodEntry from "./QuickFoodEntry";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type FoodLogEntry } from "@/contexts/FoodLogContext";
-import { Utensils, History, Star, PlusCircle } from "lucide-react";
+import { Utensils, History, Plus, Search } from "lucide-react";
 import RecentFoods from "./RecentFoods";
 import { PersistentSearchBar } from "./search/PersistentSearchBar";
 import { SearchPanel } from "./search/SearchPanel";
@@ -50,80 +50,82 @@ const FoodLog = () => {
   
   return (
     <div className="flex flex-col w-full h-full relative">
-      <Tabs 
-        defaultValue="log" 
-        className="w-full flex flex-col h-full"
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
-        <TabsList className="w-full grid grid-cols-3 mb-2">
-          <TabsTrigger value="log" className="flex items-center gap-2">
-            <Utensils className="h-4 w-4" />
-            <span>Food Log</span>
-          </TabsTrigger>
-          <TabsTrigger value="recent" className="flex items-center gap-2">
-            <History className="h-4 w-4" />
-            <span>Recent</span>
-          </TabsTrigger>
-          <TabsTrigger value="add" className="flex items-center gap-2">
-            <PlusCircle className="h-4 w-4" />
-            <span>Quick Add</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <div className="h-full">
-          <TabsContent 
-            value="log" 
-            className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col"
+      {!searchOpen ? (
+        <>
+          <Tabs 
+            defaultValue="log" 
+            className="w-full flex flex-col h-full"
+            value={activeTab}
+            onValueChange={setActiveTab}
           >
-            <FoodLogList onEditEntry={handleEditEntry} />
-          </TabsContent>
-          
-          <TabsContent 
-            value="recent" 
-            className="m-0 h-full"
-          >
-            <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <RecentFoods />
+            <TabsList className="w-full grid grid-cols-3 mb-2">
+              <TabsTrigger value="log" className="flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                <span>Food Log</span>
+              </TabsTrigger>
+              <TabsTrigger value="recent" className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                <span>Recent</span>
+              </TabsTrigger>
+              <TabsTrigger value="add" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>Quick Add</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <div className="h-full">
+              <TabsContent 
+                value="log" 
+                className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col"
+              >
+                <FoodLogList onEditEntry={handleEditEntry} />
+              </TabsContent>
+              
+              <TabsContent 
+                value="recent" 
+                className="m-0 h-full"
+              >
+                <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
+                  <RecentFoods />
+                </div>
+              </TabsContent>
+              
+              <TabsContent 
+                value="add" 
+                className="m-0 h-full"
+              >
+                <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
+                  <QuickFoodEntry 
+                    onAddSuccess={handleFoodAdded} 
+                    editingEntry={editingEntry}
+                    onEditSuccess={() => {
+                      setEditingEntry(null);
+                      setActiveTab("log");
+                    }}
+                  />
+                </div>
+              </TabsContent>
             </div>
-          </TabsContent>
+          </Tabs>
           
-          <TabsContent 
-            value="add" 
-            className="m-0 h-full"
-          >
-            <div className="border rounded-lg p-4 bg-card h-full overflow-y-auto">
-              <QuickFoodEntry 
-                onAddSuccess={handleFoodAdded} 
-                editingEntry={editingEntry}
-                onEditSuccess={() => {
-                  setEditingEntry(null);
-                  setActiveTab("log");
-                }}
-              />
-            </div>
-          </TabsContent>
-        </div>
-      </Tabs>
-      
-      {/* Adjust container for search bar and panel */}
-      <div className="mt-3 relative">
-        <PersistentSearchBar 
-          onClick={() => setSearchOpen(true)} 
-          isActive={searchOpen}
-        />
-        
-        {/* Search panel that appears when search is opened - contained within this element */}
-        {searchOpen && (
-          <div className="relative h-[550px]">
-            <SearchPanel 
-              isOpen={searchOpen} 
-              onClose={() => setSearchOpen(false)} 
-              usdaApiStatus={usdaApiStatus}
+          {/* Search bar at the bottom */}
+          <div className="mt-3">
+            <PersistentSearchBar 
+              onClick={() => setSearchOpen(true)} 
+              isActive={searchOpen}
             />
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        /* Search panel replaces the entire food log content when open */
+        <div className="h-full flex flex-col">
+          <SearchPanel 
+            isOpen={searchOpen} 
+            onClose={() => setSearchOpen(false)} 
+            usdaApiStatus={usdaApiStatus}
+          />
+        </div>
+      )}
     </div>
   );
 };
