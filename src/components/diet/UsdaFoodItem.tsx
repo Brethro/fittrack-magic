@@ -108,28 +108,9 @@ const UsdaFoodItem = ({
     <>
       <div className="glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200">
         <div className="flex justify-between items-start gap-2">
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2 flex-1">{description}</h3>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Button 
-                  size="icon"
-                  variant="ghost" 
-                  className="h-7 w-7 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500"
-                  onClick={() => setShowDetailView(true)}
-                >
-                  <Info size={16} />
-                </Button>
-                
-                <Button 
-                  size="icon"
-                  variant="outline" 
-                  className="h-7 w-7 rounded-full text-emerald-500 border-emerald-300/30 hover:bg-emerald-500/10 hover:border-emerald-300/50"
-                  onClick={handleSelectFood}
-                >
-                  <Plus size={16} />
-                </Button>
-              </div>
+          <div className="flex-1 max-w-[calc(100%-80px)]">
+            <div className="flex items-center">
+              <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{description}</h3>
             </div>
             
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -166,6 +147,26 @@ const UsdaFoodItem = ({
               <p>Serving: {servingSize}</p>
               {showSourceBadge && <p className="text-emerald-500 text-xs">Source: USDA</p>}
             </div>
+          </div>
+          
+          <div className="flex flex-col items-center gap-2 min-w-[70px]">
+            <Button 
+              size="icon"
+              variant="ghost" 
+              className="h-8 w-8 rounded-full hover:bg-emerald-500/10 hover:text-emerald-500"
+              onClick={() => setShowDetailView(true)}
+            >
+              <Info size={16} />
+            </Button>
+            
+            <Button 
+              size="icon"
+              variant="outline" 
+              className="h-8 w-8 rounded-full text-emerald-500 border-emerald-300/30 hover:bg-emerald-500/10 hover:border-emerald-300/50"
+              onClick={handleSelectFood}
+            >
+              <Plus size={16} />
+            </Button>
           </div>
         </div>
       </div>

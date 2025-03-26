@@ -229,32 +229,10 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
     <>
       <div className={`glass-panel p-3 rounded-lg hover:shadow-lg transition-all duration-200 ${highlighted ? 'border-l-2 border-primary' : ''}`}>
         <div className="flex justify-between items-start gap-2">
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-1 mr-2">
-                <h3 className="font-medium text-sm sm:text-base line-clamp-1">{productName}</h3>
-                {highlighted && <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" />}
-              </div>
-              
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Button 
-                  size="icon"
-                  variant="ghost" 
-                  className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary"
-                  onClick={() => setShowDetailView(true)}
-                >
-                  <Info size={16} />
-                </Button>
-                
-                <Button 
-                  size="icon"
-                  variant="outline" 
-                  className="h-7 w-7 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
-                  onClick={handleSelectFood}
-                >
-                  <Plus size={16} />
-                </Button>
-              </div>
+          <div className="flex-1 max-w-[calc(100%-80px)]">
+            <div className="flex items-center">
+              <h3 className="font-medium text-sm sm:text-base line-clamp-1 mr-2">{productName}</h3>
+              {highlighted && <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" fill="currentColor" />}
             </div>
             
             <div className="flex items-center gap-2 mt-0.5">
@@ -297,6 +275,26 @@ const FoodItem = ({ product, onSelect }: FoodItemProps) => {
                 />
               )}
             </div>
+          </div>
+          
+          <div className="flex flex-col items-center gap-2 min-w-[70px]">
+            <Button 
+              size="icon"
+              variant="ghost" 
+              className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowDetailView(true)}
+            >
+              <Info size={16} />
+            </Button>
+            
+            <Button 
+              size="icon"
+              variant="outline" 
+              className="h-8 w-8 rounded-full text-primary border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              onClick={handleSelectFood}
+            >
+              <Plus size={16} />
+            </Button>
           </div>
         </div>
       </div>

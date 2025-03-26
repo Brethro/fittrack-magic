@@ -46,7 +46,7 @@ export function SearchResults({
   return (
     <div className="mt-4">
       <h3 className="text-sm font-medium mb-3">Results</h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         <UnifiedFoodResults 
           mergedResults={mergedResults}
           onSelectFood={onSelectFood}
