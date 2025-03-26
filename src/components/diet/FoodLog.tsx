@@ -106,20 +106,24 @@ const FoodLog = () => {
         </div>
       </Tabs>
       
-      {/* Persistent search bar at the bottom */}
-      <div className="mt-3">
+      {/* Adjust container for search bar and panel */}
+      <div className="mt-3 relative">
         <PersistentSearchBar 
           onClick={() => setSearchOpen(true)} 
           isActive={searchOpen}
         />
+        
+        {/* Search panel that appears when search is opened - contained within this element */}
+        {searchOpen && (
+          <div className="relative h-[550px]">
+            <SearchPanel 
+              isOpen={searchOpen} 
+              onClose={() => setSearchOpen(false)} 
+              usdaApiStatus={usdaApiStatus}
+            />
+          </div>
+        )}
       </div>
-      
-      {/* Search panel that appears when search is opened */}
-      <SearchPanel 
-        isOpen={searchOpen} 
-        onClose={() => setSearchOpen(false)} 
-        usdaApiStatus={usdaApiStatus}
-      />
     </div>
   );
 };

@@ -99,7 +99,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="absolute inset-x-0 bottom-0 max-h-[80vh] bg-background border-t border-border/50 rounded-t-xl shadow-lg z-50 overflow-hidden flex flex-col"
+          className="absolute inset-x-0 bottom-0 max-h-[80vh] glass-panel bg-card border-t border-border/50 rounded-b-xl shadow-lg z-40 overflow-hidden flex flex-col"
         >
           {/* Header with search bar */}
           <div className="p-3 border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">

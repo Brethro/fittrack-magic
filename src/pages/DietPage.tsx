@@ -6,7 +6,6 @@ import ApiStatusIndicators from "@/components/diet/ApiStatusIndicators";
 import FoodLogSummary from "@/components/diet/FoodLogSummary";
 import FoodLog from "@/components/diet/FoodLog";
 import { useFoodLog } from "@/contexts/FoodLogContext";
-import SearchSection from "@/components/diet/SearchSection";
 import { useUserData } from "@/contexts/UserDataContext";
 import { AlertTriangle } from "lucide-react";
 
@@ -64,8 +63,8 @@ const DietPage = () => {
           <FoodLogSummary onDateChange={handleDateChange} />
         </div>
         
-        {/* 2. Food Log Section - in the middle */}
-        <div className="glass-panel p-4 rounded-lg h-[500px]">
+        {/* 2. Food Log Section - in the middle - increased height to accommodate search panel */}
+        <div className="glass-panel p-4 rounded-lg h-auto min-h-[600px]">
           <FoodLog />
         </div>
       </motion.div>
