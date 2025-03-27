@@ -404,8 +404,8 @@ const AdminPage = () => {
                                   <p className="text-lg font-semibold">{dbStats.tables}</p>
                                 </div>
                                 
-                                {/* New stats for unique foods and users */}
-                                <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-md">
+                                {/* Updated card styles to match others */}
+                                <div className="bg-card/50 p-2 rounded-md">
                                   <p className="text-xs text-muted-foreground flex items-center">
                                     <Database className="h-3 w-3 mr-1" />
                                     Unique Foods
@@ -413,7 +413,7 @@ const AdminPage = () => {
                                   <p className="text-lg font-semibold">{dbStats.uniqueFoods}</p>
                                 </div>
                                 
-                                <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded-md">
+                                <div className="bg-card/50 p-2 rounded-md">
                                   <p className="text-xs text-muted-foreground flex items-center">
                                     <Users className="h-3 w-3 mr-1" />
                                     Unique Users
