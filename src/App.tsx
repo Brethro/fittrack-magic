@@ -17,6 +17,7 @@ import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import EnvSetupDialog from "./components/EnvSetupDialog";
 import SplashScreen from "./components/SplashScreen";
+import AuthCallback from "./components/auth/AuthCallback";
 
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
@@ -104,6 +105,9 @@ function AppContent() {
             <FoodLogProvider>
               <Toaster />
               <Routes>
+                {/* Auth callback route to handle authentication redirects */}
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                
                 {/* Show splash screen first for non-onboarded users */}
                 <Route 
                   path="/splash" 

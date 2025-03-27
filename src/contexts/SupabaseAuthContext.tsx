@@ -24,14 +24,32 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Handle auth state change immediately when component mounts
+    const handleAuthStateChange = async () => {
+      try {
+        // Get initial session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error fetching session:', error);
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+        
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        setLoading(false);
+      } catch (err) {
+        console.error('Unexpected error getting session:', err);
+        setLoading(false);
+      }
+    };
 
-    // Listen for auth changes
+    // Call immediately
+    handleAuthStateChange();
+
+    // Also set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log(`Supabase auth event: ${event}`);
       setSession(session);
@@ -48,7 +66,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      setError(null);
+      
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth/callback'
+        }
+      });
       
       if (error) {
         setError(error.message);
@@ -57,11 +83,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           description: error.message,
           variant: 'destructive',
         });
-      } else {
-        toast({
-          title: 'Account created',
-          description: 'Check your email for the confirmation link.',
-        });
+      } else if (data.user) {
+        if (data.user.identities?.length === 0) {
+          toast({
+            title: 'Account exists',
+            description: 'This email is already registered. Please sign in instead.',
+          });
+        } else {
+          toast({
+            title: 'Account created',
+            description: 'Check your email for the confirmation link.',
+          });
+        }
       }
     } catch (error: any) {
       setError(error.message);
@@ -79,7 +112,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setError(null);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
       if (error) {
         setError(error.message);
@@ -89,6 +127,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           variant: 'destructive',
         });
       } else {
+        setSession(data.session);
+        setUser(data.user);
+        
         toast({
           title: 'Signed in',
           description: 'Welcome back!',
@@ -110,11 +151,26 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   const signOut = async () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
-      toast({
-        title: 'Signed out',
-        description: 'You have been signed out.',
-      });
+      setError(null);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        setError(error.message);
+        toast({
+          title: 'Error signing out',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        setSession(null);
+        setUser(null);
+        
+        toast({
+          title: 'Signed out',
+          description: 'You have been signed out.',
+        });
+      }
     } catch (error: any) {
       setError(error.message);
       toast({
