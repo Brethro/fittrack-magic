@@ -68,11 +68,16 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       setError(null);
       
+      // Get the site URL from current location
+      // For deployed sites, this will be the actual domain
+      // For local development, this will be localhost
+      const siteUrl = window.location.origin;
+      
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: window.location.origin + '/auth/callback'
+          emailRedirectTo: `${siteUrl}/auth/callback`
         }
       });
       
