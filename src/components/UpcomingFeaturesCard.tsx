@@ -27,17 +27,12 @@ const UPCOMING_FEATURES: Feature[] = [
   {
     title: "Recipe Database",
     description: "Browse hundreds of healthy recipes tailored to your nutrition plan.",
-    coming: "Coming Q3 2023"
+    coming: "Coming Q2 2025"
   },
   {
     title: "Smart Notifications",
     description: "Get personalized reminders to stay on track with your fitness goals.",
     coming: "In development"
-  },
-  {
-    title: "Social Challenges",
-    description: "Compete with friends and join community challenges to stay motivated.",
-    coming: "Planned"
   }
 ];
 
