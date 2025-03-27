@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Sparkles, Rocket } from "lucide-react";
+import { ChevronDown, ChevronUp, Sparkles, Rocket, Barcode, Utensils, Dumbbell, Image, Droplet, Bed } from "lucide-react";
 import { motion } from "framer-motion";
 import { 
   Card, 
@@ -16,23 +16,45 @@ type Feature = {
   title: string;
   description: string;
   coming: string;
+  icon: React.ElementType;
 };
 
 const UPCOMING_FEATURES: Feature[] = [
   {
-    title: "Workout Tracking",
-    description: "Log your workouts and track your progress with detailed exercise stats and history.",
-    coming: "Coming soon"
+    title: "Barcode Scanning",
+    description: "Quickly scan food barcodes to log your meals with accurate nutritional information.",
+    coming: "Coming soon",
+    icon: Barcode
   },
   {
     title: "Recipe Database",
     description: "Browse hundreds of healthy recipes tailored to your nutrition plan.",
-    coming: "Coming Q2 2025"
+    coming: "Coming Q2 2025",
+    icon: Utensils
   },
   {
-    title: "Smart Notifications",
-    description: "Get personalized reminders to stay on track with your fitness goals.",
-    coming: "In development"
+    title: "Workout Library",
+    description: "Access a comprehensive database of exercises with form instructions and videos.",
+    coming: "In development",
+    icon: Dumbbell
+  },
+  {
+    title: "Progress Photos",
+    description: "Take and store progress photos to visually track your transformation over time.",
+    coming: "Planned",
+    icon: Image
+  },
+  {
+    title: "Water Intake Tracking",
+    description: "Monitor your daily hydration with reminders throughout the day.",
+    coming: "Planned",
+    icon: Droplet
+  },
+  {
+    title: "Sleep Tracking",
+    description: "Connect with sleep data to optimize recovery and improve fitness results.",
+    coming: "Coming Q3 2025",
+    icon: Bed
   }
 ];
 
@@ -75,7 +97,7 @@ const UpcomingFeaturesCard = () => {
                   className="flex gap-3 p-2 rounded-lg bg-white/5 border border-white/5"
                 >
                   <div className="p-2 rounded-full bg-fuchsia-500/10 h-fit">
-                    <Rocket size={16} className="text-fuchsia-400" />
+                    <feature.icon size={16} className="text-fuchsia-400" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
