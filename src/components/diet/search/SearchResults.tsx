@@ -53,6 +53,12 @@ export function SearchResults({
           onSelectUsdaFood={onSelectUsdaFood}
         />
       </div>
+      {/* Add a small note that all results are being added to database */}
+      {mergedResults.length > 0 && (
+        <div className="mt-3 text-xs text-muted-foreground text-center">
+          All search results are automatically saved to our database
+        </div>
+      )}
     </div>
   );
 }

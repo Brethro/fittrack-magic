@@ -9,6 +9,8 @@ import FoodSearchResults, { FoodSearchResultsSkeleton, UnifiedFoodResults } from
 import RecentFoods from "@/components/diet/RecentFoods";
 import { Button } from "@/components/ui/button";
 import { SearchSource, useSearch } from "@/hooks/useSearch";
+import { foodDb } from "@/lib/supabase";
+import { extractNutritionInfo } from "@/utils/usdaApi";
 
 interface SearchSectionPanelProps {
   usdaApiStatus: string;
@@ -19,6 +21,7 @@ const SearchSectionPanel = ({ usdaApiStatus }: SearchSectionPanelProps) => {
   const [showRawData, setShowRawData] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastUsdaResponse, setLastUsdaResponse] = useState<any>(null);
+  const [savingToDatabase, setSavingToDatabase] = useState(false);
   
   // Initialize search hook with empty values since we'll handle search manually
   const { 
@@ -50,6 +53,66 @@ const SearchSectionPanel = ({ usdaApiStatus }: SearchSectionPanelProps) => {
       window.removeEventListener("storage", checkAdminStatus);
     };
   }, []);
+
+  // Save search results to database
+  const saveSearchResultsToDatabase = async (results: any[]) => {
+    if (!results || results.length === 0) return;
+    
+    setSavingToDatabase(true);
+    
+    try {
+      // Process in smaller batches to avoid overwhelming the database
+      const batchSize = 5;
+      const totalItems = results.length;
+      let savedCount = 0;
+      
+      // Save all OpenFoodFacts results
+      const offResults = results.filter(r => r.type === 'openfoodfacts').map(r => r.item);
+      for (let i = 0; i < offResults.length; i += batchSize) {
+        const batch = offResults.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (product) => {
+          const sourceId = product.id || product._id || product.code || '';
+          await foodDb.saveFood(product, 'openfoodfacts', sourceId);
+          savedCount++;
+        }));
+      }
+      
+      // Save all USDA results
+      const usdaResults = results.filter(r => r.type === 'usda').map(r => r.item);
+      for (let i = 0; i < usdaResults.length; i += batchSize) {
+        const batch = usdaResults.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (foodItem) => {
+          const nutritionInfo = extractNutritionInfo(foodItem);
+          const enhancedItem = {
+            ...foodItem,
+            nutrition: nutritionInfo.nutritionValues,
+            servingSize: nutritionInfo.servingInfo.size,
+            servingSizeUnit: nutritionInfo.servingInfo.unit
+          };
+          await foodDb.saveFood(enhancedItem, 'usda', foodItem.fdcId.toString());
+          savedCount++;
+        }));
+      }
+      
+      if (savedCount > 0 && isAdmin) {
+        toast({
+          title: "Database updated",
+          description: `Saved ${savedCount} of ${totalItems} food items to the database.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error saving search results to database:", error);
+      if (isAdmin) {
+        toast({
+          title: "Database error",
+          description: `Could not save all items to database: ${error instanceof Error ? error.message : "Unknown error"}`,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
   
   // Handle search from form submission
   const handleSearch = async (
@@ -81,7 +144,19 @@ const SearchSectionPanel = ({ usdaApiStatus }: SearchSectionPanelProps) => {
         }))
       });
     }
+    
+    // Automatically save search results to database
+    if (mergedResults && mergedResults.length > 0) {
+      saveSearchResultsToDatabase(mergedResults);
+    }
   };
+
+  // Also save results when they change
+  useEffect(() => {
+    if (mergedResults && mergedResults.length > 0) {
+      saveSearchResultsToDatabase(mergedResults);
+    }
+  }, [mergedResults]);
   
   return (
     <div className="glass-panel p-4 rounded-lg">
@@ -97,6 +172,17 @@ const SearchSectionPanel = ({ usdaApiStatus }: SearchSectionPanelProps) => {
         <div className="mt-2 p-2 text-xs text-amber-800 bg-amber-50 rounded-md border border-amber-200">
           <p>USDA API rate limit exceeded. Only Open Food Facts results will be shown. 
           The rate limit typically resets after a few minutes.</p>
+        </div>
+      )}
+      
+      {/* Show database saving indicator for admin users */}
+      {savingToDatabase && isAdmin && (
+        <div className="mt-2 p-2 text-xs text-blue-800 bg-blue-50 rounded-md border border-blue-200 flex items-center">
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p>Saving search results to database...</p>
         </div>
       )}
       
