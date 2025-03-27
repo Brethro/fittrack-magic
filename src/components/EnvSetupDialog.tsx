@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
 
 interface EnvSetupDialogProps {
   open: boolean;
@@ -15,6 +16,16 @@ export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
   const { toast } = useToast();
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseKey, setSupabaseKey] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Initialize with existing values if available
+  useState(() => {
+    const existingUrl = localStorage.getItem("SUPABASE_URL");
+    const existingKey = localStorage.getItem("SUPABASE_ANON_KEY");
+    
+    if (existingUrl) setSupabaseUrl(existingUrl);
+    if (existingKey) setSupabaseKey(existingKey);
+  });
 
   const handleSave = () => {
     if (!supabaseUrl || !supabaseKey) {
@@ -25,6 +36,9 @@ export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
       });
       return;
     }
+
+    // Start saving process
+    setSaving(true);
 
     // Store in localStorage
     localStorage.setItem("SUPABASE_URL", supabaseUrl);
@@ -59,6 +73,14 @@ export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
+          <div className="rounded-md bg-amber-50 dark:bg-amber-950/50 p-3 text-sm flex gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+            <div className="text-amber-800 dark:text-amber-200">
+              After saving, the page will reload to apply your configuration.
+              Visit the Admin page to verify the connection status.
+            </div>
+          </div>
+          
           <div className="grid gap-2">
             <Label htmlFor="supabaseUrl">Supabase URL</Label>
             <Input
@@ -84,10 +106,12 @@ export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save configuration</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save configuration"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
