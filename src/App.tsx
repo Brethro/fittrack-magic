@@ -21,32 +21,47 @@ import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import { useToast } from "./hooks/use-toast";
+import { useAuth } from "./contexts/SupabaseAuthContext";
 
 // Initialize React Query client
 const queryClient = new QueryClient();
 
+// Function to check if user is a guest or has account
+function useGuestStatus() {
+  const [isGuest, setIsGuest] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // If user is logged in, they are not a guest
+    setIsGuest(!user);
+  }, [user]);
+
+  return isGuest;
+}
+
 function AppContent() {
   const [showEnvSetup, setShowEnvSetup] = useState(false);
-  const [hasVisitedBefore, setHasVisitedBefore] = useState(() => {
-    return localStorage.getItem("hasVisitedBefore") === "true";
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
+    return localStorage.getItem("hasCompletedOnboarding") === "true";
   });
   const { toast } = useToast();
+  const isGuest = useGuestStatus();
 
   // Check for localStorage changes (for example after a reset)
   useEffect(() => {
-    const checkVisitStatus = () => {
-      const visitStatus = localStorage.getItem("hasVisitedBefore") === "true";
-      setHasVisitedBefore(visitStatus);
+    const checkOnboardingStatus = () => {
+      const onboardingStatus = localStorage.getItem("hasCompletedOnboarding") === "true";
+      setHasCompletedOnboarding(onboardingStatus);
     };
     
     // Set up event listener to check localStorage changes
-    window.addEventListener('storage', checkVisitStatus);
+    window.addEventListener('storage', checkOnboardingStatus);
     
     // Also check on mount
-    checkVisitStatus();
+    checkOnboardingStatus();
     
     return () => {
-      window.removeEventListener('storage', checkVisitStatus);
+      window.removeEventListener('storage', checkOnboardingStatus);
     };
   }, []);
 
@@ -70,12 +85,15 @@ function AppContent() {
     }
   }, [toast]);
 
-  // Mark as visited after the first visit
-  useEffect(() => {
-    if (!hasVisitedBefore) {
-      localStorage.setItem("hasVisitedBefore", "true");
-    }
-  }, [hasVisitedBefore]);
+  // Mark as onboarded after completing the flow
+  const completeOnboarding = () => {
+    localStorage.setItem("hasCompletedOnboarding", "true");
+    setHasCompletedOnboarding(true);
+  };
+
+  // Determine if we should show splash screen
+  // Now we show it for everyone who hasn't completed onboarding AND for guests
+  const shouldShowSplash = !hasCompletedOnboarding || isGuest;
 
   return (
     <>
@@ -85,7 +103,12 @@ function AppContent() {
             <FoodLogProvider>
               <Toaster />
               <Routes>
-                <Route path="/splash" element={<SplashScreen />} />
+                {/* Show splash screen first for non-onboarded users */}
+                <Route 
+                  path="/splash" 
+                  element={<SplashScreen onComplete={completeOnboarding} />} 
+                />
+                
                 <Route path="/" element={<Layout />}>
                   <Route index element={<HomePage />} />
                   <Route path="onboarding" element={<OnboardingPage />} />
@@ -96,10 +119,11 @@ function AppContent() {
                   <Route path="admin" element={<AdminPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
-                {/* Redirect to splash screen for first-time visitors, otherwise to home */}
+                
+                {/* Redirect to splash if conditions are met, otherwise to home */}
                 <Route 
                   path="*" 
-                  element={hasVisitedBefore ? <Navigate to="/" replace /> : <Navigate to="/splash" replace />} 
+                  element={shouldShowSplash ? <Navigate to="/splash" replace /> : <Navigate to="/" replace />} 
                 />
               </Routes>
             </FoodLogProvider>
@@ -117,7 +141,9 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AppContent />
+          <SupabaseAuthProvider>
+            <AppContent />
+          </SupabaseAuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>

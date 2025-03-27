@@ -1,8 +1,8 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LineChart, UserRound } from "lucide-react";
+import { LineChart, UserRound, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -12,18 +12,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import AuthForm from "./auth/AuthForm";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
-export function SplashScreen() {
+type SplashScreenProps = {
+  onComplete?: () => void;
+};
+
+export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isReturningUser, setIsReturningUser] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Check if user has data stored but is not logged in
+  useEffect(() => {
+    const hasUserData = localStorage.getItem("fitTrackUserData") !== null;
+    setIsReturningUser(hasUserData && !user);
+  }, [user]);
 
   const handleContinueAsGuest = () => {
     // Continue as guest, navigate to home page
+    if (onComplete) onComplete();
     navigate("/");
   };
 
   const handleAuthSuccess = () => {
     setIsAuthOpen(false);
+    if (onComplete) onComplete();
     navigate("/");
   };
 
@@ -77,35 +92,65 @@ export function SplashScreen() {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="flex flex-col gap-4 w-full"
         >
-          <Dialog open={isAuthOpen} onOpenChange={setIsAuthOpen}>
-            <Button 
-              variant="gradient" 
-              size="lg" 
-              onClick={() => setIsAuthOpen(true)}
-              className="w-full py-6 purple-glow flex items-center justify-center gap-2"
-            >
-              <UserRound size={20} />
-              <span>Create Account</span>
-            </Button>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Account</DialogTitle>
-                <DialogDescription>
-                  Sign in to your account or create a new one to save your progress
-                </DialogDescription>
-              </DialogHeader>
-              <AuthForm onSuccess={handleAuthSuccess} />
-            </DialogContent>
-          </Dialog>
+          {isReturningUser ? (
+            // Show returning user message and options
+            <div className="bg-white/5 rounded-xl p-4 mb-2 border border-white/10">
+              <p className="text-white mb-3">Welcome back! You have existing data</p>
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setIsAuthOpen(true)}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <UserRound size={18} />
+                  <span>Sign in to sync data</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={handleContinueAsGuest}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <ArrowRight size={18} />
+                  <span>Continue without signing in</span>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // Show new user options
+            <>
+              <Dialog open={isAuthOpen} onOpenChange={setIsAuthOpen}>
+                <Button 
+                  variant="gradient" 
+                  size="lg" 
+                  onClick={() => setIsAuthOpen(true)}
+                  className="w-full py-6 purple-glow flex items-center justify-center gap-2"
+                >
+                  <UserRound size={20} />
+                  <span>Create Account</span>
+                </Button>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Account</DialogTitle>
+                    <DialogDescription>
+                      Sign in to your account or create a new one to save your progress
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AuthForm onSuccess={handleAuthSuccess} />
+                </DialogContent>
+              </Dialog>
 
-          <Button 
-            variant="outline" 
-            size="lg" 
-            onClick={handleContinueAsGuest}
-            className="w-full py-6"
-          >
-            Continue as Guest
-          </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={handleContinueAsGuest}
+                className="w-full py-6"
+              >
+                Continue as Guest
+              </Button>
+            </>
+          )}
           
           <p className="text-xs text-white/60 mt-2">
             Guest mode saves data only on this device
