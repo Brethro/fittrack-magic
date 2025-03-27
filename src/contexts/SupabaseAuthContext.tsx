@@ -62,21 +62,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, []);
 
+  // Helper function to get the base URL for redirects
+  const getRedirectUrl = () => {
+    // Use window.location to dynamically determine the current URL
+    // This ensures it works both in development and production
+    const baseUrl = window.location.origin; // e.g., https://example.com
+    return `${baseUrl}/auth/callback`;
+  };
+
   // Sign up with email and password
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Instead of using window.location.origin which can be localhost in development,
-      // we'll use the Supabase project URL which should be consistent across environments
-      // This ensures the redirect URL in emails will always point to the correct deployment
-      const supabaseUrl = new URL(supabase.supabaseUrl);
-      const domain = supabaseUrl.hostname.split('.')[0]; // Get the Supabase project ID
-      const redirectUrl = process.env.NODE_ENV === 'production' 
-        ? `${window.location.origin}/auth/callback` 
-        : `https://${window.location.host}/auth/callback`;
-      
+      // Get the dynamic redirect URL
+      const redirectUrl = getRedirectUrl();
       console.log('Signup redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({ 

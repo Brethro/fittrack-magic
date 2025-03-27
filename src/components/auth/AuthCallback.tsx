@@ -23,6 +23,7 @@ export function AuthCallback() {
         
         console.log('Auth tokens in hash:', hasTokenInHash);
         console.log('Auth tokens in query:', hasTokenInQuery);
+        console.log('Full URL:', window.location.href);
         
         // For email confirmation links, we need to process the token from URL
         if (hasTokenInQuery) {
