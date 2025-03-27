@@ -5,16 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Shield, LogOut, Database, RefreshCw, Code, Copy, Check, Users } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Lock, Shield, LogOut, Database, RefreshCw, Code, Copy, Check, Users, Search, Trash, UserX } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import EnvSetupDialog from "@/components/EnvSetupDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-const ADMIN_PASSWORD = "gayest"; // Simple password as requested
-const ADMIN_AUTH_KEY = "fittrack_admin_auth"; // localStorage key
+// Simple password as requested
+const ADMIN_PASSWORD = "gayest";
+// localStorage key
+const ADMIN_AUTH_KEY = "fittrack_admin_auth";
 
 // SQL scripts for creating the tables
 const createTableScripts = {
@@ -85,6 +107,13 @@ const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("config");
   const [copiedScript, setCopiedScript] = useState<string | null>(null);
+  
+  // User management state
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Check for saved authentication on component mount
   useEffect(() => {
@@ -262,6 +291,197 @@ const AdminPage = () => {
     }, 2000);
   };
 
+  // User management functions
+  const searchUsers = async () => {
+    if (!userSearchQuery.trim()) {
+      toast({
+        title: "Search query required",
+        description: "Please enter an email or user ID to search for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearchingUsers(true);
+    setSearchResults([]);
+    
+    try {
+      // First try to search by user_id in the tables that reference users
+      const tables = ['user_favorites', 'weight_logs'];
+      let foundUsers = new Map();
+      
+      for (const table of tables) {
+        // Search by exact user_id match
+        if (userSearchQuery.length >= 36) { // UUID is 36 chars
+          const { data, error } = await supabase
+            .from(table)
+            .select('user_id')
+            .eq('user_id', userSearchQuery)
+            .limit(10);
+          
+          if (error) {
+            console.error(`Error searching ${table}:`, error);
+          } else if (data && data.length > 0) {
+            data.forEach(item => {
+              foundUsers.set(item.user_id, { id: item.user_id, source: table });
+            });
+          }
+        }
+      }
+      
+      // Then search auth.users if we have admin access
+      // Note: This will only work if you have admin rights to the auth schema
+      try {
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 20,
+        });
+        
+        if (!authError && authUsers) {
+          // Filter users by the search query
+          const filteredUsers = authUsers.users.filter(user => 
+            user.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+            user.id.includes(userSearchQuery)
+          );
+          
+          filteredUsers.forEach(user => {
+            foundUsers.set(user.id, { 
+              id: user.id, 
+              email: user.email,
+              lastSignIn: user.last_sign_in_at,
+              createdAt: user.created_at
+            });
+          });
+        }
+      } catch (authListError) {
+        console.error("Error listing auth users:", authListError);
+        // This will likely fail in most cases unless the user has admin rights
+      }
+      
+      // Convert the Map to an array
+      const results = Array.from(foundUsers.values());
+      setSearchResults(results);
+      
+      if (results.length === 0) {
+        toast({
+          title: "No users found",
+          description: "No users match your search criteria",
+        });
+      }
+    } catch (error) {
+      console.error("Error searching users:", error);
+      toast({
+        title: "Error searching users",
+        description: "An error occurred while searching for users",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearchingUsers(false);
+    }
+  };
+  
+  const getUserDetails = async (userId: string) => {
+    setIsLoading(true);
+    
+    try {
+      // Gather user data from various tables
+      const userDetails: any = { id: userId, data: {} };
+      
+      // Check for weight logs
+      const { data: weightLogs, error: weightLogsError } = await supabase
+        .from('weight_logs')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (weightLogsError) {
+        console.error("Error fetching weight logs:", weightLogsError);
+      } else {
+        userDetails.data.weightLogs = weightLogs || [];
+      }
+      
+      // Check for favorites
+      const { data: favorites, error: favoritesError } = await supabase
+        .from('user_favorites')
+        .select('*, foods(name)')
+        .eq('user_id', userId);
+        
+      if (favoritesError) {
+        console.error("Error fetching favorites:", favoritesError);
+      } else {
+        userDetails.data.favorites = favorites || [];
+      }
+      
+      setSelectedUser(userDetails);
+    } catch (error) {
+      console.error("Error getting user details:", error);
+      toast({
+        title: "Error fetching user details",
+        description: "Could not retrieve complete user information",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const deleteUserData = async (userId: string) => {
+    setIsDeleting(true);
+    
+    try {
+      // Delete from weight_logs
+      const { error: weightLogsError } = await supabase
+        .from('weight_logs')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (weightLogsError) {
+        throw new Error(`Error deleting weight logs: ${weightLogsError.message}`);
+      }
+      
+      // Delete from user_favorites
+      const { error: favoritesError } = await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (favoritesError) {
+        throw new Error(`Error deleting favorites: ${favoritesError.message}`);
+      }
+      
+      // Try to delete the auth user (requires admin privileges)
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        
+        if (authError) {
+          console.warn("Could not delete auth user (may require higher privileges):", authError);
+        }
+      } catch (authDeleteError) {
+        console.warn("Auth user deletion failed (likely insufficient permissions):", authDeleteError);
+      }
+      
+      toast({
+        title: "User data deleted",
+        description: "All user data has been successfully removed from the database",
+      });
+      
+      // Update UI
+      setSelectedUser(null);
+      setSearchResults(searchResults.filter(user => user.id !== userId));
+      
+      // Refresh database stats
+      fetchDatabaseStats();
+    } catch (error: any) {
+      console.error("Error deleting user data:", error);
+      toast({
+        title: "Error deleting user data",
+        description: error.message || "An error occurred while deleting user data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="container px-4 py-8 mx-auto">
       <motion.div
@@ -349,6 +569,10 @@ const AdminPage = () => {
                 <TabsTrigger value="tables">
                   <Code className="h-4 w-4 mr-2" />
                   Create Tables
+                </TabsTrigger>
+                <TabsTrigger value="users">
+                  <Users className="h-4 w-4 mr-2" />
+                  User Management
                 </TabsTrigger>
               </TabsList>
               
@@ -595,14 +819,113 @@ const AdminPage = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
-          </div>
-        )}
-      </motion.div>
-      
-      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />
-    </div>
-  );
-};
-
-export default AdminPage;
+              
+              <TabsContent value="users">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="mr-2 h-5 w-5" />
+                      User Management
+                    </CardTitle>
+                    <CardDescription>
+                      Search for users and manage their data
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Search by email or user ID"
+                            value={userSearchQuery}
+                            onChange={(e) => setUserSearchQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                searchUsers();
+                              }
+                            }}
+                          />
+                        </div>
+                        <Button 
+                          onClick={searchUsers}
+                          disabled={isSearchingUsers || !userSearchQuery.trim()}
+                          className="flex items-center"
+                        >
+                          {isSearchingUsers ? (
+                            <>Searching...</>
+                          ) : (
+                            <>
+                              <Search className="h-4 w-4 mr-1" />
+                              Search
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {searchResults.length > 0 && (
+                        <div className="border rounded-md overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>User ID</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {searchResults.map((user) => (
+                                <TableRow key={user.id}>
+                                  <TableCell className="font-mono text-xs">
+                                    {user.id.substring(0, 8)}...
+                                  </TableCell>
+                                  <TableCell>{user.email || "Unknown"}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => getUserDetails(user.id)}
+                                        disabled={isLoading}
+                                      >
+                                        {isLoading && selectedUser?.id === user.id ? "Loading..." : "View Details"}
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                      
+                      {selectedUser && (
+                        <Card className="mt-4">
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle className="text-lg">User Details</CardTitle>
+                                <CardDescription className="mt-1 font-mono text-xs">
+                                  ID: {selectedUser.id}
+                                </CardDescription>
+                              </div>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm">
+                                    <Trash className="h-4 w-4 mr-1" />
+                                    Delete User
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete all user data from the database, including:
+                                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                                        <li>Weight logs ({selectedUser.data.weightLogs?.length || 0} entries)</li>
+                                        <li>Favorite foods ({selectedUser.data.favorites?.length || 0} items)</li>
+                                        <li>User authentication data (if permissions allow)</li>
+                                      </ul>
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</

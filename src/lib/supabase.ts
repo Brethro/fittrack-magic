@@ -146,6 +146,92 @@ export const foodDb = {
   }
 };
 
+// Utils for user management
+export const userDb = {
+  // Get user by ID
+  async getUserById(userId: string) {
+    try {
+      // This only works for projects with admin access - for most users it will fail
+      const { data, error } = await supabase.auth.admin.getUserById(userId);
+      
+      if (error) {
+        console.error("Error fetching user by ID:", error);
+        return null;
+      }
+      
+      return data.user;
+    } catch (error) {
+      console.error("Error in getUserById:", error);
+      return null;
+    }
+  },
+  
+  // Get user data from application database tables
+  async getUserData(userId: string) {
+    try {
+      const userData: any = { userId };
+      
+      // Get weight logs
+      const weightLogsResponse = await supabase
+        .from('weight_logs')
+        .select('*')
+        .eq('user_id', userId);
+        
+      userData.weightLogs = weightLogsResponse.data || [];
+      
+      // Get favorites
+      const favoritesResponse = await supabase
+        .from('user_favorites')
+        .select('*, foods(id, name)')
+        .eq('user_id', userId);
+        
+      userData.favorites = favoritesResponse.data || [];
+      
+      return userData;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  },
+  
+  // Delete all user data from the application
+  async deleteUserData(userId: string) {
+    try {
+      // Delete from weight_logs
+      const { error: weightLogsError } = await supabase
+        .from('weight_logs')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (weightLogsError) {
+        throw weightLogsError;
+      }
+      
+      // Delete from user_favorites
+      const { error: favoritesError } = await supabase
+        .from('user_favorites')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (favoritesError) {
+        throw favoritesError;
+      }
+      
+      // Try to delete the auth user (requires admin privileges)
+      try {
+        await supabase.auth.admin.deleteUser(userId);
+      } catch (error) {
+        console.warn("Could not delete auth user (may require admin privileges):", error);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting user data:", error);
+      throw error;
+    }
+  }
+};
+
 // Helper to extract nutrition info from USDA food format
 function extractNutritionFromUsda(usdaFood: any) {
   const nutrition = {
@@ -208,4 +294,24 @@ export type UserFavorite = {
   food_id: string;
   created_at: string;
   foods: FoodSearchResult;
+};
+
+// User-related types
+export type UserDataResult = {
+  userId: string;
+  weightLogs: Array<{
+    id: string;
+    date: string;
+    weight: number;
+    notes?: string;
+    created_at: string;
+  }>;
+  favorites: UserFavorite[];
+};
+
+export type UserSearchResult = {
+  id: string;
+  email?: string;
+  last_sign_in_at?: string;
+  created_at?: string;
 };
