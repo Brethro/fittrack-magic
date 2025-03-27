@@ -28,6 +28,9 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   const [showEnvSetup, setShowEnvSetup] = useState(false);
+  const [hasVisitedBefore, setHasVisitedBefore] = useState(() => {
+    return localStorage.getItem("hasVisitedBefore") === "true";
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +53,13 @@ function AppContent() {
     }
   }, [toast]);
 
+  // Mark as visited after the first visit
+  useEffect(() => {
+    if (!hasVisitedBefore) {
+      localStorage.setItem("hasVisitedBefore", "true");
+    }
+  }, [hasVisitedBefore]);
+
   return (
     <>
       <SupabaseAuthProvider>
@@ -69,8 +79,11 @@ function AppContent() {
                   <Route path="admin" element={<AdminPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
-                {/* Redirect root to splash screen for first-time visitors */}
-                <Route path="*" element={<Navigate to="/splash" replace />} />
+                {/* Redirect to splash screen for first-time visitors, otherwise to home */}
+                <Route 
+                  path="*" 
+                  element={hasVisitedBefore ? <Navigate to="/" replace /> : <Navigate to="/splash" replace />} 
+                />
               </Routes>
             </FoodLogProvider>
           </BrowserRouter>
