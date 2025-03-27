@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
+import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 
 // Initialize React Query client
 const queryClient = new QueryClient();
@@ -27,25 +28,27 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <UserDataProvider>
-            <BrowserRouter>
-              <FoodLogProvider>
-                <Toaster />
-                <Routes>
-                  <Route path="/" element={<Layout />}>
-                    <Route index element={<HomePage />} />
-                    <Route path="onboarding" element={<OnboardingPage />} />
-                    <Route path="goals" element={<GoalsPage />} />
-                    <Route path="plan" element={<PlanPage />} />
-                    <Route path="diet" element={<DietPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="admin" element={<AdminPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </FoodLogProvider>
-            </BrowserRouter>
-          </UserDataProvider>
+          <SupabaseAuthProvider>
+            <UserDataProvider>
+              <BrowserRouter>
+                <FoodLogProvider>
+                  <Toaster />
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<HomePage />} />
+                      <Route path="onboarding" element={<OnboardingPage />} />
+                      <Route path="goals" element={<GoalsPage />} />
+                      <Route path="plan" element={<PlanPage />} />
+                      <Route path="diet" element={<DietPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="admin" element={<AdminPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                  </Routes>
+                </FoodLogProvider>
+              </BrowserRouter>
+            </UserDataProvider>
+          </SupabaseAuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
