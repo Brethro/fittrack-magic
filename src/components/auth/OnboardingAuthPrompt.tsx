@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LogIn, User } from "lucide-react";
+import { UserRound } from "lucide-react";
 import AuthForm from "./AuthForm";
 
 export function OnboardingAuthPrompt() {
@@ -26,23 +26,23 @@ export function OnboardingAuthPrompt() {
   };
 
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div className="mb-8 rounded-xl glass-panel p-4 flex items-center justify-between">
       <div className="flex-1">
-        <h2 className="text-sm font-medium">
+        <h2 className="text-base font-medium">
           Create an account to save your progress
         </h2>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Your data will be lost if you don't create an account
         </p>
       </div>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <Button 
-          variant="outline" 
+          variant="purple" 
           size="sm"
           onClick={() => setIsOpen(true)} 
-          className="flex items-center gap-2"
+          className="ml-4 flex items-center gap-2"
         >
-          <User size={16} />
+          <UserRound size={16} />
           <span>Create Account</span>
         </Button>
         <DialogContent className="sm:max-w-md">
