@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -185,7 +184,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     searchInProgress.current = false;
   }, []);
   
-  // Search database first
+  // Search database first - FIX HERE
   const searchDatabase = useCallback(async (query: string) => {
     if (!query || query.trim().length < 2) return [];
     
@@ -194,7 +193,11 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     try {
       // Search for the term in the foods table using text search
-      const { data: foods, error } = await foodDb.searchFoods(query, 20);
+      const result = await foodDb.searchFoods(query, 20);
+      
+      // Properly destructure the result object, not treating it as an array
+      const foods = result.data || [];
+      const error = result.error;
       
       if (error) {
         console.error("Database search error:", error);
@@ -202,7 +205,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       }
       
       console.log(`Found ${foods.length} items in database for "${query}"`);
-      return foods || [];
+      return foods;
     } catch (error) {
       console.error("Error searching database:", error);
       return [];
