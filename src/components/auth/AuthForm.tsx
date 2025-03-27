@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 
-export function AuthForm() {
+export function AuthForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, signUp, loading, error } = useAuth();
@@ -15,15 +15,17 @@ export function AuthForm() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     await signIn(email, password);
+    if (!error && onSuccess) onSuccess();
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     await signUp(email, password);
+    if (!error && onSuccess) onSuccess();
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-card rounded-xl shadow-sm border p-6">
+    <div className="w-full mx-auto">
       <Tabs defaultValue="signin" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">Sign In</TabsTrigger>

@@ -4,6 +4,7 @@ import { Home, Target, LineChart, User, Shield, Apple } from "lucide-react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useRef, useState } from "react";
+import LoginButton from "./auth/LoginButton";
 
 const Layout = () => {
   const location = useLocation();
@@ -116,6 +117,9 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-main">
+      {/* Login Button */}
+      <LoginButton />
+      
       {/* Decorative elements */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] right-[-5%] w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-[100px]" />
