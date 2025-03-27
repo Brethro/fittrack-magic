@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +17,10 @@ import AuthForm from "./AuthForm";
 export const LoginButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
 
-  // Don't render if user is already logged in
-  if (user) {
+  // Don't render if user is already logged in or if on splash screen
+  if (user || location.pathname === "/splash") {
     return null;
   }
 
