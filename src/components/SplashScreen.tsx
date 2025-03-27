@@ -24,10 +24,15 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Check if user has data stored but is not logged in
+  // Check if user has actual data stored but is not logged in
   useEffect(() => {
-    const hasUserData = localStorage.getItem("fitTrackUserData") !== null;
-    setIsReturningUser(hasUserData && !user);
+    const userData = localStorage.getItem("fitTrackUserData");
+    // Only consider them returning if they have meaningful data
+    const hasActualUserData = userData !== null && 
+      JSON.parse(userData).weight !== null && 
+      (JSON.parse(userData).age !== null || JSON.parse(userData).height !== null);
+      
+    setIsReturningUser(hasActualUserData && !user);
   }, [user]);
 
   const handleContinueAsGuest = () => {
