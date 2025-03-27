@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -38,6 +37,15 @@ import {
 const ADMIN_PASSWORD = "gayest";
 // localStorage key
 const ADMIN_AUTH_KEY = "fittrack_admin_auth";
+
+// Define a type for the user search results
+type UserSearchResult = {
+  id: string;
+  email?: string;
+  lastSignIn?: string;
+  createdAt?: string;
+  source?: string;
+};
 
 // SQL scripts for creating the tables
 const createTableScripts = {
@@ -112,7 +120,7 @@ const AdminPage = () => {
   // User management state
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -309,7 +317,7 @@ const AdminPage = () => {
     try {
       // First try to search by user_id in the tables that reference users
       const tables = ['user_favorites', 'weight_logs'];
-      let foundUsers = new Map();
+      let foundUsers = new Map<string, UserSearchResult>();
       
       for (const table of tables) {
         // Search by exact user_id match
