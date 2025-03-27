@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Shield, LogOut, Database, RefreshCw, Code, Copy, Check } from "lucide-react";
+import { Lock, Shield, LogOut, Database, RefreshCw, Code, Copy, Check, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -77,7 +76,12 @@ const AdminPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [supabaseStatus, setSupabaseStatus] = useState<"checking" | "connected" | "error">("checking");
   const [showEnvSetup, setShowEnvSetup] = useState(false);
-  const [dbStats, setDbStats] = useState<{tables: number, rows: {[key: string]: number}} | null>(null);
+  const [dbStats, setDbStats] = useState<{
+    tables: number,
+    rows: {[key: string]: number},
+    uniqueFoods: number,
+    uniqueUsers: number
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("config");
   const [copiedScript, setCopiedScript] = useState<string | null>(null);
@@ -124,7 +128,12 @@ const AdminPage = () => {
     setIsLoading(true);
     try {
       // Create an object to store counts for different tables
-      const stats = { tables: 0, rows: {} as {[key: string]: number} };
+      const stats = { 
+        tables: 0, 
+        rows: {} as {[key: string]: number},
+        uniqueFoods: 0,
+        uniqueUsers: 0
+      };
       
       // Array of tables to check
       const tables = ['foods', 'food_nutrients', 'user_favorites', 'search_logs', 'weight_logs'];
@@ -143,6 +152,48 @@ const AdminPage = () => {
           stats.rows[table] = count || 0;
         }
       }
+
+      // Get count of unique foods
+      const { count: foodsCount, error: foodsError } = await supabase
+        .from('foods')
+        .select('id', { count: 'exact', head: true });
+      
+      if (foodsError) {
+        console.error("Error fetching unique foods count:", foodsError);
+        stats.uniqueFoods = 0;
+      } else {
+        stats.uniqueFoods = foodsCount || 0;
+      }
+
+      // Get count of unique users (from user_favorites and weight_logs tables)
+      const { data: userFavoritesData, error: userFavoritesError } = await supabase
+        .from('user_favorites')
+        .select('user_id');
+      
+      const { data: weightLogsData, error: weightLogsError } = await supabase
+        .from('weight_logs')
+        .select('user_id');
+      
+      if (userFavoritesError) {
+        console.error("Error fetching user favorites:", userFavoritesError);
+      }
+      
+      if (weightLogsError) {
+        console.error("Error fetching weight logs:", weightLogsError);
+      }
+      
+      // Combine user IDs from both tables and count unique ones
+      const userIds = new Set<string>();
+      
+      if (userFavoritesData) {
+        userFavoritesData.forEach(item => userIds.add(item.user_id));
+      }
+      
+      if (weightLogsData) {
+        weightLogsData.forEach(item => userIds.add(item.user_id));
+      }
+      
+      stats.uniqueUsers = userIds.size;
       
       setDbStats(stats);
     } catch (error) {
@@ -352,6 +403,25 @@ const AdminPage = () => {
                                   <p className="text-xs text-muted-foreground">Tables</p>
                                   <p className="text-lg font-semibold">{dbStats.tables}</p>
                                 </div>
+                                
+                                {/* New stats for unique foods and users */}
+                                <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-md">
+                                  <p className="text-xs text-muted-foreground flex items-center">
+                                    <Database className="h-3 w-3 mr-1" />
+                                    Unique Foods
+                                  </p>
+                                  <p className="text-lg font-semibold">{dbStats.uniqueFoods}</p>
+                                </div>
+                                
+                                <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded-md">
+                                  <p className="text-xs text-muted-foreground flex items-center">
+                                    <Users className="h-3 w-3 mr-1" />
+                                    Unique Users
+                                  </p>
+                                  <p className="text-lg font-semibold">{dbStats.uniqueUsers}</p>
+                                </div>
+                                
+                                {/* Table row counts */}
                                 {Object.entries(dbStats.rows).map(([table, count]) => (
                                   <div key={table} className="bg-card/50 p-2 rounded-md">
                                     <p className="text-xs text-muted-foreground">{table}</p>
