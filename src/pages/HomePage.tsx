@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Dumbbell, LineChart, Info, UserRound } from "lucide-react";
@@ -16,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import AuthForm from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/SupabaseAuthContext";
+import UpcomingFeaturesCard from "@/components/UpcomingFeaturesCard";
 
 const HomePage = () => {
   const { userData } = useUserData();
@@ -67,7 +67,7 @@ const HomePage = () => {
               Achieve your fitness goals - whether building muscle or losing fat - using science-based personalized plans.
             </motion.p>
           </div>
-
+          
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -91,6 +91,16 @@ const HomePage = () => {
               title="Scientific Approach"
               description="Our methodologies are based on peer-reviewed research. We implement formulas like the Mifflin-St Jeor equation for BMR, and account for the Thermic Effect of Food and Non-Exercise Activity Thermogenesis in calorie calculations."
             />
+          </motion.div>
+
+          {/* Upcoming Features Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="w-full max-w-md"
+          >
+            <UpcomingFeaturesCard />
           </motion.div>
 
           <motion.div
