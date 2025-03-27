@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +30,11 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   const [savingToDatabase, setSavingToDatabase] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const shouldInitiateSearch = useRef(false);
+  const [saveStats, setSaveStats] = useState<{saved: number, total: number, lastSaved: number}>({
+    saved: 0,
+    total: 0,
+    lastSaved: 0
+  });
   
   // Initialize search hook
   const { 
@@ -59,6 +65,12 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     if (!results || results.length === 0) return;
     
     setSavingToDatabase(true);
+    // Reset save stats
+    setSaveStats({
+      saved: 0, 
+      total: results.length,
+      lastSaved: Date.now()
+    });
     
     try {
       // Process in smaller batches to avoid overwhelming the database
@@ -66,14 +78,22 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
       const totalItems = results.length;
       let savedCount = 0;
       
+      console.log(`Starting to save ${totalItems} food items to database`);
+      
       // Save all OpenFoodFacts results
       const offResults = results.filter(r => r.type === 'openfoodfacts').map(r => r.item);
       for (let i = 0; i < offResults.length; i += batchSize) {
         const batch = offResults.slice(i, i + batchSize);
         await Promise.all(batch.map(async (product) => {
-          const sourceId = product.id || product._id || product.code || '';
-          await foodDb.saveFood(product, 'openfoodfacts', sourceId);
-          savedCount++;
+          try {
+            const sourceId = product.id || product._id || product.code || '';
+            await foodDb.saveFood(product, 'openfoodfacts', sourceId);
+            savedCount++;
+            setSaveStats(prev => ({...prev, saved: savedCount}));
+            console.log(`Saved OpenFoodFacts item ${savedCount}/${totalItems}: ${product.product_name || 'Unnamed Product'}`);
+          } catch (error) {
+            console.error("Error saving OpenFoodFacts item:", error);
+          }
         }));
       }
       
@@ -82,22 +102,44 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
       for (let i = 0; i < usdaResults.length; i += batchSize) {
         const batch = usdaResults.slice(i, i + batchSize);
         await Promise.all(batch.map(async (foodItem) => {
-          const nutritionInfo = extractNutritionInfo(foodItem);
-          const enhancedItem = {
-            ...foodItem,
-            nutrition: nutritionInfo.nutritionValues,
-            servingSize: nutritionInfo.servingInfo.size,
-            servingSizeUnit: nutritionInfo.servingInfo.unit
-          };
-          await foodDb.saveFood(enhancedItem, 'usda', foodItem.fdcId.toString());
-          savedCount++;
+          try {
+            const nutritionInfo = extractNutritionInfo(foodItem);
+            const enhancedItem = {
+              ...foodItem,
+              nutrition: nutritionInfo.nutritionValues,
+              servingSize: nutritionInfo.servingInfo.size,
+              servingSizeUnit: nutritionInfo.servingInfo.unit
+            };
+            await foodDb.saveFood(enhancedItem, 'usda', foodItem.fdcId.toString());
+            savedCount++;
+            setSaveStats(prev => ({...prev, saved: savedCount}));
+            console.log(`Saved USDA item ${savedCount}/${totalItems}: ${foodItem.description || 'Unnamed Food'}`);
+          } catch (error) {
+            console.error("Error saving USDA item:", error);
+          }
         }));
       }
       
-      console.log(`Saved ${savedCount} food items to database`);
+      console.log(`Saved ${savedCount} of ${totalItems} food items to database`);
+      
+      // Add success toast
+      if (savedCount > 0) {
+        setTimeout(() => {
+          toast({
+            title: "Database updated",
+            description: `Saved ${savedCount} food items to the database.`,
+          });
+        }, 500);
+      }
     } catch (error) {
       console.error("Error saving search results to database:", error);
+      toast({
+        title: "Database error",
+        description: `Could not save all items to database: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
     } finally {
+      setSaveStats(prev => ({...prev, lastSaved: Date.now()}));
       setSavingToDatabase(false);
     }
   };
@@ -214,6 +256,22 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             </Button>
           )}
         </div>
+        
+        {/* Database saving stats - only show while saving */}
+        {savingToDatabase && mergedResults.length > 0 && (
+          <div className="mt-2 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs p-1.5 rounded-md">
+            <div className="flex justify-between">
+              <span>Saving to database...</span>
+              <span>{saveStats.saved}/{saveStats.total}</span>
+            </div>
+            <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-1.5 mt-1">
+              <div 
+                className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                style={{ width: `${saveStats.saved / Math.max(1, saveStats.total) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
         
         {/* Search filters */}
         <div className="flex items-center space-x-2 mt-2">

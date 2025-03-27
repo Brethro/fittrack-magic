@@ -59,7 +59,7 @@ export function SearchResults({
       {mergedResults.length > 0 && (
         <div className="mt-3 text-xs text-center">
           {savingToDatabase ? (
-            <div className="flex items-center justify-center space-x-1 text-blue-500">
+            <div className="flex items-center justify-center space-x-1 text-blue-500 font-medium">
               <Loader className="h-3 w-3 animate-spin" />
               <span>Saving search results to our database...</span>
             </div>
