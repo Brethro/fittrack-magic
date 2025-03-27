@@ -193,16 +193,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     try {
       // Search for the term in the foods table using text search
-      const result = await foodDb.searchFoods(query, 20);
-      
-      // Properly destructure the result object, not treating it as an array
-      const foods = result.data || [];
-      const error = result.error;
-      
-      if (error) {
-        console.error("Database search error:", error);
-        return [];
-      }
+      const foods = await foodDb.searchFoods(query, 20);
       
       console.log(`Found ${foods.length} items in database for "${query}"`);
       return foods;
