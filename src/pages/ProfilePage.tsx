@@ -63,7 +63,12 @@ const ProfilePage = () => {
       title: "All data cleared",
       description: "Your profile and progress have been reset",
     });
-    navigate("/");
+    
+    // Force update localStorage event
+    window.dispatchEvent(new Event('storage'));
+    
+    // Navigate to splash screen instead of home
+    navigate("/splash");
   };
 
   const handleSubmit = (e: React.FormEvent) => {

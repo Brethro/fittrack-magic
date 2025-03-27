@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,6 +31,24 @@ function AppContent() {
     return localStorage.getItem("hasVisitedBefore") === "true";
   });
   const { toast } = useToast();
+
+  // Check for localStorage changes (for example after a reset)
+  useEffect(() => {
+    const checkVisitStatus = () => {
+      const visitStatus = localStorage.getItem("hasVisitedBefore") === "true";
+      setHasVisitedBefore(visitStatus);
+    };
+    
+    // Set up event listener to check localStorage changes
+    window.addEventListener('storage', checkVisitStatus);
+    
+    // Also check on mount
+    checkVisitStatus();
+    
+    return () => {
+      window.removeEventListener('storage', checkVisitStatus);
+    };
+  }, []);
 
   useEffect(() => {
     // Check if we have stored credentials in localStorage and load them

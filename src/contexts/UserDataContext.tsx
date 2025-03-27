@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useNutritionCalculator } from "@/hooks/useNutritionCalculator";
@@ -141,6 +140,9 @@ export const UserDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log("Clearing all user data");
     setUserData(initialUserData);
     localStorage.removeItem("fitTrackUserData");
+    
+    // Also clear the hasVisitedBefore flag so the splash screen will show again
+    localStorage.removeItem("hasVisitedBefore");
   }, []);
 
   // Use our custom hooks
