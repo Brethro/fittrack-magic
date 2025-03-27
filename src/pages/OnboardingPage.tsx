@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -13,6 +12,7 @@ import { useUserData } from "@/contexts/UserDataContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import OnboardingAuthPrompt from "@/components/auth/OnboardingAuthPrompt";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -121,6 +121,9 @@ const OnboardingPage = () => {
             Your Information
           </h1>
         </div>
+        
+        {/* Auth Prompt - New Component */}
+        <OnboardingAuthPrompt />
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-end">
