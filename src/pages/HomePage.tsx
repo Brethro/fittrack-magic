@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Dumbbell, LineChart, Info } from "lucide-react";
+import { ArrowRight, BarChart3, Dumbbell, LineChart, Info, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserData } from "@/contexts/UserDataContext";
 import {
@@ -13,10 +13,20 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import AuthForm from "@/components/auth/AuthForm";
+import { useAuth } from "@/contexts/SupabaseAuthContext";
 
 const HomePage = () => {
   const { userData } = useUserData();
   const hasStarted = userData.age !== null;
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const { user } = useAuth();
+  const isGuestUser = !user;
+
+  const handleAuthSuccess = () => {
+    setIsAuthOpen(false);
+  };
 
   return (
     <div className="flex flex-col min-h-[90vh] py-4 overflow-hidden relative">
@@ -104,6 +114,31 @@ const HomePage = () => {
               <p className="text-xs text-white/60 text-center mt-2">
                 Takes just 2 minutes to set up your personalized plan
               </p>
+            )}
+            
+            {/* Subtle account creation option for guest users */}
+            {isGuestUser && (
+              <Dialog open={isAuthOpen} onOpenChange={setIsAuthOpen}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsAuthOpen(true)}
+                  className="mt-4 text-white/60 hover:text-white/90 transition-colors flex items-center gap-1.5"
+                >
+                  <UserRound size={14} />
+                  <span className="text-xs">Create account to save your data</span>
+                </Button>
+                
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Create Account</DialogTitle>
+                    <DialogDescription>
+                      Sign up to save your progress and access from any device
+                    </DialogDescription>
+                  </DialogHeader>
+                  <AuthForm onSuccess={handleAuthSuccess} />
+                </DialogContent>
+              </Dialog>
             )}
           </motion.div>
         </motion.div>
