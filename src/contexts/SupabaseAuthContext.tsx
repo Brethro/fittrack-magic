@@ -68,16 +68,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       setError(null);
       
-      // Get the site URL from current location
-      // For deployed sites, this will be the actual domain
-      // For local development, this will be localhost
-      const siteUrl = window.location.origin;
+      // Instead of using window.location.origin which can be localhost in development,
+      // we'll use the Supabase project URL which should be consistent across environments
+      // This ensures the redirect URL in emails will always point to the correct deployment
+      const supabaseUrl = new URL(supabase.supabaseUrl);
+      const domain = supabaseUrl.hostname.split('.')[0]; // Get the Supabase project ID
+      const redirectUrl = process.env.NODE_ENV === 'production' 
+        ? `${window.location.origin}/auth/callback` 
+        : `https://${window.location.host}/auth/callback`;
+      
+      console.log('Signup redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: `${siteUrl}/auth/callback`
+          emailRedirectTo: redirectUrl
         }
       });
       

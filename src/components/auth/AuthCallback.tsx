@@ -13,67 +13,92 @@ export function AuthCallback() {
     // Function to handle the auth redirect
     const handleAuthRedirect = async () => {
       try {
-        // Get the URL hash (where Supabase appends the tokens)
-        const hash = window.location.hash;
+        console.log('Auth callback processing...');
         
-        // If we have a hash, we need to handle it manually
-        if (hash && hash.includes('access_token')) {
-          // Process the hash
-          console.log('Processing auth callback with hash');
+        // Get URL parts that might contain tokens
+        const hash = window.location.hash;
+        const queryParams = new URLSearchParams(window.location.search);
+        const hasTokenInHash = hash && hash.includes('access_token');
+        const hasTokenInQuery = queryParams.has('token');
+        
+        console.log('Auth tokens in hash:', hasTokenInHash);
+        console.log('Auth tokens in query:', hasTokenInQuery);
+        
+        // For email confirmation links, we need to process the token from URL
+        if (hasTokenInQuery) {
+          const token = queryParams.get('token');
+          const type = queryParams.get('type');
           
-          // The setSession API will extract the tokens from the URL
-          const { data, error } = await supabase.auth.getSession();
+          console.log('Found token in URL, type:', type);
           
-          if (error) {
-            console.error('Auth callback error:', error);
-            toast({
-              title: 'Authentication error',
-              description: error.message,
-              variant: 'destructive',
-            });
-            navigate('/splash', { replace: true });
-            return;
+          if (token && type === 'signup') {
+            // We have a signup confirmation token
+            try {
+              // Process token to verify email
+              const { error } = await supabase.auth.verifyOtp({
+                token_hash: token,
+                type: 'email',
+              });
+              
+              if (error) {
+                console.error('Error verifying email:', error);
+                toast({
+                  title: 'Verification error',
+                  description: error.message,
+                  variant: 'destructive',
+                });
+                navigate('/splash', { replace: true });
+                return;
+              }
+              
+              // Successfully verified email
+              toast({
+                title: 'Email verified',
+                description: 'Your email has been verified. Please sign in.',
+              });
+              
+              navigate('/splash', { replace: true });
+              return;
+            } catch (err) {
+              console.error('Error processing token:', err);
+              toast({
+                title: 'Verification error',
+                description: 'There was a problem verifying your email.',
+                variant: 'destructive',
+              });
+              navigate('/splash', { replace: true });
+              return;
+            }
           }
-          
-          if (data?.session) {
-            // Success - user is logged in
-            console.log('Auth successful, redirecting to homepage');
-            toast({
-              title: 'Authentication successful',
-              description: 'You are now signed in.',
-            });
-            navigate('/', { replace: true });
-          } else {
-            // No session found, redirect to splash
-            console.log('No session found, redirecting to splash');
-            navigate('/splash', { replace: true });
-          }
+        }
+        
+        // For OAuth redirects or token exchange, we use getSession
+        // which will automatically handle hash fragments
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Auth callback error:', error);
+          toast({
+            title: 'Authentication error',
+            description: error.message,
+            variant: 'destructive',
+          });
+          navigate('/splash', { replace: true });
+          return;
+        }
+        
+        if (data?.session) {
+          // Success - user is logged in
+          console.log('Auth successful, got session');
+          toast({
+            title: 'Authentication successful',
+            description: 'You are now signed in.',
+          });
+          navigate('/', { replace: true });
         } else {
-          // No hash, try to get session normally
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            console.error('Auth callback error:', error);
-            toast({
-              title: 'Authentication error',
-              description: error.message,
-              variant: 'destructive',
-            });
-            navigate('/splash', { replace: true });
-            return;
-          }
-
-          if (data?.session) {
-            // Success - user is logged in
-            toast({
-              title: 'Authentication successful',
-              description: 'You are now signed in.',
-            });
-            navigate('/', { replace: true });
-          } else {
-            // No session found, redirect to splash
-            navigate('/splash', { replace: true });
-          }
+          // No session found, redirect to splash
+          console.log('No session found, redirecting to splash');
+          navigate('/splash', { replace: true });
         }
       } catch (err) {
         console.error('Error processing auth redirect:', err);

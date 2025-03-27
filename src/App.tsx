@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,9 +21,8 @@ import AuthCallback from "./components/auth/AuthCallback";
 
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
-import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
+import { SupabaseAuthProvider, useAuth } from "./contexts/SupabaseAuthContext";
 import { useToast } from "./hooks/use-toast";
-import { useAuth } from "./contexts/SupabaseAuthContext";
 
 // Initialize React Query client
 const queryClient = new QueryClient();
@@ -40,7 +40,7 @@ function useGuestStatus() {
   return isGuest;
 }
 
-function AppContent() {
+function AppRoutes() {
   const [showEnvSetup, setShowEnvSetup] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     return localStorage.getItem("hasCompletedOnboarding") === "true";
@@ -98,42 +98,40 @@ function AppContent() {
 
   return (
     <>
-      <SupabaseAuthProvider>
-        <UserDataProvider>
-          <BrowserRouter>
-            <FoodLogProvider>
-              <Toaster />
-              <Routes>
-                {/* Auth callback route to handle authentication redirects */}
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                
-                {/* Show splash screen first for non-onboarded users */}
-                <Route 
-                  path="/splash" 
-                  element={<SplashScreen onComplete={completeOnboarding} />} 
-                />
-                
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<HomePage />} />
-                  <Route path="onboarding" element={<OnboardingPage />} />
-                  <Route path="goals" element={<GoalsPage />} />
-                  <Route path="plan" element={<PlanPage />} />
-                  <Route path="diet" element={<DietPage />} />
-                  <Route path="profile" element={<ProfilePage />} />
-                  <Route path="admin" element={<AdminPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-                
-                {/* Redirect to splash if conditions are met, otherwise to home */}
-                <Route 
-                  path="*" 
-                  element={shouldShowSplash ? <Navigate to="/splash" replace /> : <Navigate to="/" replace />} 
-                />
-              </Routes>
-            </FoodLogProvider>
-          </BrowserRouter>
-        </UserDataProvider>
-      </SupabaseAuthProvider>
+      <UserDataProvider>
+        <BrowserRouter>
+          <FoodLogProvider>
+            <Toaster />
+            <Routes>
+              {/* Auth callback route to handle authentication redirects */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              
+              {/* Show splash screen first for non-onboarded users */}
+              <Route 
+                path="/splash" 
+                element={<SplashScreen onComplete={completeOnboarding} />} 
+              />
+              
+              <Route path="/" element={<Layout />}>
+                <Route index element={<HomePage />} />
+                <Route path="onboarding" element={<OnboardingPage />} />
+                <Route path="goals" element={<GoalsPage />} />
+                <Route path="plan" element={<PlanPage />} />
+                <Route path="diet" element={<DietPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="admin" element={<AdminPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+              
+              {/* Redirect to splash if conditions are met, otherwise to home */}
+              <Route 
+                path="*" 
+                element={shouldShowSplash ? <Navigate to="/splash" replace /> : <Navigate to="/" replace />} 
+              />
+            </Routes>
+          </FoodLogProvider>
+        </BrowserRouter>
+      </UserDataProvider>
       
       <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />
     </>
@@ -151,6 +149,15 @@ function App() {
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
+  );
+}
+
+// Separate component that must be used inside the SupabaseAuthProvider
+function AppContent() {
+  return (
+    <SupabaseAuthProvider>
+      <AppRoutes />
+    </SupabaseAuthProvider>
   );
 }
 
