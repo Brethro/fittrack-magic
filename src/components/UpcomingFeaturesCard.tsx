@@ -46,7 +46,7 @@ const UpcomingFeaturesCard = () => {
 
   return (
     <Card className="dark-glass border border-white/10 w-full overflow-hidden">
-      <CardHeader className="pb-2">
+      <CardHeader className="py-3"> {/* Adjusted padding */}
         <CardTitle className="flex justify-between items-center text-lg cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="text-fuchsia-400" />

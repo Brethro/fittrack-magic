@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Dumbbell, LineChart, Info, UserRound } from "lucide-react";
@@ -93,16 +94,6 @@ const HomePage = () => {
             />
           </motion.div>
 
-          {/* Upcoming Features Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="w-full max-w-md"
-          >
-            <UpcomingFeaturesCard />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -150,6 +141,16 @@ const HomePage = () => {
                 </DialogContent>
               </Dialog>
             )}
+          </motion.div>
+
+          {/* Moved Upcoming Features below the action buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="w-full max-w-md mt-0" // Removed extra top margin
+          >
+            <UpcomingFeaturesCard />
           </motion.div>
         </motion.div>
       </div>
