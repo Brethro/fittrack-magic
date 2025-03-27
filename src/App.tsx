@@ -69,7 +69,7 @@ function AppContent() {
                   <Route path="admin" element={<AdminPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
-                {/* Redirect root to splash screen for new users */}
+                {/* Redirect root to splash screen for first-time visitors */}
                 <Route path="*" element={<Navigate to="/splash" replace />} />
               </Routes>
             </FoodLogProvider>
