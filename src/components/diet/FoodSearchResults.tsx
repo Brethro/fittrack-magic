@@ -5,6 +5,7 @@ import UsdaFoodItem from "./UsdaFoodItem";
 import { UsdaFoodItem as UsdaFoodItemType } from "@/utils/usdaApi";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database } from "lucide-react";
 
 interface FoodSearchResultsProps {
   results: any[];
@@ -164,7 +165,7 @@ export function UnifiedFoodResults({
   onSelectFood,
   onSelectUsdaFood
 }: {
-  mergedResults: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>
+  mergedResults: Array<{type: 'openfoodfacts' | 'usda' | 'database', item: any, score: number}>
   onSelectFood?: (food: any) => void;
   onSelectUsdaFood?: (food: UsdaFoodItemType) => void;
 }) {
@@ -182,7 +183,29 @@ export function UnifiedFoodResults({
           className="relative"
         >
           {/* Render appropriate component based on result type */}
-          {result.type === 'openfoodfacts' ? (
+          {result.type === 'database' ? (
+            <div className="relative">
+              {/* Source badge is added to identify database items */}
+              <div className="absolute -right-1 -top-1 z-10">
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-300/20 text-xs px-2 py-0.5 flex items-center">
+                  <Database className="h-3 w-3 mr-1" />
+                  <span>Database</span>
+                </Badge>
+              </div>
+              <FoodItem 
+                product={result.item} 
+                onSelect={(food) => {
+                  if (onSelectFood) onSelectFood(food);
+                }} 
+              />
+              {/* Debug score display */}
+              {showDebugScores && result.score !== undefined && (
+                <div className="text-xs text-muted-foreground mt-1 pl-2">
+                  Score: {Math.round(result.score)} | Database
+                </div>
+              )}
+            </div>
+          ) : result.type === 'openfoodfacts' ? (
             <div className="relative">
               {/* Source badge is now integrated inside the FoodItem component */}
               <FoodItem 

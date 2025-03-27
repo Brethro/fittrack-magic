@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Search } from "lucide-react";
+import { X, Search, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,8 +40,10 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   const { 
     searchQuery, 
     setSearchQuery, 
-    isLoading, 
+    isLoading,
+    isSearchingDatabase,
     mergedResults = [],
+    databaseResults = [],
     recentSearches = [],
     handleSelectFood,
     handleSelectUsdaFood,
@@ -56,7 +58,11 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   // Save search results to database
   useEffect(() => {
     if (mergedResults && mergedResults.length > 0) {
-      saveSearchResultsToDatabase(mergedResults);
+      // Filter out database results since they're already in the database
+      const externalResults = mergedResults.filter(r => r.type !== 'database');
+      if (externalResults.length > 0) {
+        saveSearchResultsToDatabase(externalResults);
+      }
     }
   }, [mergedResults]);
   
@@ -221,7 +227,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
   }, [inputValue, handleSearchWithOptions, userPreferences]);
   
   return (
-    <div className="w-full h-full glass-panel bg-card rounded-lg shadow-lg z-40 overflow-hidden flex flex-col">
+    <div className="w-full h-full glass-panel rounded-lg shadow-lg z-40 overflow-hidden flex flex-col">
       {/* Header with search bar */}
       <div className="p-3 border-b sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-3">
@@ -257,6 +263,14 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           )}
         </div>
         
+        {/* Database searching indicator */}
+        {isSearchingDatabase && (
+          <div className="mt-2 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs p-1.5 rounded-md flex items-center">
+            <Database className="h-3 w-3 animate-pulse mr-1.5" />
+            <span>Searching internal database...</span>
+          </div>
+        )}
+        
         {/* Database saving stats - only show while saving */}
         {savingToDatabase && mergedResults.length > 0 && (
           <div className="mt-2 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs p-1.5 rounded-md">
@@ -283,6 +297,13 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
             All Sources
           </Badge>
           <Badge 
+            variant={searchSource === "database" ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => handleSourceChange("database")}
+          >
+            Database
+          </Badge>
+          <Badge 
             variant={searchSource === "openfoods" ? "default" : "outline"} 
             className="cursor-pointer"
             onClick={() => handleSourceChange("openfoods")}
@@ -301,6 +322,14 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
       
       {/* Content area */}
       <div className="flex-1 overflow-y-auto p-3">
+        {/* Database search success message */}
+        {databaseResults.length > 0 && inputValue.length >= 2 && (
+          <div className="mb-3 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 text-xs p-2 rounded-md flex items-center">
+            <Database className="h-3 w-3 mr-1.5" />
+            <span>Found {databaseResults.length} results in our database!</span>
+          </div>
+        )}
+        
         {/* Recent Foods */}
         {inputValue.length < 2 && (
           <RecentFoods />

@@ -1,12 +1,12 @@
 
-import { Loader } from "lucide-react";
+import { Loader, Database } from "lucide-react";
 import { UsdaFoodItem } from "@/utils/usdaApi";
 import { UnifiedFoodResults } from "@/components/diet/FoodSearchResults";
 
 interface SearchResultsProps {
   isLoading: boolean;
   searchQuery: string;
-  mergedResults: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>;
+  mergedResults: Array<{type: 'openfoodfacts' | 'usda' | 'database', item: any, score: number}>;
   onSelectFood: (food: any) => void;
   onSelectUsdaFood: (food: UsdaFoodItem) => void;
   savingToDatabase?: boolean;
@@ -44,10 +44,26 @@ export function SearchResults({
     return null;
   }
   
+  // Count database results for info message
+  const databaseCount = mergedResults.filter(r => r.type === 'database').length;
+  
   // Show results
   return (
     <div className="mt-4">
       <h3 className="text-sm font-medium mb-3">Results</h3>
+      
+      {/* Database result source message */}
+      {databaseCount > 0 && (
+        <div className="mb-3 text-xs flex items-center text-green-700 dark:text-green-400">
+          <Database className="h-3 w-3 mr-1.5" />
+          <span>
+            {databaseCount === mergedResults.length 
+              ? 'All results from internal database'
+              : `${databaseCount} of ${mergedResults.length} results from internal database`}
+          </span>
+        </div>
+      )}
+      
       <div className="space-y-4">
         <UnifiedFoodResults 
           mergedResults={mergedResults}
@@ -55,6 +71,7 @@ export function SearchResults({
           onSelectUsdaFood={onSelectUsdaFood}
         />
       </div>
+      
       {/* Database save indicator with improved visibility */}
       {mergedResults.length > 0 && (
         <div className="mt-3 text-xs text-center">

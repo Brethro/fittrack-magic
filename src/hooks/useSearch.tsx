@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useApiConnection } from "@/hooks/useApiConnection";
 import { useFoodLog } from "@/contexts/FoodLogContext";
@@ -9,9 +10,11 @@ import {
   trackFoodSelection
 } from "@/services/foodSearchService";
 import { UserPreferences } from "@/components/diet/FoodSearchForm";
+import { foodDb } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 // Define the search source type explicitly to avoid type errors
-export type SearchSource = "both" | "openfoods" | "usda";
+export type SearchSource = "both" | "openfoods" | "usda" | "database";
 
 interface UseSearchProps {
   open: boolean;
@@ -24,8 +27,10 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [usdaResults, setUsdaResults] = useState<UsdaFoodItem[]>([]);
-  const [mergedResults, setMergedResults] = useState<Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>>([]);
+  const [mergedResults, setMergedResults] = useState<Array<{type: 'openfoodfacts' | 'usda' | 'database', item: any, score: number}>>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [databaseResults, setDatabaseResults] = useState<any[]>([]);
+  const [isSearchingDatabase, setIsSearchingDatabase] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSearchQuery = useRef<string>("");
   const searchInProgress = useRef<boolean>(false);
@@ -57,23 +62,53 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     localStorage.setItem("fitTrackRecentSearches", JSON.stringify(updatedSearches));
   }, [recentSearches]);
   
-  // Update merged results whenever search results or USDA results change
+  // Update merged results whenever search results, USDA results, or database results change
   useEffect(() => {
-    // Ensure both arrays are defined before merging
+    // Ensure all arrays are defined before merging
     const offResultsArray = Array.isArray(searchResults) ? searchResults : [];
     const usdaResultsArray = Array.isArray(usdaResults) ? usdaResults : [];
+    const dbResultsArray = Array.isArray(databaseResults) ? databaseResults : [];
     
-    if (offResultsArray.length > 0 || usdaResultsArray.length > 0) {
-      const merged = mergeAndSortResults(offResultsArray, usdaResultsArray);
+    if (offResultsArray.length > 0 || usdaResultsArray.length > 0 || dbResultsArray.length > 0) {
+      const merged = mergeAndSortResults(offResultsArray, usdaResultsArray, dbResultsArray);
       setMergedResults(merged);
     } else {
       setMergedResults([]);
     }
-  }, [searchResults, usdaResults]);
+  }, [searchResults, usdaResults, databaseResults]);
   
   // Function to merge and sort results by score
-  const mergeAndSortResults = (offResults: any[], usdaItems: UsdaFoodItem[]) => {
-    const merged: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}> = [];
+  const mergeAndSortResults = (
+    offResults: any[], 
+    usdaItems: UsdaFoodItem[], 
+    dbItems: any[]
+  ) => {
+    const merged: Array<{type: 'openfoodfacts' | 'usda' | 'database', item: any, score: number}> = [];
+    
+    // Add database results (give them a higher base score to prioritize)
+    if (Array.isArray(dbItems)) {
+      dbItems.forEach(item => {
+        // Calculate a score based on exact match or position
+        let score = 85; // Higher base score to prioritize database results
+        
+        // If name contains the exact search query, boost score
+        if (item.name && item.name.toLowerCase().includes(lastSearchQuery.current.toLowerCase())) {
+          score += 10;
+        }
+        
+        merged.push({
+          type: 'database',
+          item: {
+            ...item,
+            product_name: item.name,
+            brands: item.brand,
+            nutrition: item.food_nutrients,
+            _searchScore: score
+          },
+          score
+        });
+      });
+    }
     
     // Add Open Food Facts results
     if (Array.isArray(offResults)) {
@@ -128,6 +163,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
   const clearSearchResults = useCallback(() => {
     setSearchResults([]);
     setUsdaResults([]);
+    setDatabaseResults([]);
     setMergedResults([]);
   }, []);
   
@@ -147,6 +183,32 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     // Reset search state
     searchInProgress.current = false;
+  }, []);
+  
+  // Search database first
+  const searchDatabase = useCallback(async (query: string) => {
+    if (!query || query.trim().length < 2) return [];
+    
+    setIsSearchingDatabase(true);
+    console.log("Searching database for:", query);
+    
+    try {
+      // Search for the term in the foods table using text search
+      const { data: foods, error } = await foodDb.searchFoods(query, 20);
+      
+      if (error) {
+        console.error("Database search error:", error);
+        return [];
+      }
+      
+      console.log(`Found ${foods.length} items in database for "${query}"`);
+      return foods || [];
+    } catch (error) {
+      console.error("Error searching database:", error);
+      return [];
+    } finally {
+      setIsSearchingDatabase(false);
+    }
   }, []);
   
   // Method to handle search with specific options
@@ -192,9 +254,24 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     console.log(`Executing search for "${trimmedQuery}" using source: ${searchSource}`);
     
     try {
+      // Always search database first, regardless of search source
+      let dbResults = await searchDatabase(trimmedQuery);
+      
+      // Update database results
+      setDatabaseResults(dbResults);
+      
+      // If we only want database results, or we found enough in the database, return early
+      if (searchSource === "database" || (dbResults.length >= 10 && searchSource !== "both")) {
+        setSearchResults([]);
+        setUsdaResults([]);
+        setIsLoading(false);
+        searchInProgress.current = false;
+        return { databaseResults: dbResults, searchResults: [], usdaResults: [] };
+      }
+      
       const searchType = "broad";
       
-      // Search in Open Food Facts
+      // Search in Open Food Facts if needed
       if (searchSource === "openfoods" || searchSource === "both") {
         try {
           let offResults = await searchOpenFoodFacts(query, searchType, userPreferences || {});
@@ -258,7 +335,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
                error.message.includes("429"))) {
             toast({
               title: "USDA API rate limited",
-              description: "You've reached the USDA API rate limit. Only showing Open Food Facts results.",
+              description: "You've reached the USDA API rate limit. Only showing database and Open Food Facts results.",
               variant: "destructive",
             });
           } else {
@@ -277,7 +354,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
         setUsdaResults([]);
       }
       
-      return { searchResults, usdaResults };
+      return { databaseResults: dbResults, searchResults, usdaResults };
     } catch (error) {
       console.error("Search error:", error);
       toast({
@@ -290,7 +367,7 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
       setIsLoading(false);
       searchInProgress.current = false;
     }
-  }, [toast, usdaApiStatus, saveRecentSearch, clearSearchResults, cancelOngoingSearches]);
+  }, [toast, usdaApiStatus, saveRecentSearch, clearSearchResults, cancelOngoingSearches, searchDatabase]);
   
   // Perform search when query changes with debounce
   useEffect(() => {
@@ -302,14 +379,14 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     
     // Only search if query is at least 2 characters
     if (searchQuery.trim().length >= 2) {
-      // Set a new timeout with a further reduced debounce period (75% of original)
+      // Set a new timeout with a further reduced debounce period
       searchTimeoutRef.current = setTimeout(() => {
         // Don't search if query is the same as the last one or search is already in progress
         if (searchQuery.trim() !== lastSearchQuery.current || !searchInProgress.current) {
           console.log(`Debounced search for: "${searchQuery.trim()}"`);
           handleSearchWithOptions(searchQuery);
         }
-      }, 940); // Reduced from 1250ms to 940ms (25% further reduction)
+      }, 400); // Even shorter delay for database search (was 940ms)
     } else {
       // Clear results if query is too short
       clearSearchResults();
@@ -337,8 +414,10 @@ export function useSearch({ open, toast, usdaApiStatus }: UseSearchProps) {
     searchQuery,
     setSearchQuery,
     isLoading,
+    isSearchingDatabase,
     searchResults,
     usdaResults,
+    databaseResults,
     mergedResults,
     recentSearches: Array.isArray(recentSearches) ? recentSearches : [],
     handleSelectFood,
