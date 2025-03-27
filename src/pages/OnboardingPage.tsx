@@ -12,7 +12,6 @@ import { useUserData } from "@/contexts/UserDataContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import OnboardingAuthPrompt from "@/components/auth/OnboardingAuthPrompt";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -122,8 +121,7 @@ const OnboardingPage = () => {
           </h1>
         </div>
         
-        {/* Auth Prompt - New Component */}
-        <OnboardingAuthPrompt />
+        {/* Removed OnboardingAuthPrompt component */}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-end">
