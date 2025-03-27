@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +10,8 @@ import RecentFoods from "@/components/diet/RecentFoods";
 import { useSearch, SearchSource } from "@/hooks/useSearch";
 import { useToast } from "@/hooks/use-toast";
 import { UserPreferences } from "@/components/diet/FoodSearchForm";
+import { foodDb } from "@/lib/supabase";
+import { extractNutritionInfo } from "@/utils/usdaApi";
 
 interface SearchPanelProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     preferHighProtein: false,
   });
   const [inputValue, setInputValue] = useState(""); // Track input value separately
+  const [savingToDatabase, setSavingToDatabase] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const shouldInitiateSearch = useRef(false);
   
@@ -44,6 +46,61 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
     toast, 
     usdaApiStatus 
   });
+
+  // Save search results to database
+  useEffect(() => {
+    if (mergedResults && mergedResults.length > 0) {
+      saveSearchResultsToDatabase(mergedResults);
+    }
+  }, [mergedResults]);
+  
+  // Save search results to database
+  const saveSearchResultsToDatabase = async (results: any[]) => {
+    if (!results || results.length === 0) return;
+    
+    setSavingToDatabase(true);
+    
+    try {
+      // Process in smaller batches to avoid overwhelming the database
+      const batchSize = 5;
+      const totalItems = results.length;
+      let savedCount = 0;
+      
+      // Save all OpenFoodFacts results
+      const offResults = results.filter(r => r.type === 'openfoodfacts').map(r => r.item);
+      for (let i = 0; i < offResults.length; i += batchSize) {
+        const batch = offResults.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (product) => {
+          const sourceId = product.id || product._id || product.code || '';
+          await foodDb.saveFood(product, 'openfoodfacts', sourceId);
+          savedCount++;
+        }));
+      }
+      
+      // Save all USDA results
+      const usdaResults = results.filter(r => r.type === 'usda').map(r => r.item);
+      for (let i = 0; i < usdaResults.length; i += batchSize) {
+        const batch = usdaResults.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (foodItem) => {
+          const nutritionInfo = extractNutritionInfo(foodItem);
+          const enhancedItem = {
+            ...foodItem,
+            nutrition: nutritionInfo.nutritionValues,
+            servingSize: nutritionInfo.servingInfo.size,
+            servingSizeUnit: nutritionInfo.servingInfo.unit
+          };
+          await foodDb.saveFood(enhancedItem, 'usda', foodItem.fdcId.toString());
+          savedCount++;
+        }));
+      }
+      
+      console.log(`Saved ${savedCount} food items to database`);
+    } catch (error) {
+      console.error("Error saving search results to database:", error);
+    } finally {
+      setSavingToDatabase(false);
+    }
+  };
   
   // Focus the input when the panel opens
   useEffect(() => {
@@ -82,7 +139,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
       setInputValue("");
     }
   }, [isOpen, clearSearchResults, setSearchQuery]);
-
+  
   // Handle input changes with debounce in the component
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -206,6 +263,7 @@ export function SearchPanel({ isOpen, onClose, usdaApiStatus }: SearchPanelProps
           mergedResults={mergedResults}
           onSelectFood={handleSelectFood}
           onSelectUsdaFood={handleSelectUsdaFood}
+          savingToDatabase={savingToDatabase}
         />
       </div>
       

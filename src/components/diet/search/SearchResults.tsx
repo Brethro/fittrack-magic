@@ -9,6 +9,7 @@ interface SearchResultsProps {
   mergedResults: Array<{type: 'openfoodfacts' | 'usda', item: any, score: number}>;
   onSelectFood: (food: any) => void;
   onSelectUsdaFood: (food: UsdaFoodItem) => void;
+  savingToDatabase?: boolean;
 }
 
 export function SearchResults({ 
@@ -16,7 +17,8 @@ export function SearchResults({
   searchQuery,
   mergedResults,
   onSelectFood,
-  onSelectUsdaFood
+  onSelectUsdaFood,
+  savingToDatabase
 }: SearchResultsProps) {
   // Show loading state
   if (isLoading) {
@@ -53,10 +55,19 @@ export function SearchResults({
           onSelectUsdaFood={onSelectUsdaFood}
         />
       </div>
-      {/* Add a small note that all results are being added to database */}
+      {/* Database save indicator with improved visibility */}
       {mergedResults.length > 0 && (
-        <div className="mt-3 text-xs text-muted-foreground text-center">
-          All search results are automatically saved to our database
+        <div className="mt-3 text-xs text-center">
+          {savingToDatabase ? (
+            <div className="flex items-center justify-center space-x-1 text-blue-500">
+              <Loader className="h-3 w-3 animate-spin" />
+              <span>Saving search results to our database...</span>
+            </div>
+          ) : (
+            <div className="text-muted-foreground">
+              All search results are automatically saved to our database
+            </div>
+          )}
         </div>
       )}
     </div>
