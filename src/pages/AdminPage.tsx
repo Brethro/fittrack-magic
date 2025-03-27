@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -928,4 +929,99 @@ const AdminPage = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => deleteUserData(selectedUser.id)}
+                                      disabled={isDeleting}
+                                    >
+                                      {isDeleting ? "Deleting..." : "Delete User Data"}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="text-sm font-semibold mb-2">Weight Logs</h3>
+                                {selectedUser.data.weightLogs?.length > 0 ? (
+                                  <div className="border rounded-md overflow-hidden">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Date</TableHead>
+                                          <TableHead>Weight</TableHead>
+                                          <TableHead>Notes</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {selectedUser.data.weightLogs.map((log: any) => (
+                                          <TableRow key={log.id}>
+                                            <TableCell>{new Date(log.date).toLocaleDateString()}</TableCell>
+                                            <TableCell>{log.weight}</TableCell>
+                                            <TableCell>{log.notes || "-"}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No weight logs found.</p>
+                                )}
+                              </div>
+                              
+                              <div>
+                                <h3 className="text-sm font-semibold mb-2">Favorite Foods</h3>
+                                {selectedUser.data.favorites?.length > 0 ? (
+                                  <div className="border rounded-md overflow-hidden">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Food</TableHead>
+                                          <TableHead>Added On</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {selectedUser.data.favorites.map((favorite: any) => (
+                                          <TableRow key={favorite.id}>
+                                            <TableCell>{favorite.foods?.name || "Unknown Food"}</TableCell>
+                                            <TableCell>{new Date(favorite.created_at).toLocaleDateString()}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No favorite foods found.</p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="border-t pt-4">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setSelectedUser(null)}
+                              className="mr-2"
+                            >
+                              Close
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </motion.div>
+      
+      {/* Environment setup dialog */}
+      {showEnvSetup && <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />}
+    </div>
+  );
+};
+
+export default AdminPage;
