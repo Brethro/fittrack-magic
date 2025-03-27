@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,40 +15,75 @@ import DietPage from "./pages/DietPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import EnvSetupDialog from "./components/EnvSetupDialog";
 
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
+import { useToast } from "./hooks/use-toast";
 
 // Initialize React Query client
 const queryClient = new QueryClient();
+
+function AppContent() {
+  const [showEnvSetup, setShowEnvSetup] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if we have stored credentials in localStorage and load them
+    const storedUrl = localStorage.getItem("SUPABASE_URL");
+    const storedKey = localStorage.getItem("SUPABASE_ANON_KEY");
+
+    if (storedUrl && storedKey) {
+      // Set session storage values for current page load
+      window.sessionStorage.setItem("VITE_SUPABASE_URL", storedUrl);
+      window.sessionStorage.setItem("VITE_SUPABASE_ANON_KEY", storedKey);
+    } else if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      // If neither stored credentials nor environment variables exist, show setup dialog
+      setShowEnvSetup(true);
+      toast({
+        title: "Supabase configuration needed",
+        description: "Please configure your Supabase project to enable database features.",
+        duration: 5000,
+      });
+    }
+  }, [toast]);
+
+  return (
+    <>
+      <SupabaseAuthProvider>
+        <UserDataProvider>
+          <BrowserRouter>
+            <FoodLogProvider>
+              <Toaster />
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="onboarding" element={<OnboardingPage />} />
+                  <Route path="goals" element={<GoalsPage />} />
+                  <Route path="plan" element={<PlanPage />} />
+                  <Route path="diet" element={<DietPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="admin" element={<AdminPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </FoodLogProvider>
+          </BrowserRouter>
+        </UserDataProvider>
+      </SupabaseAuthProvider>
+      
+      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />
+    </>
+  );
+}
 
 function App() {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <SupabaseAuthProvider>
-            <UserDataProvider>
-              <BrowserRouter>
-                <FoodLogProvider>
-                  <Toaster />
-                  <Routes>
-                    <Route path="/" element={<Layout />}>
-                      <Route index element={<HomePage />} />
-                      <Route path="onboarding" element={<OnboardingPage />} />
-                      <Route path="goals" element={<GoalsPage />} />
-                      <Route path="plan" element={<PlanPage />} />
-                      <Route path="diet" element={<DietPage />} />
-                      <Route path="profile" element={<ProfilePage />} />
-                      <Route path="admin" element={<AdminPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                  </Routes>
-                </FoodLogProvider>
-              </BrowserRouter>
-            </UserDataProvider>
-          </SupabaseAuthProvider>
+          <AppContent />
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>

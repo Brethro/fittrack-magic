@@ -1,21 +1,31 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Check for Supabase credentials in various places
+const getEnvVariable = (key: string): string => {
+  // Check sessionStorage first (for dynamically set values)
+  const sessionValue = window.sessionStorage.getItem(key);
+  if (sessionValue) return sessionValue;
+  
+  // Then check environment variables
+  const envValue = import.meta.env[key];
+  if (envValue) return envValue;
+  
+  return '';
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    'Missing Supabase credentials. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.'
+// Initialize Supabase client
+const supabaseUrl = getEnvVariable('VITE_SUPABASE_URL') || 'https://placeholder-url.supabase.co';
+const supabaseAnonKey = getEnvVariable('VITE_SUPABASE_ANON_KEY') || 'placeholder-key';
+
+// Log appropriate warning
+if (supabaseUrl === 'https://placeholder-url.supabase.co') {
+  console.warn(
+    'Missing Supabase URL. Please configure via environment variables or the setup dialog.'
   );
 }
 
-export const supabase = createClient<Database>(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
-);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // Create a typed helper function to fetch data
 export async function fetcher<T>(
@@ -30,24 +40,24 @@ export async function fetcher<T>(
 export const foodDb = {
   // Food search function
   async searchFoods(query: string, limit = 10) {
-    return await fetcher(
-      supabase
-        .from('foods')
-        .select('*, food_nutrients(*)')
-        .textSearch('name', query)
-        .limit(limit)
-    );
+    const response = await supabase
+      .from('foods')
+      .select('*, food_nutrients(*)')
+      .textSearch('name', query)
+      .limit(limit);
+    
+    return fetcher(Promise.resolve(response));
   },
 
   // Get a food by ID
   async getFoodById(id: string) {
-    return await fetcher(
-      supabase
-        .from('foods')
-        .select('*, food_nutrients(*)')
-        .eq('id', id)
-        .single()
-    );
+    const response = await supabase
+      .from('foods')
+      .select('*, food_nutrients(*)')
+      .eq('id', id)
+      .single();
+    
+    return fetcher(Promise.resolve(response));
   },
 
   // Save a food from external API to database
@@ -116,23 +126,23 @@ export const foodDb = {
 
   // Add food to user favorites
   async addToFavorites(userId: string, foodId: string) {
-    return await fetcher(
-      supabase.from('user_favorites').insert({
-        user_id: userId,
-        food_id: foodId,
-        created_at: new Date().toISOString()
-      })
-    );
+    const response = await supabase.from('user_favorites').insert({
+      user_id: userId,
+      food_id: foodId,
+      created_at: new Date().toISOString()
+    });
+    
+    return fetcher(Promise.resolve(response));
   },
 
   // Get user's favorite foods
   async getFavorites(userId: string) {
-    return await fetcher(
-      supabase
-        .from('user_favorites')
-        .select('*, foods(*, food_nutrients(*))')
-        .eq('user_id', userId)
-    );
+    const response = await supabase
+      .from('user_favorites')
+      .select('*, foods(*, food_nutrients(*))')
+      .eq('user_id', userId);
+    
+    return fetcher(Promise.resolve(response));
   }
 };
 
