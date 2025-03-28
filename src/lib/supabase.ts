@@ -56,6 +56,8 @@ export const foodDb = {
   },
 
   // Save a food from external API to database
+  // This function can be used by any user - we'll rely on RLS policies
+  // to control access, not client-side checks
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
     const { data: existingFood } = await supabase
@@ -117,6 +119,19 @@ export const foodDb = {
       results_count: resultsCount,
       created_at: new Date().toISOString()
     });
+  },
+
+  // Admin-only: Update an existing food entry
+  async updateFood(foodId: string, foodData: any, adminKey?: string) {
+    // This function should only be used by admins
+    // RLS policies will enforce this on the backend
+    const response = await supabase
+      .from('foods')
+      .update(foodData)
+      .eq('id', foodId)
+      .select();
+    
+    return fetcher(Promise.resolve(response));
   },
 
   // Add food to user favorites
