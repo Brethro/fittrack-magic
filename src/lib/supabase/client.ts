@@ -16,9 +16,24 @@ const getEnvVariable = (key: string): string => {
   return '';
 };
 
+// Default values for public demo access
+const DEFAULT_SUPABASE_URL = "https://jzezrkvkbelcuuashoqy.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6ZXpya3ZrYmVsY3V1YXNob3F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwNTAzNjYsImV4cCI6MjA1ODYyNjM2Nn0.ZAzLoMvlEB01fjWQSuWhQdwDbbInAdxWXoFHaF9eav8";
+
 // Initialize Supabase client
-const supabaseUrl = getEnvVariable('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnvVariable('VITE_SUPABASE_ANON_KEY');
+let supabaseUrl = getEnvVariable('VITE_SUPABASE_URL');
+let supabaseAnonKey = getEnvVariable('VITE_SUPABASE_ANON_KEY');
+
+// Use default values if needed
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.log('Using default Supabase credentials');
+  supabaseUrl = DEFAULT_SUPABASE_URL;
+  supabaseAnonKey = DEFAULT_SUPABASE_ANON_KEY;
+  
+  // Store in session storage for consistency
+  window.sessionStorage.setItem('VITE_SUPABASE_URL', supabaseUrl);
+  window.sessionStorage.setItem('VITE_SUPABASE_ANON_KEY', supabaseAnonKey);
+}
 
 // Create the supabase client
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);

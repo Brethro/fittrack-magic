@@ -27,10 +27,6 @@ import { useToast } from "./hooks/use-toast";
 // Initialize React Query client
 const queryClient = new QueryClient();
 
-// Supabase credentials 
-const DEFAULT_SUPABASE_URL = "https://jzezrkvkbelcuuashoqy.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6ZXpya3ZrYmVsY3V1YXNob3F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwNTAzNjYsImV4cCI6MjA1ODYyNjM2Nn0.ZAzLoMvlEB01fjWQSuWhQdwDbbInAdxWXoFHaF9eav8";
-
 // Function to check if user is a guest or has account
 function useGuestStatus() {
   const [isGuest, setIsGuest] = useState(true);
@@ -95,11 +91,8 @@ function AppRoutes() {
           description: "Please configure your Supabase project to enable database features.",
           duration: 5000,
         });
-      } else {
-        // For regular users, set default credentials
-        window.sessionStorage.setItem("VITE_SUPABASE_URL", DEFAULT_SUPABASE_URL);
-        window.sessionStorage.setItem("VITE_SUPABASE_ANON_KEY", DEFAULT_SUPABASE_ANON_KEY);
       }
+      // Note: we removed the else branch that was setting default credentials since client.ts now handles this
     }
   }, [toast]);
 
