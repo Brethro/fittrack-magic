@@ -12,6 +12,7 @@ const getEnvVariable = (key: string): string => {
   const envValue = import.meta.env[key];
   if (envValue) return envValue;
   
+  // Return empty string if not found
   return '';
 };
 
