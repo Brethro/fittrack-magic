@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -160,20 +161,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <SupabaseAuthProvider>
-            <AppContent />
+            <AppRoutes />
           </SupabaseAuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </React.StrictMode>
-  );
-}
-
-// Separate component that must be used inside the SupabaseAuthProvider
-function AppContent() {
-  return (
-    <SupabaseAuthProvider>
-      <AppRoutes />
-    </SupabaseAuthProvider>
   );
 }
 

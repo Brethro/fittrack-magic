@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
@@ -120,6 +121,12 @@ export const foodDb = {
 
   // Add food to user favorites
   async addToFavorites(userId: string, foodId: string) {
+    // Verify user is authenticated before adding favorites
+    const session = await supabase.auth.getSession();
+    if (!session.data.session?.user.id || session.data.session.user.id !== userId) {
+      throw new Error("User must be authenticated to add favorites");
+    }
+    
     const response = await supabase.from('user_favorites').insert({
       user_id: userId,
       food_id: foodId,
@@ -131,6 +138,12 @@ export const foodDb = {
 
   // Get user's favorite foods
   async getFavorites(userId: string) {
+    // Verify user is authenticated before getting favorites
+    const session = await supabase.auth.getSession();
+    if (!session.data.session?.user.id || session.data.session.user.id !== userId) {
+      throw new Error("User must be authenticated to view favorites");
+    }
+    
     const response = await supabase
       .from('user_favorites')
       .select('*, foods(*, food_nutrients(*))')
@@ -145,6 +158,13 @@ export const userDb = {
   // Get user by ID
   async getUserById(userId: string) {
     try {
+      // Verify the requesting user is authorized
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id || session.session.user.id !== userId) {
+        console.error("Unauthorized access attempt to user data");
+        return null;
+      }
+      
       // This only works for projects with admin access - for most users it will fail
       const { data, error } = await supabase.auth.admin.getUserById(userId);
       
@@ -163,6 +183,13 @@ export const userDb = {
   // Get user data from application database tables
   async getUserData(userId: string) {
     try {
+      // Verify the requesting user is authorized
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id || session.session.user.id !== userId) {
+        console.error("Unauthorized access attempt to user data");
+        throw new Error("Unauthorized access");
+      }
+      
       const userData: any = { userId };
       
       // Get weight logs
@@ -191,6 +218,13 @@ export const userDb = {
   // Delete all user data from the application
   async deleteUserData(userId: string) {
     try {
+      // Verify the requesting user is authorized to delete their own data
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id || session.session.user.id !== userId) {
+        console.error("Unauthorized attempt to delete user data");
+        throw new Error("Unauthorized access");
+      }
+      
       // Delete from weight_logs
       const { error: weightLogsError } = await supabase
         .from('weight_logs')
@@ -211,13 +245,31 @@ export const userDb = {
         throw favoritesError;
       }
       
-      // We no longer attempt to delete the auth user here
-      // This requires special admin privileges and should be handled carefully
-      // with additional authentication
-      
       return true;
     } catch (error) {
       console.error("Error deleting user data:", error);
+      throw error;
+    }
+  },
+  
+  // ADMIN ONLY: Search for users - restricted by authentication
+  async searchUsers(query: string, adminSecret: string) {
+    try {
+      // Verify admin credentials are provided
+      if (!adminSecret || adminSecret !== import.meta.env.VITE_ADMIN_SECRET) {
+        console.error("Unauthorized admin access attempt");
+        throw new Error("Admin authentication required");
+      }
+      
+      // This is a placeholder - in a real app, you would implement
+      // a secure admin-only endpoint through a serverless function
+      // that requires proper authentication
+      console.log("Admin search for users with query:", query);
+      
+      // Return empty results for security
+      return [];
+    } catch (error) {
+      console.error("Error in admin searchUsers:", error);
       throw error;
     }
   }
