@@ -48,4 +48,41 @@ const container = document.getElementById("root");
 if (!container) throw new Error('Root element not found');
 const root = createRoot(container);
 
-root.render(<App />);
+// Wrap rendering in a try/catch block to catch any rendering errors
+try {
+  root.render(<App />);
+} catch (error) {
+  console.error('Error rendering application:', error);
+  // Render a simple fallback UI if the main app fails to render
+  root.render(
+    <div style={{ 
+      padding: '20px', 
+      textAlign: 'center', 
+      fontFamily: 'Inter, sans-serif',
+      color: 'white',
+      backgroundColor: '#1e1e2e',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <h1>Something went wrong</h1>
+      <p>The application encountered an error during initialization.</p>
+      <button 
+        onClick={() => window.location.reload()} 
+        style={{
+          marginTop: '20px',
+          padding: '10px 20px',
+          backgroundColor: '#8b5cf6',
+          border: 'none',
+          borderRadius: '8px',
+          color: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        Refresh Page
+      </button>
+    </div>
+  );
+}

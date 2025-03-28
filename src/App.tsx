@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./App.css";
 
 import Layout from "./components/Layout";
-import HomePage from "./pages/HomePage";
+import HomePage from "./pages/HomePage"; // Ensure this import is correct
 import OnboardingPage from "./pages/OnboardingPage";
 import GoalsPage from "./pages/GoalsPage";
 import PlanPage from "./pages/PlanPage";
