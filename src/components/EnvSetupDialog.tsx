@@ -10,9 +10,10 @@ import { AlertCircle } from "lucide-react";
 interface EnvSetupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdminMode?: boolean;
 }
 
-export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
+export function EnvSetupDialog({ open, onOpenChange, isAdminMode = false }: EnvSetupDialogProps) {
   const { toast } = useToast();
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseKey, setSupabaseKey] = useState("");
@@ -60,6 +61,38 @@ export function EnvSetupDialog({ open, onOpenChange }: EnvSetupDialogProps) {
       window.location.reload();
     }, 1500);
   };
+
+  // If not in admin mode and dialog is shown, inform user and close
+  if (!isAdminMode && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Developer Configuration</DialogTitle>
+            <DialogDescription>
+              This dialog is intended only for developers and administrators.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="rounded-md bg-amber-50 dark:bg-amber-950/50 p-3 text-sm flex gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              <div className="text-amber-800 dark:text-amber-200">
+                You don't need to configure Supabase to use this application. 
+                This configuration is only required for developers.
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

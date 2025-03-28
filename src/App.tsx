@@ -27,6 +27,11 @@ import { useToast } from "./hooks/use-toast";
 // Initialize React Query client
 const queryClient = new QueryClient();
 
+// Default Supabase credentials - replace these with your actual project details
+// These will be used only if no environment variables or localStorage values are found
+const DEFAULT_SUPABASE_URL = "https://your-project-id.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "your-anon-key";
+
 // Function to check if user is a guest or has account
 function useGuestStatus() {
   const [isGuest, setIsGuest] = useState(true);
@@ -42,6 +47,7 @@ function useGuestStatus() {
 
 function AppRoutes() {
   const [showEnvSetup, setShowEnvSetup] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     return localStorage.getItem("hasCompletedOnboarding") === "true";
   });
@@ -70,19 +76,31 @@ function AppRoutes() {
     // Check if we have stored credentials in localStorage and load them
     const storedUrl = localStorage.getItem("SUPABASE_URL");
     const storedKey = localStorage.getItem("SUPABASE_ANON_KEY");
+    
+    // Check if we have the admin URL parameter (for development/admin access)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'true';
+    setIsAdminMode(isAdmin);
 
     if (storedUrl && storedKey) {
       // Set session storage values for current page load
       window.sessionStorage.setItem("VITE_SUPABASE_URL", storedUrl);
       window.sessionStorage.setItem("VITE_SUPABASE_ANON_KEY", storedKey);
     } else if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      // If neither stored credentials nor environment variables exist, show setup dialog
-      setShowEnvSetup(true);
-      toast({
-        title: "Supabase configuration needed",
-        description: "Please configure your Supabase project to enable database features.",
-        duration: 5000,
-      });
+      // If neither stored credentials nor environment variables exist
+      if (isAdmin) {
+        // Show setup dialog only for admin mode
+        setShowEnvSetup(true);
+        toast({
+          title: "Supabase configuration needed",
+          description: "Please configure your Supabase project to enable database features.",
+          duration: 5000,
+        });
+      } else {
+        // For regular users, set default credentials
+        window.sessionStorage.setItem("VITE_SUPABASE_URL", DEFAULT_SUPABASE_URL);
+        window.sessionStorage.setItem("VITE_SUPABASE_ANON_KEY", DEFAULT_SUPABASE_ANON_KEY);
+      }
     }
   }, [toast]);
 
@@ -133,7 +151,7 @@ function AppRoutes() {
         </BrowserRouter>
       </UserDataProvider>
       
-      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />
+      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} isAdminMode={isAdminMode} />
     </>
   );
 }
