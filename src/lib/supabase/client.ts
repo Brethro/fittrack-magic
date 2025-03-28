@@ -35,8 +35,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   window.sessionStorage.setItem('VITE_SUPABASE_ANON_KEY', supabaseAnonKey);
 }
 
-// Create the supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Create the supabase client with explicit options
+export const supabase = createClient<Database>(
+  supabaseUrl, 
+  supabaseAnonKey,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true
+    }
+  }
+);
 
 // Create a typed helper function to fetch data
 export async function fetcher<T>(

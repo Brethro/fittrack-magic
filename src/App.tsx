@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,8 +24,16 @@ import { FoodLogProvider } from "./contexts/FoodLogContext";
 import { SupabaseAuthProvider, useAuth } from "./contexts/SupabaseAuthContext";
 import { useToast } from "./hooks/use-toast";
 
-// Initialize React Query client
-const queryClient = new QueryClient();
+// Initialize React Query client with error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 // Function to check if user is a guest or has account
 function useGuestStatus() {
@@ -39,6 +47,22 @@ function useGuestStatus() {
 
   return isGuest;
 }
+
+// Fallback component for error boundaries
+const ErrorFallback = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+      <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+      <p className="mb-4">We encountered an error loading the application.</p>
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-4 py-2 bg-purple-600 text-white rounded-md"
+      >
+        Refresh Page
+      </button>
+    </div>
+  );
+};
 
 function AppRoutes() {
   const [showEnvSetup, setShowEnvSetup] = useState(false);
