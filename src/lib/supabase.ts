@@ -140,7 +140,7 @@ export const foodDb = {
   }
 };
 
-// Utils for user management
+// Utils for user management with improved security
 export const userDb = {
   // Get user by ID
   async getUserById(userId: string) {
@@ -211,12 +211,9 @@ export const userDb = {
         throw favoritesError;
       }
       
-      // Try to delete the auth user (requires admin privileges)
-      try {
-        await supabase.auth.admin.deleteUser(userId);
-      } catch (error) {
-        console.warn("Could not delete auth user (may require admin privileges):", error);
-      }
+      // We no longer attempt to delete the auth user here
+      // This requires special admin privileges and should be handled carefully
+      // with additional authentication
       
       return true;
     } catch (error) {

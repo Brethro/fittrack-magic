@@ -133,6 +133,11 @@ const AdminPage = () => {
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // New state for admin code
+  const [adminCode, setAdminCode] = useState("");
+  const [showAdminCodeInput, setShowAdminCodeInput] = useState(false);
+  const [adminCodeAuthenticated, setAdminCodeAuthenticated] = useState(false);
 
   // Check for saved authentication on component mount
   useEffect(() => {
@@ -284,6 +289,7 @@ const AdminPage = () => {
 
   const handleLogout = () => {
     setAuthenticated(false);
+    setAdminCodeAuthenticated(false);
     localStorage.removeItem(ADMIN_AUTH_KEY);
     toast({
       title: "Logged out",
@@ -310,8 +316,37 @@ const AdminPage = () => {
     }, 2000);
   };
 
-  // User management functions
+  // Admin code verification
+  const verifyAdminCode = () => {
+    // This should be a stronger verification in production
+    // For demo purposes, we use a simple code
+    if (adminCode === "SUPER_ADMIN_ACCESS") {
+      setAdminCodeAuthenticated(true);
+      setShowAdminCodeInput(false);
+      toast({
+        title: "Admin code verified",
+        description: "You now have access to user management functions",
+      });
+    } else {
+      toast({
+        title: "Invalid admin code",
+        description: "The admin code you entered is incorrect",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // User management functions - now require admin code authentication
   const searchUsers = async () => {
+    if (!adminCodeAuthenticated) {
+      setShowAdminCodeInput(true);
+      toast({
+        title: "Admin authorization required",
+        description: "Additional authentication is required for user management",
+      });
+      return;
+    }
+
     if (!userSearchQuery.trim()) {
       toast({
         title: "Search query required",
@@ -348,32 +383,34 @@ const AdminPage = () => {
         }
       }
       
-      // Then search auth.users if we have admin access
-      // Note: This will only work if you have admin rights to the auth schema
+      // Then search auth.users if we have admin access - now restricted
       try {
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
-          page: 1,
-          perPage: 20,
-        });
-        
-        if (!authError && authUsers) {
-          // Filter users by the search query
-          // Properly type the users array
-          const users = authUsers.users as SupabaseAuthUser[];
-          
-          const filteredUsers = users.filter(user => 
-            (user.email && user.email.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
-            user.id.includes(userSearchQuery)
-          );
-          
-          filteredUsers.forEach(user => {
-            foundUsers.set(user.id, { 
-              id: user.id, 
-              email: user.email,
-              lastSignIn: user.last_sign_in_at,
-              createdAt: user.created_at
-            });
+        // Only attempt if we have the proper admin code authentication
+        if (adminCodeAuthenticated) {
+          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 20,
           });
+          
+          if (!authError && authUsers) {
+            // Filter users by the search query
+            // Properly type the users array
+            const users = authUsers.users as SupabaseAuthUser[];
+            
+            const filteredUsers = users.filter(user => 
+              (user.email && user.email.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
+              user.id.includes(userSearchQuery)
+            );
+            
+            filteredUsers.forEach(user => {
+              foundUsers.set(user.id, { 
+                id: user.id, 
+                email: user.email,
+                lastSignIn: user.last_sign_in_at,
+                createdAt: user.created_at
+              });
+            });
+          }
         }
       } catch (authListError) {
         console.error("Error listing auth users:", authListError);
@@ -403,6 +440,15 @@ const AdminPage = () => {
   };
   
   const getUserDetails = async (userId: string) => {
+    if (!adminCodeAuthenticated) {
+      setShowAdminCodeInput(true);
+      toast({
+        title: "Admin authorization required",
+        description: "Additional authentication is required for user management",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -447,6 +493,15 @@ const AdminPage = () => {
   };
   
   const deleteUserData = async (userId: string) => {
+    if (!adminCodeAuthenticated) {
+      setShowAdminCodeInput(true);
+      toast({
+        title: "Admin authorization required",
+        description: "Additional authentication is required for user management",
+      });
+      return;
+    }
+
     setIsDeleting(true);
     
     try {
@@ -471,14 +526,16 @@ const AdminPage = () => {
       }
       
       // Try to delete the auth user (requires admin privileges)
-      try {
-        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-        
-        if (authError) {
-          console.warn("Could not delete auth user (may require higher privileges):", authError);
+      if (adminCodeAuthenticated) {
+        try {
+          const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+          
+          if (authError) {
+            console.warn("Could not delete auth user (may require higher privileges):", authError);
+          }
+        } catch (authDeleteError) {
+          console.warn("Auth user deletion failed (likely insufficient permissions):", authDeleteError);
         }
-      } catch (authDeleteError) {
-        console.warn("Auth user deletion failed (likely insufficient permissions):", authDeleteError);
       }
       
       toast({
@@ -623,10 +680,10 @@ const AdminPage = () => {
                           <div>
                             <p className="text-sm font-medium">Current configuration:</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              URL: {localStorage.getItem("SUPABASE_URL") ? "✓ Configured" : "Not set"}
+                              URL: {localStorage.getItem("SUPABASE_URL") ? "✓ Configured" : "Using default"}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Anon Key: {localStorage.getItem("SUPABASE_ANON_KEY") ? "✓ Configured" : "Not set"}
+                              Anon Key: {localStorage.getItem("SUPABASE_ANON_KEY") ? "✓ Configured" : "Using default"}
                             </p>
                           </div>
                           
@@ -843,14 +900,69 @@ const AdminPage = () => {
               </TabsContent>
               
               <TabsContent value="users">
+                {/* Admin Code Authentication Dialog */}
+                {showAdminCodeInput && !adminCodeAuthenticated && (
+                  <Card className="mb-6 border-amber-500">
+                    <CardHeader className="bg-amber-50 dark:bg-amber-950/30">
+                      <CardTitle className="text-amber-800 dark:text-amber-300 flex items-center">
+                        <Shield className="mr-2 h-5 w-5" />
+                        Enhanced Security Required
+                      </CardTitle>
+                      <CardDescription className="text-amber-700 dark:text-amber-400">
+                        User management functions require additional authentication
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="space-y-4">
+                        <p className="text-sm">
+                          To access user data, you must enter the administrator security code.
+                          This helps protect sensitive user information.
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="password"
+                            placeholder="Enter admin security code"
+                            value={adminCode}
+                            onChange={(e) => setAdminCode(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                verifyAdminCode();
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowAdminCodeInput(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={verifyAdminCode}
+                      >
+                        Verify Code
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+                
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Users className="mr-2 h-5 w-5" />
                       User Management
+                      {adminCodeAuthenticated && (
+                        <Badge className="ml-2 bg-green-600">Enhanced Access</Badge>
+                      )}
                     </CardTitle>
                     <CardDescription>
-                      Search for users and manage their data
+                      {adminCodeAuthenticated 
+                        ? "Search for users and manage their data with enhanced privileges"
+                        : "Search for basic user information (advanced features require enhanced security access)"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -883,6 +995,24 @@ const AdminPage = () => {
                           )}
                         </Button>
                       </div>
+                      
+                      {!adminCodeAuthenticated && !showAdminCodeInput && (
+                        <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md text-blue-700 dark:text-blue-300 text-sm">
+                          <p>
+                            <span className="font-semibold">Note:</span> Basic user search functionality is available, 
+                            but detailed user data and management actions require enhanced security access.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setShowAdminCodeInput(true)}
+                            className="mt-2 bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800"
+                          >
+                            <Shield className="h-3.5 w-3.5 mr-1" />
+                            Request Enhanced Access
+                          </Button>
+                        </div>
+                      )}
                       
                       {searchResults.length > 0 && (
                         <div className="border rounded-md overflow-hidden">
