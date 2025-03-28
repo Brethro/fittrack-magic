@@ -42,7 +42,17 @@ export const supabase = createClient<Database>(
   {
     auth: {
       autoRefreshToken: true,
-      persistSession: true
+      persistSession: true,
+      storageKey: 'weara-auth-token',
+      detectSessionInUrl: true
+    },
+    global: {
+      fetch: (...args) => {
+        return fetch(...args).catch(err => {
+          console.warn('Supabase fetch error:', err);
+          throw err;
+        });
+      }
     }
   }
 );
@@ -51,7 +61,15 @@ export const supabase = createClient<Database>(
 export async function fetcher<T>(
   query: Promise<{ data: T; error: any }>
 ): Promise<T> {
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await query;
+    if (error) {
+      console.error('Fetch error:', error);
+      throw error;
+    }
+    return data;
+  } catch (err) {
+    console.error('Fetcher caught error:', err);
+    throw err;
+  }
 }
