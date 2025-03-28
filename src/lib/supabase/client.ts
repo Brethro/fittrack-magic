@@ -47,8 +47,8 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true
     },
     global: {
-      fetch: (...args) => {
-        return fetch(...args).catch(err => {
+      fetch: (url: RequestInfo | URL, options?: RequestInit) => {
+        return fetch(url, options).catch(err => {
           console.warn('Supabase fetch error:', err);
           throw err;
         });
