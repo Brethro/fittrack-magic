@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,10 +26,9 @@ import { useToast } from "./hooks/use-toast";
 // Initialize React Query client
 const queryClient = new QueryClient();
 
-// Default Supabase credentials - replace these with your actual project details
-// These will be used only if no environment variables or localStorage values are found
-const DEFAULT_SUPABASE_URL = "https://your-project-id.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY = "your-anon-key";
+// Supabase credentials 
+const DEFAULT_SUPABASE_URL = "https://jzezrkvkbelcuuashoqy.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6ZXpya3ZrYmVsY3V1YXNob3F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwNTAzNjYsImV4cCI6MjA1ODYyNjM2Nn0.ZAzLoMvlEB01fjWQSuWhQdwDbbInAdxWXoFHaF9eav8";
 
 // Function to check if user is a guest or has account
 function useGuestStatus() {

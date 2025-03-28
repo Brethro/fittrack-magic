@@ -15,16 +15,10 @@ const getEnvVariable = (key: string): string => {
 };
 
 // Initialize Supabase client
-const supabaseUrl = getEnvVariable('VITE_SUPABASE_URL') || 'https://placeholder-url.supabase.co';
-const supabaseAnonKey = getEnvVariable('VITE_SUPABASE_ANON_KEY') || 'placeholder-key';
+const supabaseUrl = getEnvVariable('VITE_SUPABASE_URL');
+const supabaseAnonKey = getEnvVariable('VITE_SUPABASE_ANON_KEY');
 
-// Log appropriate warning
-if (supabaseUrl === 'https://placeholder-url.supabase.co') {
-  console.warn(
-    'Missing Supabase URL. Please configure via environment variables or the setup dialog.'
-  );
-}
-
+// Create the supabase client
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // Create a typed helper function to fetch data
