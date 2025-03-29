@@ -14,6 +14,7 @@ export function AuthCallback() {
     const handleAuthRedirect = async () => {
       try {
         console.log('Auth callback processing...');
+        console.log('Full URL:', window.location.href);
         
         // Get URL parts that might contain tokens
         const hash = window.location.hash;
@@ -23,7 +24,6 @@ export function AuthCallback() {
         
         console.log('Auth tokens in hash:', hasTokenInHash);
         console.log('Auth tokens in query:', hasTokenInQuery);
-        console.log('Full URL:', window.location.href);
         
         // For email confirmation links, we need to process the token from URL
         if (hasTokenInQuery) {

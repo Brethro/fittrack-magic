@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -64,10 +63,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   // Helper function to get the base URL for redirects
   const getRedirectUrl = () => {
-    // Use window.location to dynamically determine the current URL
-    // This ensures it works both in development and production
-    const baseUrl = window.location.origin; // e.g., https://example.com
-    return `${baseUrl}/auth/callback`;
+    // Use the current origin instead of hardcoding localhost
+    const currentOrigin = window.location.origin;
+    console.log('Current origin for auth redirect:', currentOrigin);
+    return `${currentOrigin}/auth/callback`;
   };
 
   // Sign up with email and password
