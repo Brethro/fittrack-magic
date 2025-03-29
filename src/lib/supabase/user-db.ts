@@ -2,7 +2,8 @@
 import { supabase, fetcher } from './client';
 import { 
   selectFilteredFromTable, 
-  deleteFromTable 
+  deleteFromTable,
+  ValidTable 
 } from './db-helpers';
 
 // Utils for user management with improved security
@@ -48,7 +49,7 @@ export const userDb = {
       // Get weight logs
       const weightLogsResponse = await selectFilteredFromTable(
         supabase,
-        'weight_logs',
+        'weight_logs' as ValidTable,
         'user_id',
         userId,
         '*'
@@ -59,7 +60,7 @@ export const userDb = {
       // Get favorites
       const favoritesResponse = await selectFilteredFromTable(
         supabase,
-        'user_favorites',
+        'user_favorites' as ValidTable,
         'user_id',
         userId,
         '*, foods(id, name)'
@@ -87,7 +88,7 @@ export const userDb = {
       // Delete from weight_logs
       const { error: weightLogsError } = await deleteFromTable(
         supabase,
-        'weight_logs',
+        'weight_logs' as ValidTable,
         'user_id',
         userId
       );
@@ -99,7 +100,7 @@ export const userDb = {
       // Delete from user_favorites
       const { error: favoritesError } = await deleteFromTable(
         supabase,
-        'user_favorites',
+        'user_favorites' as ValidTable,
         'user_id',
         userId
       );

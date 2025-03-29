@@ -50,7 +50,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       storageKey: 'weara-auth-token',
       detectSessionInUrl: true,
-      flowType: 'pkce',
+      flowType: 'pkce'
     },
     global: {
       fetch: function customFetch(url: RequestInfo | URL, options?: RequestInit) {

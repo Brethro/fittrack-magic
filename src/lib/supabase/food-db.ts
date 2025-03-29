@@ -4,7 +4,8 @@ import { extractNutritionFromUsda } from './utils';
 import { 
   insertIntoTable, 
   selectFromTable, 
-  selectFilteredFromTable 
+  selectFilteredFromTable,
+  ValidTable
 } from './db-helpers';
 import type { TablesInsertProps } from '../../types/supabase';
 

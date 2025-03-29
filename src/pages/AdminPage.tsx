@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -33,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ValidTable } from "@/lib/supabase/db-helpers";
 
 // Simple password as requested
 const ADMIN_PASSWORD = "gayest";
@@ -162,7 +162,7 @@ const AdminPage = () => {
     setSupabaseStatus("checking");
     try {
       // Simple health check query
-      const { data, error } = await supabase.from('foods').select('id').limit(1);
+      const { data, error } = await supabase.from('foods' as ValidTable).select('id').limit(1);
       
       if (error) {
         console.error("Supabase connection error:", error);
@@ -189,7 +189,7 @@ const AdminPage = () => {
       };
       
       // Array of tables to check
-      const tables = ['foods', 'food_nutrients', 'user_favorites', 'search_logs', 'weight_logs'];
+      const tables = ['foods', 'food_nutrients', 'user_favorites', 'search_logs', 'weight_logs'] as const;
       
       // Count number of tables
       stats.tables = tables.length;
@@ -369,7 +369,7 @@ const AdminPage = () => {
     
     try {
       // First try to search by user_id in the tables that reference users
-      const tables = ['user_favorites', 'weight_logs'];
+      const tables = ['user_favorites', 'weight_logs'] as Array<ValidTable>;
       let foundUsers = new Map<string, UserSearchResult>();
       
       for (const table of tables) {
@@ -378,7 +378,7 @@ const AdminPage = () => {
           const { data, error } = await supabase
             .from(table)
             .select('user_id')
-            .eq('user_id', userSearchQuery as any)
+            .eq('user_id', userSearchQuery)
             .limit(10);
           
           if (error) {
@@ -386,7 +386,7 @@ const AdminPage = () => {
           } else if (data && data.length > 0) {
             data.forEach(item => {
               if (item && typeof item === 'object' && 'user_id' in item) {
-                foundUsers.set(item.user_id as string, { id: item.user_id as string, source: table });
+                userIds.add(item.user_id as string);
               }
             });
           }
@@ -929,234 +929,3 @@ const AdminPage = () => {
                           This helps protect sensitive user information.
                         </p>
                         <div className="flex items-center space-x-2">
-                          <Lock className="h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="password"
-                            placeholder="Enter admin code"
-                            value={adminCode}
-                            onChange={(e) => setAdminCode(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                verifyAdminCode();
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        onClick={verifyAdminCode}
-                      >
-                        Verify Code
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="ml-2"
-                        onClick={() => setShowAdminCodeInput(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                )}
-                
-                {/* User Search */}
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Users className="mr-2 h-5 w-5" />
-                      User Management
-                    </CardTitle>
-                    <CardDescription>
-                      Search for users and manage their data
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="text"
-                          placeholder="Search by user ID or email"
-                          value={userSearchQuery}
-                          onChange={(e) => setUserSearchQuery(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              searchUsers();
-                            }
-                          }}
-                        />
-                        <Button 
-                          onClick={searchUsers}
-                          disabled={isSearchingUsers}
-                        >
-                          {isSearchingUsers ? (
-                            <><RefreshCw className="h-4 w-4 mr-1 animate-spin" /> Searching</>
-                          ) : (
-                            "Search"
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {/* Search Results */}
-                      {searchResults.length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-medium mb-2">Search Results</h3>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>User ID</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {searchResults.map((user) => (
-                                <TableRow key={user.id}>
-                                  <TableCell className="font-mono text-xs">
-                                    {user.id.substring(0, 8)}...
-                                  </TableCell>
-                                  <TableCell>{user.email || "N/A"}</TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => getUserDetails(user.id)}
-                                        disabled={isLoading}
-                                      >
-                                        View Details
-                                      </Button>
-                                      <Button 
-                                        variant="destructive" 
-                                        size="sm"
-                                        onClick={() => {
-                                          if (window.confirm(`Are you sure you want to delete all data for this user? This action cannot be undone.`)) {
-                                            deleteUserData(user.id);
-                                          }
-                                        }}
-                                        disabled={isDeleting}
-                                      >
-                                        <Trash className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                      
-                      {/* Selected User Details */}
-                      {selectedUser && (
-                        <Card className="mt-4">
-                          <CardHeader>
-                            <CardTitle className="flex items-center text-lg">
-                              User Details
-                              <Badge className="ml-2">{selectedUser.id.substring(0, 8)}</Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-4">
-                              <div>
-                                <h4 className="text-sm font-medium mb-2">Weight Logs</h4>
-                                {selectedUser.data.weightLogs && selectedUser.data.weightLogs.length > 0 ? (
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Weight</TableHead>
-                                        <TableHead>Notes</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {selectedUser.data.weightLogs.map((log: any) => (
-                                        <TableRow key={log.id}>
-                                          <TableCell>{new Date(log.date).toLocaleDateString()}</TableCell>
-                                          <TableCell>{log.weight}</TableCell>
-                                          <TableCell>{log.notes || "—"}</TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                ) : (
-                                  <p className="text-muted-foreground text-sm">No weight logs found.</p>
-                                )}
-                              </div>
-                              
-                              <div>
-                                <h4 className="text-sm font-medium mb-2">Favorite Foods</h4>
-                                {selectedUser.data.favorites && selectedUser.data.favorites.length > 0 ? (
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Food</TableHead>
-                                        <TableHead>Added On</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {selectedUser.data.favorites.map((fav: any) => (
-                                        <TableRow key={fav.id}>
-                                          <TableCell>
-                                            {fav.foods ? fav.foods.name : "Unknown Food"}
-                                          </TableCell>
-                                          <TableCell>
-                                            {new Date(fav.created_at).toLocaleDateString()}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                ) : (
-                                  <p className="text-muted-foreground text-sm">No favorite foods found.</p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                          <CardFooter>
-                            <Button
-                              variant="destructive"
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete all data for this user? This action cannot be undone.`)) {
-                                  deleteUserData(selectedUser.id);
-                                }
-                              }}
-                              disabled={isDeleting}
-                              className="flex items-center"
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Delete User Data
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="ml-2"
-                              onClick={() => setSelectedUser(null)}
-                            >
-                              Close
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
-
-        {/* Environment Setup Dialog */}
-        {showEnvSetup && (
-          <EnvSetupDialog
-            open={showEnvSetup}
-            onOpenChange={setShowEnvSetup}
-          />
-        )}
-      </motion.div>
-    </div>
-  );
-};
-
-export default AdminPage;
