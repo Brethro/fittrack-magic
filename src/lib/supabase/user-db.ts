@@ -18,7 +18,8 @@ export const userDb = {
       }
       
       // This only works for projects with admin access - for most users it will fail
-      const { data, error } = await supabase.auth.admin.getUserById(userId);
+      // Since we can't directly access the admin API properly, use user session instead
+      const { data, error } = await supabase.auth.getUser();
       
       if (error) {
         console.error("Error fetching user by ID:", error);
@@ -47,10 +48,10 @@ export const userDb = {
       // Get weight logs
       const weightLogsResponse = await selectFilteredFromTable(
         supabase,
-        'public',
         'weight_logs',
         'user_id',
-        userId as any
+        userId,
+        '*'
       );
         
       userData.weightLogs = weightLogsResponse.data || [];
@@ -58,10 +59,9 @@ export const userDb = {
       // Get favorites
       const favoritesResponse = await selectFilteredFromTable(
         supabase,
-        'public',
         'user_favorites',
         'user_id',
-        userId as any,
+        userId,
         '*, foods(id, name)'
       );
         
@@ -87,10 +87,9 @@ export const userDb = {
       // Delete from weight_logs
       const { error: weightLogsError } = await deleteFromTable(
         supabase,
-        'public',
         'weight_logs',
         'user_id',
-        userId as any
+        userId
       );
       
       if (weightLogsError) {
@@ -100,10 +99,9 @@ export const userDb = {
       // Delete from user_favorites
       const { error: favoritesError } = await deleteFromTable(
         supabase,
-        'public',
         'user_favorites',
         'user_id',
-        userId as any
+        userId
       );
       
       if (favoritesError) {

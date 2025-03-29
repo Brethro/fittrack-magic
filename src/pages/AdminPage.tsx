@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -238,13 +237,22 @@ const AdminPage = () => {
       // Combine user IDs from both tables and count unique ones
       const userIds = new Set<string>();
       
-      if (userFavoritesData) {
-        userFavoritesData.forEach(item => userIds.add(item.user_id));
-      }
       
-      if (weightLogsData) {
-        weightLogsData.forEach(item => userIds.add(item.user_id));
+  if (userFavoritesData) {
+    userFavoritesData.forEach(item => {
+      if (item && typeof item === 'object' && 'user_id' in item) {
+        userIds.add(item.user_id as string);
       }
+    });
+  }
+  
+  if (weightLogsData) {
+    weightLogsData.forEach(item => {
+      if (item && typeof item === 'object' && 'user_id' in item) {
+        userIds.add(item.user_id as string);
+      }
+    });
+  }
       
       stats.uniqueUsers = userIds.size;
       
@@ -370,16 +378,19 @@ const AdminPage = () => {
           const { data, error } = await supabase
             .from(table)
             .select('user_id')
-            .eq('user_id', userSearchQuery)
+            .eq('user_id', userSearchQuery as any)
             .limit(10);
           
-          if (error) {
-            console.error(`Error searching ${table}:`, error);
-          } else if (data && data.length > 0) {
-            data.forEach(item => {
-              foundUsers.set(item.user_id, { id: item.user_id, source: table });
-            });
-          }
+          
+if (error) {
+  console.error(`Error searching ${table}:`, error);
+} else if (data && data.length > 0) {
+  data.forEach(item => {
+    if (item && typeof item === 'object' && 'user_id' in item) {
+      foundUsers.set(item.user_id as string, { id: item.user_id as string, source: table });
+    }
+  });
+}
         }
       }
       
@@ -459,7 +470,7 @@ const AdminPage = () => {
       const { data: weightLogs, error: weightLogsError } = await supabase
         .from('weight_logs')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
       
       if (weightLogsError) {
         console.error("Error fetching weight logs:", weightLogsError);
@@ -471,7 +482,7 @@ const AdminPage = () => {
       const { data: favorites, error: favoritesError } = await supabase
         .from('user_favorites')
         .select('*, foods(name)')
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
         
       if (favoritesError) {
         console.error("Error fetching favorites:", favoritesError);
@@ -509,7 +520,7 @@ const AdminPage = () => {
       const { error: weightLogsError } = await supabase
         .from('weight_logs')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
       
       if (weightLogsError) {
         throw new Error(`Error deleting weight logs: ${weightLogsError.message}`);
@@ -519,7 +530,7 @@ const AdminPage = () => {
       const { error: favoritesError } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
       
       if (favoritesError) {
         throw new Error(`Error deleting favorites: ${favoritesError.message}`);
@@ -919,253 +930,4 @@ const AdminPage = () => {
                           This helps protect sensitive user information.
                         </p>
                         <div className="flex items-center space-x-2">
-                          <Lock className="h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="password"
-                            placeholder="Enter admin security code"
-                            value={adminCode}
-                            onChange={(e) => setAdminCode(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                verifyAdminCode();
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowAdminCodeInput(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={verifyAdminCode}
-                      >
-                        Verify Code
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                )}
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Users className="mr-2 h-5 w-5" />
-                      User Management
-                      {adminCodeAuthenticated && (
-                        <Badge className="ml-2 bg-green-600">Enhanced Access</Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription>
-                      {adminCodeAuthenticated 
-                        ? "Search for users and manage their data with enhanced privileges"
-                        : "Search for basic user information (advanced features require enhanced security access)"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex-1">
-                          <Input
-                            placeholder="Search by email or user ID"
-                            value={userSearchQuery}
-                            onChange={(e) => setUserSearchQuery(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                searchUsers();
-                              }
-                            }}
-                          />
-                        </div>
-                        <Button 
-                          onClick={searchUsers}
-                          disabled={isSearchingUsers || !userSearchQuery.trim()}
-                          className="flex items-center"
-                        >
-                          {isSearchingUsers ? (
-                            <>Searching...</>
-                          ) : (
-                            <>
-                              <Search className="h-4 w-4 mr-1" />
-                              Search
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {!adminCodeAuthenticated && !showAdminCodeInput && (
-                        <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md text-blue-700 dark:text-blue-300 text-sm">
-                          <p>
-                            <span className="font-semibold">Note:</span> Basic user search functionality is available, 
-                            but detailed user data and management actions require enhanced security access.
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setShowAdminCodeInput(true)}
-                            className="mt-2 bg-blue-100 dark:bg-blue-900/50 border-blue-200 dark:border-blue-800"
-                          >
-                            <Shield className="h-3.5 w-3.5 mr-1" />
-                            Request Enhanced Access
-                          </Button>
-                        </div>
-                      )}
-                      
-                      {searchResults.length > 0 && (
-                        <div className="border rounded-md overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>User ID</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {searchResults.map((user) => (
-                                <TableRow key={user.id}>
-                                  <TableCell className="font-mono text-xs">
-                                    {user.id.substring(0, 8)}...
-                                  </TableCell>
-                                  <TableCell>{user.email || "Unknown"}</TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => getUserDetails(user.id)}
-                                        disabled={isLoading}
-                                      >
-                                        {isLoading && selectedUser?.id === user.id ? "Loading..." : "View Details"}
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                      
-                      {selectedUser && (
-                        <Card className="mt-4">
-                          <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle className="text-lg">User Details</CardTitle>
-                                <CardDescription className="mt-1 font-mono text-xs">
-                                  ID: {selectedUser.id}
-                                </CardDescription>
-                              </div>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm">
-                                    <Trash className="h-4 w-4 mr-1" />
-                                    Delete User
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete User Data</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will permanently delete all data associated with this user
-                                      including their weight logs and food favorites. This action cannot
-                                      be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => deleteUserData(selectedUser.id)}
-                                      disabled={isDeleting}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      {isDeleting ? "Deleting..." : "Delete User Data"}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            {isLoading ? (
-                              <div className="flex justify-center py-6">
-                                <div className="animate-spin h-6 w-6 border-2 border-primary rounded-full border-t-transparent"></div>
-                              </div>
-                            ) : (
-                              <div className="space-y-6">
-                                <div>
-                                  <h3 className="text-sm font-medium mb-2">Weight Logs</h3>
-                                  {selectedUser.data.weightLogs && selectedUser.data.weightLogs.length > 0 ? (
-                                    <div className="border rounded-md overflow-hidden">
-                                      <Table>
-                                        <TableHeader>
-                                          <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Weight</TableHead>
-                                            <TableHead>Notes</TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {selectedUser.data.weightLogs.map((log: any) => (
-                                            <TableRow key={log.id}>
-                                              <TableCell>{new Date(log.date).toLocaleDateString()}</TableCell>
-                                              <TableCell>{log.weight}</TableCell>
-                                              <TableCell>{log.notes || "-"}</TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">No weight logs found</p>
-                                  )}
-                                </div>
-                                
-                                <div>
-                                  <h3 className="text-sm font-medium mb-2">Favorite Foods</h3>
-                                  {selectedUser.data.favorites && selectedUser.data.favorites.length > 0 ? (
-                                    <div className="border rounded-md overflow-hidden">
-                                      <Table>
-                                        <TableHeader>
-                                          <TableRow>
-                                            <TableHead>Food Name</TableHead>
-                                            <TableHead>Added</TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {selectedUser.data.favorites.map((fav: any) => (
-                                            <TableRow key={fav.id}>
-                                              <TableCell>{fav.foods?.name || "Unknown Food"}</TableCell>
-                                              <TableCell>{new Date(fav.created_at).toLocaleDateString()}</TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">No favorite foods found</p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
-      </motion.div>
-      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} />
-    </div>
-  );
-};
-
-export default AdminPage;
+                          <Lock className="h-4 w-4 text-

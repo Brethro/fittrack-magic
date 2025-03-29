@@ -51,7 +51,6 @@ export const supabase = createClient<Database>(
       storageKey: 'weara-auth-token',
       detectSessionInUrl: true,
       flowType: 'pkce',
-      redirectTo: `${getCurrentOrigin()}/auth/callback`
     },
     global: {
       fetch: function customFetch(url: RequestInfo | URL, options?: RequestInit) {
@@ -64,11 +63,11 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Set up auth redirect URL separately - use the correct method
-// This `setSession` is just a placeholder to initialize auth - it doesn't actually set any credentials
-supabase.auth.setSession({
-  access_token: '',
-  refresh_token: '',
+// Configure auth callback URL separately
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    console.log('Auth state changed:', event);
+  }
 });
 
 // Create a typed helper function to fetch data

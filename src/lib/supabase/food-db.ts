@@ -6,7 +6,7 @@ import {
   selectFromTable, 
   selectFilteredFromTable 
 } from './db-helpers';
-import { TablesInsertProps } from '../../types/supabase';
+import type { TablesInsertProps } from '../../types/supabase';
 
 // Utils for food database interactions
 export const foodDb = {
@@ -25,26 +25,23 @@ export const foodDb = {
   async getFoodById(id: string) {
     const response = await selectFromTable(
       supabase,
-      'public',
       'foods',
       '*, food_nutrients(*)'
-    ).eq('id', id as any).single();
+    ).eq('id', id).single();
     
     return fetcher(Promise.resolve(response));
   },
 
   // Save a food from external API to database
-  // This function can be used by any user - we'll rely on RLS policies
-  // to control access, not client-side checks
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
     const { data: existingFood } = await selectFilteredFromTable(
       supabase,
-      'public',
       'foods',
       'source',
-      source as any
-    ).eq('source_id', sourceId as any).maybeSingle();
+      source,
+      '*'
+    ).eq('source_id', sourceId).maybeSingle();
 
     if (existingFood) {
       return existingFood.id;
@@ -67,12 +64,12 @@ export const foodDb = {
 
     const { data: newFood, error } = await insertIntoTable(
       supabase,
-      'public',
       'foods',
       foodData
     ).select('id').single();
 
     if (error) throw error;
+    if (!newFood) throw new Error("Failed to insert food");
 
     // Extract nutrition data
     const nutritionData = food.nutrition || 
@@ -92,7 +89,6 @@ export const foodDb = {
 
     await insertIntoTable(
       supabase,
-      'public',
       'food_nutrients',
       nutrientData
     );
@@ -111,7 +107,6 @@ export const foodDb = {
 
     await insertIntoTable(
       supabase,
-      'public',
       'search_logs',
       searchLogData
     );
@@ -124,7 +119,7 @@ export const foodDb = {
     const response = await supabase
       .from('foods')
       .update(foodData)
-      .eq('id', foodId as any)
+      .eq('id', foodId)
       .select();
     
     return fetcher(Promise.resolve(response));
@@ -146,7 +141,6 @@ export const foodDb = {
 
     const response = await insertIntoTable(
       supabase,
-      'public',
       'user_favorites',
       favoriteData
     );
@@ -164,10 +158,9 @@ export const foodDb = {
     
     const response = await selectFromTable(
       supabase,
-      'public',
       'user_favorites',
       '*, foods(*, food_nutrients(*))'
-    ).eq('user_id', userId as any);
+    ).eq('user_id', userId);
     
     return fetcher(Promise.resolve(response));
   }
