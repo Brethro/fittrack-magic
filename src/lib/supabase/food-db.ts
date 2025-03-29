@@ -1,4 +1,3 @@
-
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
 import { 
@@ -36,25 +35,18 @@ export const foodDb = {
   // Save a food from external API to database
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
-    const response = await selectFilteredFromTable(
+    const { data, error } = await selectFilteredFromTable(
       supabase,
       'foods',
       'source_id',
       sourceId,
       '*'
     ).eq('source', source).maybeSingle();
-
-    // Explicitly handle different response scenarios
-    const { data: existingFoodData, error } = response;
     
-    // Check if we have a valid existing food with an ID
-    if (existingFoodData && 
-        existingFoodData !== null &&
-        typeof existingFoodData === 'object' && 
-        'id' in existingFoodData &&
-        typeof existingFoodData.id === 'string') {
-      // We have a valid existing food, return its ID
-      return existingFoodData.id;
+    // If we found existing food with matching source and source_id
+    if (data !== null && typeof data === 'object' && 'id' in data && typeof data.id === 'string') {
+      // Return the existing food's ID
+      return data.id;
     }
 
     // Insert new food
