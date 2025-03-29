@@ -3,90 +3,66 @@ import { Database } from "../../types/supabase";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Helper functions for type-safe database operations
+ * Simplified helper functions for database operations
+ * that use direct Supabase query methods rather than complex type-checking
  */
 
-// Type-safe filter for string columns
-export function filterByString<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables'],
-  Column extends keyof Database[Schema]['Tables'][Table]['Row'] & string
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
-  column: Column,
-  value: string
-) {
-  return query.from(table as string).eq(column as string, value);
-}
-
-// Type-safe insert for tables
-export function insertIntoTable<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables']
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
-  values: Database[Schema]['Tables'][Table]['Insert']
-) {
-  return query.from(table as string).insert(values as any);
-}
-
-// Type-safe update for tables
-export function updateTable<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables']
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
-  values: Database[Schema]['Tables'][Table]['Update'],
+// Helper for simple queries
+export function filterByString(
+  query: SupabaseClient<Database>,
+  table: string,
   column: string,
   value: string
 ) {
-  return query.from(table as string).update(values as any).eq(column, value);
+  return query.from(table).eq(column, value);
 }
 
-// Type-safe delete from tables
-export function deleteFromTable<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables']
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
+// Helper for inserting data
+export function insertIntoTable(
+  query: SupabaseClient<Database>,
+  table: string,
+  values: any
+) {
+  return query.from(table).insert(values);
+}
+
+// Helper for updating data
+export function updateTable(
+  query: SupabaseClient<Database>,
+  table: string,
+  values: any,
   column: string,
   value: string
 ) {
-  return query.from(table as string).delete().eq(column, value);
+  return query.from(table).update(values).eq(column, value);
 }
 
-// Type-safe select from tables
-export function selectFromTable<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables']
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
+// Helper for deleting data
+export function deleteFromTable(
+  query: SupabaseClient<Database>,
+  table: string,
+  column: string,
+  value: string
+) {
+  return query.from(table).delete().eq(column, value);
+}
+
+// Helper for selecting data
+export function selectFromTable(
+  query: SupabaseClient<Database>,
+  table: string,
   columns: string = '*'
 ) {
-  return query.from(table as string).select(columns);
+  return query.from(table).select(columns);
 }
 
-// Type-safe select with filtering
-export function selectFilteredFromTable<
-  Schema extends keyof Database,
-  Table extends keyof Database[Schema]['Tables']
->(
-  query: SupabaseClient<Database, Schema>,
-  schema: Schema,
-  table: Table,
+// Helper for selecting with filtering
+export function selectFilteredFromTable(
+  query: SupabaseClient<Database>,
+  table: string,
   filterColumn: string,
   filterValue: string,
   columns: string = '*'
 ) {
-  return query.from(table as string).select(columns).eq(filterColumn, filterValue);
+  return query.from(table).select(columns).eq(filterColumn, filterValue);
 }
