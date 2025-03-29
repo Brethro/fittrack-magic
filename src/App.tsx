@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -146,6 +145,12 @@ function AppRoutes() {
     setHasCompletedOnboarding(true);
   };
 
+  // Handler for when Supabase config is saved
+  const handleConfigSaved = () => {
+    // We can optionally add logic here after config is saved
+    console.log("Supabase configuration has been saved");
+  };
+
   // Determine if we should show splash screen
   // Now we show it for everyone who hasn't completed onboarding AND for guests
   const shouldShowSplash = !hasCompletedOnboarding || isGuest;
@@ -187,7 +192,12 @@ function AppRoutes() {
         </BrowserRouter>
       </UserDataProvider>
       
-      <EnvSetupDialog open={showEnvSetup} onOpenChange={setShowEnvSetup} isAdminMode={isAdminMode} />
+      <EnvSetupDialog 
+        open={showEnvSetup} 
+        onOpenChange={setShowEnvSetup} 
+        onConfigSaved={handleConfigSaved}
+        isAdminMode={isAdminMode} 
+      />
     </>
   );
 }

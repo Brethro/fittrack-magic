@@ -1,4 +1,3 @@
-
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
 import { 
@@ -46,8 +45,7 @@ export const foodDb = {
 
     if (existingFood) {
       // Check if we have a proper id field, if not, return a default value
-      const foodId = existingFood.id || 'error-missing-id';
-      return foodId;
+      return existingFood.id || 'error-missing-id';
     }
 
     // Insert new food
