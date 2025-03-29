@@ -37,7 +37,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Get the current origin for redirects
 const getCurrentOrigin = (): string => {
-  // Ensure we use the correct origin, not hardcoded localhost
   const origin = window.location.origin;
   console.log('Current origin for auth redirect:', origin);
   return origin;
@@ -54,8 +53,8 @@ export const supabase = createClient<Database>(
       storageKey: 'weara-auth-token',
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // Set the redirect URL dynamically based on current origin
-      redirectTo: `${getCurrentOrigin()}/auth/callback`
+      // The redirectTo property needs to be in the auth.signUp and auth.signIn methods
+      // instead of here in the client initialization
     },
     global: {
       fetch: function customFetch(url: RequestInfo | URL, options?: RequestInit) {

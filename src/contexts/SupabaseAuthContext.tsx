@@ -90,7 +90,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   // Get the current origin dynamically for redirects
   const getRedirectUrl = () => {
     const origin = window.location.origin;
-    console.log('Auth redirect URL:', `${origin}/auth/callback`);
+    // Ensuring we get the actual origin, not localhost
+    console.log('Auth redirect URL set to:', `${origin}/auth/callback`);
     return `${origin}/auth/callback`;
   };
 
@@ -99,11 +100,14 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setLoading(true);
       setError(null);
       
+      // IMPORTANT: Always explicitly set the redirectTo in the signUp method
+      const redirectUrl = getRedirectUrl();
+      
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: getRedirectUrl()
+          emailRedirectTo: redirectUrl // Use dynamic redirect URL here
         }
       });
       
@@ -141,9 +145,13 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setLoading(true);
       setError(null);
       
+      // For sign in, also set the redirectTo explicitly
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: getRedirectUrl() // Add redirect URL for sign in too
+        }
       });
       
       if (error) {
