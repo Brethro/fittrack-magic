@@ -7,6 +7,7 @@ import EnvSetupDialog from "@/components/EnvSetupDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Code, Users } from "lucide-react";
 import { ValidTable } from "@/lib/supabase/db-helpers";
+import { createTableScripts } from "@/lib/supabase/sql-scripts";
 
 // Import refactored components
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
@@ -32,57 +33,6 @@ type SupabaseAuthUser = {
   email?: string;
   last_sign_in_at?: string;
   created_at?: string;
-};
-
-// SQL scripts for creating the tables
-const createTableScripts = {
-  foods: `CREATE TABLE public.foods (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  name text NOT NULL,
-  description text NOT NULL,
-  brand text,
-  source text NOT NULL,
-  source_id text NOT NULL,
-  category text,
-  serving_size numeric NOT NULL,
-  serving_unit text NOT NULL,
-  household_serving text,
-  created_at timestamp with time zone NOT NULL,
-  updated_at timestamp with time zone NOT NULL
-);`,
-  food_nutrients: `CREATE TABLE public.food_nutrients (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  food_id uuid REFERENCES public.foods(id) ON DELETE CASCADE,
-  calories numeric NOT NULL,
-  protein numeric NOT NULL,
-  carbs numeric NOT NULL,
-  fat numeric NOT NULL,
-  fiber numeric NOT NULL,
-  sugar numeric NOT NULL,
-  other_nutrients jsonb NOT NULL
-);`,
-  user_favorites: `CREATE TABLE public.user_favorites (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id uuid NOT NULL,
-  food_id uuid REFERENCES public.foods(id) ON DELETE CASCADE,
-  created_at timestamp with time zone NOT NULL
-);`,
-  search_logs: `CREATE TABLE public.search_logs (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  query text NOT NULL,
-  source text NOT NULL,
-  results_count integer NOT NULL,
-  created_at timestamp with time zone NOT NULL
-);`,
-  weight_logs: `CREATE TABLE public.weight_logs (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id uuid NOT NULL,
-  date timestamp with time zone NOT NULL,
-  weight numeric NOT NULL,
-  notes text,
-  created_at timestamp with time zone NOT NULL,
-  updated_at timestamp with time zone NOT NULL
-);`
 };
 
 const AdminPage = () => {
@@ -129,7 +79,7 @@ const AdminPage = () => {
     setSupabaseStatus("checking");
     try {
       // Simple health check query
-      const { data, error } = await supabase.from('foods' as ValidTable).select('id').limit(1);
+      const { data, error } = await supabase.from('foods').select('id').limit(1);
       
       if (error) {
         console.error("Supabase connection error:", error);
@@ -207,16 +157,16 @@ const AdminPage = () => {
       
       if (userFavoritesData) {
         userFavoritesData.forEach(item => {
-          if (item && typeof item === 'object' && 'user_id' in item) {
-            userIds.add(item.user_id as string);
+          if (item && item.user_id) {
+            userIds.add(item.user_id);
           }
         });
       }
       
       if (weightLogsData) {
         weightLogsData.forEach(item => {
-          if (item && typeof item === 'object' && 'user_id' in item) {
-            userIds.add(item.user_id as string);
+          if (item && item.user_id) {
+            userIds.add(item.user_id);
           }
         });
       }
@@ -255,6 +205,14 @@ const AdminPage = () => {
 
   const handleResetSupabaseConfig = () => {
     setShowEnvSetup(true);
+  };
+
+  const handleConfigSaved = () => {
+    toast({
+      title: "Configuration updated",
+      description: "Supabase configuration has been updated. Reconnecting...",
+    });
+    checkSupabaseConnection();
   };
 
   // User management functions
@@ -297,8 +255,8 @@ const AdminPage = () => {
             console.error(`Error searching ${table}:`, error);
           } else if (data && data.length > 0) {
             data.forEach(item => {
-              if (item && typeof item === 'object' && 'user_id' in item) {
-                foundUsers.set(item.user_id as string, { id: item.user_id as string, source: table });
+              if (item && item.user_id) {
+                foundUsers.set(item.user_id, { id: item.user_id, source: table });
               }
             });
           }
@@ -547,13 +505,7 @@ const AdminPage = () => {
       <EnvSetupDialog 
         open={showEnvSetup} 
         onOpenChange={setShowEnvSetup} 
-        onConfigSaved={() => {
-          toast({
-            title: "Configuration updated",
-            description: "Supabase configuration has been updated. Reconnecting...",
-          });
-          checkSupabaseConnection();
-        }}
+        onConfigSaved={handleConfigSaved}
       />
     </div>
   );

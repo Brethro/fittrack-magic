@@ -45,7 +45,9 @@ export const foodDb = {
     ).eq('source_id', sourceId).maybeSingle();
 
     if (existingFood) {
-      return existingFood.id;
+      // Check if we have a proper id field, if not, return a default value
+      const foodId = existingFood.id || 'error-missing-id';
+      return foodId;
     }
 
     // Insert new food

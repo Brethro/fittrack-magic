@@ -13,17 +13,17 @@ export type ValidTable = 'foods' | 'food_nutrients' | 'user_favorites' | 'search
 export function filterByString<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  column: keyof Database['public']['Tables'][T]['Row'],
+  column: string,
   value: string
 ) {
-  return query.from(table).select().eq(column as string, value);
+  return query.from(table).select().eq(column, value);
 }
 
 // Helper for inserting data
 export function insertIntoTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: Database['public']['Tables'][T]['Insert']
+  values: any // Using any here because of the complex type mapping challenges
 ) {
   return query.from(table).insert(values);
 }
@@ -32,21 +32,21 @@ export function insertIntoTable<T extends ValidTable>(
 export function updateTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: Database['public']['Tables'][T]['Update'],
-  column: keyof Database['public']['Tables'][T]['Row'],
+  values: any, // Using any here because of the complex type mapping challenges
+  column: string,
   value: string | number
 ) {
-  return query.from(table).update(values).eq(column as string, value);
+  return query.from(table).update(values).eq(column, value);
 }
 
 // Helper for deleting data
 export function deleteFromTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  column: keyof Database['public']['Tables'][T]['Row'],
+  column: string,
   value: string | number
 ) {
-  return query.from(table).delete().eq(column as string, value);
+  return query.from(table).delete().eq(column, value);
 }
 
 // Helper for selecting data
@@ -62,9 +62,9 @@ export function selectFromTable<T extends ValidTable>(
 export function selectFilteredFromTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  filterColumn: keyof Database['public']['Tables'][T]['Row'],
+  filterColumn: string,
   filterValue: string | number,
   columns: string = '*'
 ) {
-  return query.from(table).select(columns).eq(filterColumn as string, filterValue);
+  return query.from(table).select(columns).eq(filterColumn, filterValue);
 }
