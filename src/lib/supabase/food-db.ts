@@ -44,8 +44,13 @@ export const foodDb = {
     ).eq('source', source).maybeSingle();
 
     // If we found an existing food, return its ID
-    if (existingFood !== null && typeof existingFood === 'object' && 'id' in existingFood) {
-      return existingFood.id || 'error-missing-id';
+    // Ensure existingFood is not null before accessing properties
+    if (existingFood !== null && typeof existingFood === 'object') {
+      // Only access id if it exists in the object
+      if ('id' in existingFood && existingFood.id) {
+        return existingFood.id;
+      }
+      return 'error-missing-id';
     }
 
     // Insert new food
