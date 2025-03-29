@@ -23,7 +23,7 @@ export function filterByString<T extends ValidTable>(
 export function insertIntoTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: any // Using any here because of the complex type mapping challenges
+  values: Database['public']['Tables'][T]['Insert']
 ) {
   return query.from(table).insert(values);
 }
@@ -32,7 +32,7 @@ export function insertIntoTable<T extends ValidTable>(
 export function updateTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: any, // Using any here because of the complex type mapping challenges
+  values: Database['public']['Tables'][T]['Update'],
   column: string,
   value: string | number
 ) {

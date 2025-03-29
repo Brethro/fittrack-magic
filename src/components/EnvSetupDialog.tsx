@@ -6,14 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
+import { EnvSetupDialogProps } from "./EnvSetupDialog.d";
 
-interface EnvSetupDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  isAdminMode?: boolean;
-}
-
-export function EnvSetupDialog({ open, onOpenChange, isAdminMode = false }: EnvSetupDialogProps) {
+export function EnvSetupDialog({ open, onOpenChange, onConfigSaved, isAdminMode = false }: EnvSetupDialogProps) {
   const { toast } = useToast();
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseKey, setSupabaseKey] = useState("");
@@ -55,6 +50,11 @@ export function EnvSetupDialog({ open, onOpenChange, isAdminMode = false }: EnvS
     });
     
     onOpenChange(false);
+    
+    // Call the onConfigSaved callback if provided
+    if (onConfigSaved) {
+      onConfigSaved();
+    }
     
     // Reload the page to apply the new settings
     setTimeout(() => {
