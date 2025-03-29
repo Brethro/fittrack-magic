@@ -35,7 +35,7 @@ export const foodDb = {
   // Save a food from external API to database
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
-    const { data: existingFood, error } = await selectFilteredFromTable(
+    const { data: existingFoodData, error } = await selectFilteredFromTable(
       supabase,
       'foods',
       'source_id',
@@ -43,13 +43,12 @@ export const foodDb = {
       '*'
     ).eq('source', source).maybeSingle();
 
-    // Use a type guard and nullish coalescing pattern to handle the null case safely
-    // We need to check both that existingFood exists and is an object with an id property
-    if (existingFood !== null && 
-        typeof existingFood === 'object' && 
-        'id' in existingFood) {
-      // Use non-null assertion after our checks to tell TypeScript we're sure
-      return existingFood.id as string || 'error-missing-id';
+    // If we have existing food data with a valid ID, return it
+    if (existingFoodData && 
+        typeof existingFoodData === 'object' && 
+        'id' in existingFoodData &&
+        typeof existingFoodData.id === 'string') {
+      return existingFoodData.id;
     }
 
     // Insert new food
