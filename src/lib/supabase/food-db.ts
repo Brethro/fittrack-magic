@@ -1,3 +1,4 @@
+
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
 import { 
@@ -35,7 +36,7 @@ export const foodDb = {
   // Save a food from external API to database
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
-    const { data: existingFoodData, error: lookupError } = await selectFilteredFromTable(
+    const { data: existingFood, error: lookupError } = await selectFilteredFromTable(
       supabase,
       'foods',
       'source_id',
@@ -44,12 +45,8 @@ export const foodDb = {
     ).eq('source', source).maybeSingle();
     
     // Handle the case when we found an existing food
-    // Use explicit null check to satisfy TypeScript
-    if (existingFoodData !== null && 
-        typeof existingFoodData === 'object' && 
-        'id' in existingFoodData) {
-      // Now TypeScript knows existingFoodData has an id property
-      return existingFoodData.id as string;
+    if (existingFood && existingFood.id) {
+      return existingFood.id as string;
     }
 
     // Insert new food
