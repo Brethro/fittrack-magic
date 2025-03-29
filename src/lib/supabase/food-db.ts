@@ -35,21 +35,21 @@ export const foodDb = {
   // Save a food from external API to database
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
-    const { data: existingFood } = await selectFilteredFromTable(
+    const { data: existingFood, error } = await selectFilteredFromTable(
       supabase,
       'foods',
-      'source',
-      source,
+      'source_id',
+      sourceId,
       '*'
-    ).eq('source_id', sourceId).maybeSingle();
+    ).eq('source', source).maybeSingle();
 
-    if (existingFood) {
-      // Check if we have a proper id field, if not, return a default value
+    // If we found an existing food, return its ID
+    if (existingFood && typeof existingFood === 'object' && 'id' in existingFood) {
       return existingFood.id || 'error-missing-id';
     }
 
     // Insert new food
-    const foodData: TablesInsertProps<'foods'> = {
+    const foodData: any = {
       name: food.description || food.foodName || food.product_name,
       description: food.ingredients || '',
       brand: food.brandName || food.brands || '',
@@ -63,13 +63,13 @@ export const foodDb = {
       updated_at: new Date().toISOString()
     };
 
-    const { data: newFood, error } = await insertIntoTable(
+    const { data: newFood, error: insertError } = await insertIntoTable(
       supabase,
       'foods',
       foodData
     ).select('id').single();
 
-    if (error) throw error;
+    if (insertError) throw insertError;
     if (!newFood) throw new Error("Failed to insert food");
 
     // Extract nutrition data
@@ -77,7 +77,7 @@ export const foodDb = {
                          (food.foodNutrients ? extractNutritionFromUsda(food) : {});
 
     // Insert nutrition data
-    const nutrientData: TablesInsertProps<'food_nutrients'> = {
+    const nutrientData: any = {
       food_id: newFood.id,
       calories: nutritionData.calories || 0,
       protein: nutritionData.protein || 0,

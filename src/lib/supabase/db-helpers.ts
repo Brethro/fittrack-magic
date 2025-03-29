@@ -6,7 +6,7 @@ import type { Database } from "../../types/supabase";
 export type ValidTable = 'foods' | 'food_nutrients' | 'user_favorites' | 'search_logs' | 'weight_logs';
 
 /**
- * Simplified helper functions for database operations with proper types
+ * Helper functions for database operations with proper types
  */
 
 // Helper for simple queries with type safety
@@ -23,7 +23,7 @@ export function filterByString<T extends ValidTable>(
 export function insertIntoTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: Database['public']['Tables'][T]['Insert']
+  values: any
 ) {
   return query.from(table).insert(values);
 }
@@ -32,7 +32,7 @@ export function insertIntoTable<T extends ValidTable>(
 export function updateTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
-  values: Database['public']['Tables'][T]['Update'],
+  values: any,
   column: string,
   value: string | number
 ) {
