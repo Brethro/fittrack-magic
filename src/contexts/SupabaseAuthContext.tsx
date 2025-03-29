@@ -87,11 +87,11 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     };
   }, []);
 
+  // Get the current origin dynamically for redirects
   const getRedirectUrl = () => {
-    // Use the current origin instead of hardcoding localhost
-    const currentOrigin = window.location.origin;
-    console.log('Current origin for auth redirect:', currentOrigin);
-    return `${currentOrigin}/auth/callback`;
+    const origin = window.location.origin;
+    console.log('Auth redirect URL:', `${origin}/auth/callback`);
+    return `${origin}/auth/callback`;
   };
 
   const signUp = async (email: string, password: string) => {
