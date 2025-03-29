@@ -22,7 +22,18 @@ The application uses Supabase authentication, which works as follows:
 3. The confirmation link redirects back to the application's callback URL
 4. The application processes the authentication token and logs the user in
 
-**Important**: In production, make sure your Supabase project and site URL are properly configured to ensure authentication redirects work correctly.
+### Supabase Configuration
+
+**Important**: For authentication to work correctly, you need to configure the following in your Supabase project dashboard:
+
+1. Go to Authentication > URL Configuration
+2. Set the Site URL to your production URL (e.g., https://wearabody.dev)
+3. Add all allowed redirect URLs:
+   - https://wearabody.dev/auth/callback
+   - http://localhost:3000/auth/callback (for local development)
+   - Any other domains where you host the app
+
+Without these settings, authentication redirects will not work correctly, and you'll see localhost URLs in your verification emails.
 
 ## Setup and Installation
 

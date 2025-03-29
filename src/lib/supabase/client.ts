@@ -35,6 +35,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   window.sessionStorage.setItem('VITE_SUPABASE_ANON_KEY', supabaseAnonKey);
 }
 
+// Get the current origin for redirects
+const getCurrentOrigin = (): string => {
+  return window.location.origin || 'https://wearabody.dev';
+};
+
 // Create the supabase client with explicit options
 export const supabase = createClient<Database>(
   supabaseUrl, 
@@ -44,7 +49,9 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       storageKey: 'weara-auth-token',
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      redirectTo: `${getCurrentOrigin()}/auth/callback`
     },
     global: {
       fetch: function customFetch(url: RequestInfo | URL, options?: RequestInit) {
