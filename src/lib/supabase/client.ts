@@ -63,6 +63,9 @@ export const supabase = createClient<Database>(
   }
 );
 
+// Export the supabase client directly for import in other files
+export default supabase;
+
 // Configure auth callback URL separately
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

@@ -16,7 +16,7 @@ export function filterByString<T extends ValidTable>(
   column: keyof Database['public']['Tables'][T]['Row'],
   value: string
 ) {
-  return query.from(table).eq(column as string, value);
+  return query.from(table).select().eq(column as string, value);
 }
 
 // Helper for inserting data
@@ -34,7 +34,7 @@ export function updateTable<T extends ValidTable>(
   table: T,
   values: Database['public']['Tables'][T]['Update'],
   column: keyof Database['public']['Tables'][T]['Row'],
-  value: string
+  value: string | number
 ) {
   return query.from(table).update(values).eq(column as string, value);
 }
@@ -44,7 +44,7 @@ export function deleteFromTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
   column: keyof Database['public']['Tables'][T]['Row'],
-  value: string
+  value: string | number
 ) {
   return query.from(table).delete().eq(column as string, value);
 }
@@ -63,7 +63,7 @@ export function selectFilteredFromTable<T extends ValidTable>(
   query: SupabaseClient<Database>,
   table: T,
   filterColumn: keyof Database['public']['Tables'][T]['Row'],
-  filterValue: string,
+  filterValue: string | number,
   columns: string = '*'
 ) {
   return query.from(table).select(columns).eq(filterColumn as string, filterValue);
