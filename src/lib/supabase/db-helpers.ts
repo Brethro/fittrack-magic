@@ -16,7 +16,7 @@ export function filterByString<T extends ValidTable>(
   column: string,
   value: string
 ) {
-  return query.from(table).select().eq(column, value);
+  return query.from(table).select().eq(column as any, value);
 }
 
 // Helper for inserting data
@@ -36,7 +36,7 @@ export function updateTable<T extends ValidTable>(
   column: string,
   value: string | number
 ) {
-  return query.from(table).update(values).eq(column, value);
+  return query.from(table).update(values).eq(column as any, value);
 }
 
 // Helper for deleting data
@@ -46,7 +46,7 @@ export function deleteFromTable<T extends ValidTable>(
   column: string,
   value: string | number
 ) {
-  return query.from(table).delete().eq(column, value);
+  return query.from(table).delete().eq(column as any, value);
 }
 
 // Helper for selecting data
@@ -66,5 +66,5 @@ export function selectFilteredFromTable<T extends ValidTable>(
   filterValue: string | number,
   columns: string = '*'
 ) {
-  return query.from(table).select(columns).eq(filterColumn, filterValue);
+  return query.from(table).select(columns).eq(filterColumn as any, filterValue);
 }
