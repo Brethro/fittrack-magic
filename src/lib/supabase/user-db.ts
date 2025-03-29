@@ -1,5 +1,9 @@
 
 import { supabase, fetcher } from './client';
+import { 
+  selectFilteredFromTable, 
+  deleteFromTable 
+} from './db-helpers';
 
 // Utils for user management with improved security
 export const userDb = {
@@ -41,18 +45,25 @@ export const userDb = {
       const userData: any = { userId };
       
       // Get weight logs
-      const weightLogsResponse = await supabase
-        .from('weight_logs')
-        .select('*')
-        .eq('user_id', userId);
+      const weightLogsResponse = await selectFilteredFromTable(
+        supabase,
+        'public',
+        'weight_logs',
+        'user_id',
+        userId as any
+      );
         
       userData.weightLogs = weightLogsResponse.data || [];
       
       // Get favorites
-      const favoritesResponse = await supabase
-        .from('user_favorites')
-        .select('*, foods(id, name)')
-        .eq('user_id', userId);
+      const favoritesResponse = await selectFilteredFromTable(
+        supabase,
+        'public',
+        'user_favorites',
+        'user_id',
+        userId as any,
+        '*, foods(id, name)'
+      );
         
       userData.favorites = favoritesResponse.data || [];
       
@@ -74,20 +85,26 @@ export const userDb = {
       }
       
       // Delete from weight_logs
-      const { error: weightLogsError } = await supabase
-        .from('weight_logs')
-        .delete()
-        .eq('user_id', userId);
+      const { error: weightLogsError } = await deleteFromTable(
+        supabase,
+        'public',
+        'weight_logs',
+        'user_id',
+        userId as any
+      );
       
       if (weightLogsError) {
         throw weightLogsError;
       }
       
       // Delete from user_favorites
-      const { error: favoritesError } = await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('user_id', userId);
+      const { error: favoritesError } = await deleteFromTable(
+        supabase,
+        'public',
+        'user_favorites',
+        'user_id',
+        userId as any
+      );
       
       if (favoritesError) {
         throw favoritesError;

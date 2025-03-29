@@ -1,6 +1,12 @@
 
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
+import { 
+  insertIntoTable, 
+  selectFromTable, 
+  selectFilteredFromTable 
+} from './db-helpers';
+import { TablesInsertProps } from '../../types/supabase';
 
 // Utils for food database interactions
 export const foodDb = {
@@ -17,11 +23,12 @@ export const foodDb = {
 
   // Get a food by ID
   async getFoodById(id: string) {
-    const response = await supabase
-      .from('foods')
-      .select('*, food_nutrients(*)')
-      .eq('id', id)
-      .single();
+    const response = await selectFromTable(
+      supabase,
+      'public',
+      'foods',
+      '*, food_nutrients(*)'
+    ).eq('id', id as any).single();
     
     return fetcher(Promise.resolve(response));
   },
@@ -31,35 +38,39 @@ export const foodDb = {
   // to control access, not client-side checks
   async saveFood(food: any, source: string, sourceId: string) {
     // First check if food already exists to prevent duplicates
-    const { data: existingFood } = await supabase
-      .from('foods')
-      .select('id')
-      .eq('source', source)
-      .eq('source_id', sourceId)
-      .maybeSingle();
+    const { data: existingFood } = await selectFilteredFromTable(
+      supabase,
+      'public',
+      'foods',
+      'source',
+      source as any
+    ).eq('source_id', sourceId as any).maybeSingle();
 
     if (existingFood) {
       return existingFood.id;
     }
 
     // Insert new food
-    const { data: newFood, error } = await supabase
-      .from('foods')
-      .insert({
-        name: food.description || food.foodName || food.product_name,
-        description: food.ingredients || '',
-        brand: food.brandName || food.brands || '',
-        source,
-        source_id: sourceId,
-        category: food.foodCategory || food.categories || '',
-        serving_size: food.servingSize || 100,
-        serving_unit: food.servingSizeUnit || 'g',
-        household_serving: food.householdServingFullText || '',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select('id')
-      .single();
+    const foodData: TablesInsertProps<'foods'> = {
+      name: food.description || food.foodName || food.product_name,
+      description: food.ingredients || '',
+      brand: food.brandName || food.brands || '',
+      source,
+      source_id: sourceId,
+      category: food.foodCategory || food.categories || '',
+      serving_size: food.servingSize || 100,
+      serving_unit: food.servingSizeUnit || 'g',
+      household_serving: food.householdServingFullText || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: newFood, error } = await insertIntoTable(
+      supabase,
+      'public',
+      'foods',
+      foodData
+    ).select('id').single();
 
     if (error) throw error;
 
@@ -68,7 +79,7 @@ export const foodDb = {
                          (food.foodNutrients ? extractNutritionFromUsda(food) : {});
 
     // Insert nutrition data
-    await supabase.from('food_nutrients').insert({
+    const nutrientData: TablesInsertProps<'food_nutrients'> = {
       food_id: newFood.id,
       calories: nutritionData.calories || 0,
       protein: nutritionData.protein || 0,
@@ -76,20 +87,34 @@ export const foodDb = {
       fat: nutritionData.fat || 0,
       fiber: nutritionData.fiber || 0,
       sugar: nutritionData.sugars || 0,
-      other_nutrients: {} // Empty JSON for now
-    });
+      other_nutrients: {}
+    };
+
+    await insertIntoTable(
+      supabase,
+      'public',
+      'food_nutrients',
+      nutrientData
+    );
 
     return newFood.id;
   },
 
   // Log search query
   async logSearch(query: string, source: string, resultsCount: number) {
-    await supabase.from('search_logs').insert({
+    const searchLogData: TablesInsertProps<'search_logs'> = {
       query,
       source,
       results_count: resultsCount,
       created_at: new Date().toISOString()
-    });
+    };
+
+    await insertIntoTable(
+      supabase,
+      'public',
+      'search_logs',
+      searchLogData
+    );
   },
 
   // Admin-only: Update an existing food entry
@@ -99,7 +124,7 @@ export const foodDb = {
     const response = await supabase
       .from('foods')
       .update(foodData)
-      .eq('id', foodId)
+      .eq('id', foodId as any)
       .select();
     
     return fetcher(Promise.resolve(response));
@@ -113,11 +138,18 @@ export const foodDb = {
       throw new Error("User must be authenticated to add favorites");
     }
     
-    const response = await supabase.from('user_favorites').insert({
+    const favoriteData: TablesInsertProps<'user_favorites'> = {
       user_id: userId,
       food_id: foodId,
       created_at: new Date().toISOString()
-    });
+    };
+
+    const response = await insertIntoTable(
+      supabase,
+      'public',
+      'user_favorites',
+      favoriteData
+    );
     
     return fetcher(Promise.resolve(response));
   },
@@ -130,10 +162,12 @@ export const foodDb = {
       throw new Error("User must be authenticated to view favorites");
     }
     
-    const response = await supabase
-      .from('user_favorites')
-      .select('*, foods(*, food_nutrients(*))')
-      .eq('user_id', userId);
+    const response = await selectFromTable(
+      supabase,
+      'public',
+      'user_favorites',
+      '*, foods(*, food_nutrients(*))'
+    ).eq('user_id', userId as any);
     
     return fetcher(Promise.resolve(response));
   }

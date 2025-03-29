@@ -53,6 +53,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       food_nutrients: {
         Row: {
@@ -88,6 +89,14 @@ export interface Database {
           sugar?: number
           other_nutrients?: Json
         }
+        Relationships: [
+          {
+            foreignKeyName: "food_nutrients_food_id_fkey"
+            columns: ["food_id"]
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_favorites: {
         Row: {
@@ -108,6 +117,14 @@ export interface Database {
           food_id?: string
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_food_id_fkey"
+            columns: ["food_id"]
+            referencedRelation: "foods"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       search_logs: {
         Row: {
@@ -131,6 +148,7 @@ export interface Database {
           results_count?: number
           created_at?: string
         }
+        Relationships: []
       }
       weight_logs: {
         Row: {
@@ -160,6 +178,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
     Views: {
@@ -173,3 +192,13 @@ export interface Database {
     }
   }
 }
+
+// Helper types for Supabase queries
+export type TablesInsertProps<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Insert']
+
+export type TablesUpdateProps<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Update']
+
+export type TablesProps<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Row']

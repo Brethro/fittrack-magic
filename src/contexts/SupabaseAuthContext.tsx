@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -78,6 +79,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       // Get the dynamic redirect URL
       const redirectUrl = getRedirectUrl();
       console.log('Signup redirect URL:', redirectUrl);
+      
+      // Set the redirect URL in Supabase auth config
+      supabase.auth.config.redirectTo = redirectUrl;
       
       const { data, error } = await supabase.auth.signUp({ 
         email, 
