@@ -43,10 +43,9 @@ export const foodDb = {
       '*'
     ).eq('source', source).maybeSingle();
 
-    // If we found an existing food, return its ID
-    // Use a direct non-null assertion with a guard clause pattern
-    if (existingFood) {
-      return existingFood.id ?? 'error-missing-id';
+    // If we found an existing food with a valid ID, return it
+    if (existingFood && typeof existingFood === 'object' && 'id' in existingFood) {
+      return existingFood.id || 'error-missing-id';
     }
 
     // Insert new food
