@@ -43,9 +43,13 @@ export const foodDb = {
       '*'
     ).eq('source', source).maybeSingle();
 
-    // If we found an existing food with a valid ID, return it
-    if (existingFood && typeof existingFood === 'object' && 'id' in existingFood) {
-      return existingFood.id || 'error-missing-id';
+    // Use a type guard and nullish coalescing pattern to handle the null case safely
+    // We need to check both that existingFood exists and is an object with an id property
+    if (existingFood !== null && 
+        typeof existingFood === 'object' && 
+        'id' in existingFood) {
+      // Use non-null assertion after our checks to tell TypeScript we're sure
+      return existingFood.id as string || 'error-missing-id';
     }
 
     // Insert new food
