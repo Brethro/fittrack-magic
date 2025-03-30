@@ -58,13 +58,13 @@ export function selectFromTable<T extends ValidTable>(
   return query.from(table).select(columns);
 }
 
-// Helper for selecting with filtering - updated with generic type parameter
-export function selectFilteredFromTable<T = any>(
+// Helper for selecting with filtering - properly typed
+export function selectFilteredFromTable<TData = any>(
   query: SupabaseClient<Database>,
   table: ValidTable,
   filterColumn: string,
   filterValue: string | number,
   columns: string = '*'
 ) {
-  return query.from(table).select<string, T>(columns).eq(filterColumn as any, filterValue);
+  return query.from(table).select<string, TData>(columns).eq(filterColumn as any, filterValue);
 }
