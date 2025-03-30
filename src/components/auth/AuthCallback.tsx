@@ -16,19 +16,34 @@ export function AuthCallback() {
         console.log('Auth callback processing...');
         console.log('Full URL:', window.location.href);
         
+        // Hash fragments indicate access_token is in the URL fragment (common with magic links)
+        const hasHashFragment = window.location.hash && window.location.hash.length > 1;
+        
         // Get URL parts that might contain tokens
         const hash = window.location.hash;
         const queryParams = new URLSearchParams(window.location.search);
-        const hasTokenInHash = hash && hash.includes('access_token');
-        const hasTokenInQuery = queryParams.has('token');
+        const hasTokenInHash = hash && (hash.includes('access_token') || hash.includes('error'));
+        const hasTokenInQuery = queryParams.has('token') || queryParams.has('error_description');
         
-        console.log('Auth tokens in hash:', hasTokenInHash);
+        console.log('Auth tokens in hash:', hasHashFragment);
         console.log('Auth tokens in query:', hasTokenInQuery);
         
         // For email confirmation links, we need to process the token from URL
         if (hasTokenInQuery) {
           const token = queryParams.get('token');
           const type = queryParams.get('type');
+          const errorDesc = queryParams.get('error_description');
+          
+          if (errorDesc) {
+            console.error('Error in query parameters:', errorDesc);
+            toast({
+              title: 'Authentication error',
+              description: errorDesc,
+              variant: 'destructive',
+            });
+            navigate('/splash', { replace: true });
+            return;
+          }
           
           console.log('Found token in URL, type:', type);
           
@@ -73,8 +88,44 @@ export function AuthCallback() {
           }
         }
         
+        // First try to exchange the token in case it's a magic link with hash fragment
+        if (hasHashFragment) {
+          console.log('Detected hash fragment, processing as magic link...');
+          
+          try {
+            // Use setSession to handle the fragment part
+            const { data, error } = await supabase.auth.getSession();
+            
+            if (error) {
+              console.error('Error processing hash token:', error);
+              toast({
+                title: 'Authentication error',
+                description: error.message,
+                variant: 'destructive',
+              });
+              navigate('/splash', { replace: true });
+              return;
+            }
+            
+            if (data?.session) {
+              // Success - user is logged in via hash fragment
+              console.log('Magic link authentication successful');
+              toast({
+                title: 'Authentication successful',
+                description: 'You are now signed in.',
+              });
+              navigate('/', { replace: true });
+              return;
+            } else {
+              console.log('No session found after processing hash');
+            }
+          } catch (err) {
+            console.error('Error processing hash fragment:', err);
+          }
+        }
+        
         // For OAuth redirects or token exchange, we use getSession
-        // which will automatically handle hash fragments
+        // which will automatically handle regular auth flows
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
