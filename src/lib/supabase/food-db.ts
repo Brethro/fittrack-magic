@@ -45,7 +45,6 @@ export const foodDb = {
     ).eq('source', source).maybeSingle();
     
     // Handle the case when we found an existing food - ensure proper null checking
-    // Fix TypeScript errors by strengthening null checking
     if (data !== null && typeof data === 'object' && 'id' in data && data.id !== null) {
       return data.id as string;
     }
