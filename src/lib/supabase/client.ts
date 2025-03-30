@@ -35,7 +35,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   window.sessionStorage.setItem('VITE_SUPABASE_ANON_KEY', supabaseAnonKey);
 }
 
-// Get the current origin for redirects
+// Get the current origin for redirects - FIXING HARDCODED LOCALHOST
 const getCurrentOrigin = (): string => {
   const origin = window.location.origin;
   console.log('Current origin for auth redirect:', origin);

@@ -87,10 +87,10 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     };
   }, []);
 
-  // Get the current origin dynamically for redirects
+  // Get the current origin dynamically for redirects - FIX HARDCODED LOCALHOST
   const getRedirectUrl = () => {
     const origin = window.location.origin;
-    // Ensuring we get the actual origin, not localhost
+    // Using actual origin instead of hardcoded localhost
     console.log('Auth redirect URL set to:', `${origin}/auth/callback`);
     return `${origin}/auth/callback`;
   };
@@ -107,7 +107,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         email, 
         password,
         options: {
-          emailRedirectTo: redirectUrl // Use dynamic redirect URL here
+          emailRedirectTo: redirectUrl // Using dynamic redirect URL here
         }
       });
       
