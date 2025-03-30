@@ -36,9 +36,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Get the current origin for redirects
 const getCurrentOrigin = (): string => {
+  // If forced production redirect is enabled, use production domain
   if (import.meta.env.VITE_FORCE_PRODUCTION_REDIRECT === 'true') {
     return 'https://wearabody.com';
   }
+  
+  // Otherwise use current origin, this helps with local development
   return window.location.origin;
 };
 
@@ -53,8 +56,6 @@ export const supabase = createClient<Database>(
       storageKey: 'weara-auth-token',
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // The redirectTo property needs to be in the auth.signUp and auth.signIn methods
-      // instead of here in the client initialization
     },
     global: {
       fetch: function customFetch(url: RequestInfo | URL, options?: RequestInit) {

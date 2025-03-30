@@ -16,17 +16,51 @@ export function AuthCallback() {
         console.log('Auth callback processing...');
         console.log('Full URL:', window.location.href);
         
-        // Hash fragments indicate access_token is in the URL fragment (common with magic links)
-        const hasHashFragment = window.location.hash && window.location.hash.length > 1;
-        
         // Get URL parts that might contain tokens
         const hash = window.location.hash;
+        const pathname = window.location.pathname;
         const queryParams = new URLSearchParams(window.location.search);
-        const hasTokenInHash = hash && (hash.includes('access_token') || hash.includes('error'));
+        
+        // Check if this is a callback with a code parameter (email verification flow)
+        const hasCodeParam = queryParams.has('code');
+        const hasTokenInHash = hash && hash.includes('access_token');
         const hasTokenInQuery = queryParams.has('token') || queryParams.has('error_description');
         
-        console.log('Auth tokens in hash:', hasHashFragment);
+        console.log('Auth code in query:', hasCodeParam);
+        console.log('Auth tokens in hash:', hasTokenInHash);
         console.log('Auth tokens in query:', hasTokenInQuery);
+        
+        // Handle Supabase email verification with code parameter
+        if (hasCodeParam) {
+          console.log('Found code in URL, handling email verification');
+          
+          // When there's a code parameter, let Supabase handle it
+          // The PKCE flow will automatically exchange the code for a token
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Error processing verification code:', error);
+            toast({
+              title: 'Verification error',
+              description: error.message,
+              variant: 'destructive',
+            });
+            navigate('/splash', { replace: true });
+            return;
+          }
+          
+          if (data?.session) {
+            console.log('Email verification successful');
+            toast({
+              title: 'Email verified',
+              description: 'Your email has been verified successfully.',
+            });
+            navigate('/', { replace: true });
+            return;
+          } else {
+            console.log('No session after code verification, continuing...');
+          }
+        }
         
         // For email confirmation links, we need to process the token from URL
         if (hasTokenInQuery) {
@@ -88,12 +122,12 @@ export function AuthCallback() {
           }
         }
         
-        // First try to exchange the token in case it's a magic link with hash fragment
-        if (hasHashFragment) {
+        // Handle magic link with hash fragment
+        if (hasTokenInHash) {
           console.log('Detected hash fragment, processing as magic link...');
           
           try {
-            // Use setSession to handle the fragment part
+            // Use getSession to handle the fragment part
             const { data, error } = await supabase.auth.getSession();
             
             if (error) {
@@ -124,8 +158,7 @@ export function AuthCallback() {
           }
         }
         
-        // For OAuth redirects or token exchange, we use getSession
-        // which will automatically handle regular auth flows
+        // Final fallback: check for session 
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
