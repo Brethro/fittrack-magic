@@ -145,13 +145,11 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setLoading(true);
       setError(null);
       
-      // For sign in, also set the redirectTo explicitly
+      // For sign in, we can't set redirectTo directly in options since it's not in the type
+      // Instead, we need to handle this in the AuthCallback component
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          redirectTo: getRedirectUrl() // Add redirect URL for sign in too
-        }
+        password
       });
       
       if (error) {
