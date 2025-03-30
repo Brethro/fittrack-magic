@@ -1,4 +1,3 @@
-
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
 import { 
@@ -45,7 +44,8 @@ export const foodDb = {
     ).eq('source', source).maybeSingle();
     
     // Handle the case when we found an existing food - ensure proper null checking
-    if (data && typeof data === 'object' && 'id' in data) {
+    // Note: This is the section with TypeScript errors we need to fix
+    if (data !== null && typeof data === 'object' && 'id' in data) {
       return data.id as string;
     }
 
