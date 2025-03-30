@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../types/supabase';
 
@@ -37,13 +36,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Get the current origin for redirects
 const getCurrentOrigin = (): string => {
-  if (window.location.hostname === 'localhost') {
-    // For development, return localhost
-    return window.location.origin;
-  } else {
-    // For production, return your production domain
+  if (import.meta.env.VITE_FORCE_PRODUCTION_REDIRECT === 'true') {
     return 'https://wearabody.com';
   }
+  return window.location.origin;
 };
 
 // Create the supabase client with explicit options
