@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../types/supabase';
 
@@ -36,15 +37,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Get the current origin for redirects
 const getCurrentOrigin = (): string => {
-  // Use production URL if defined, otherwise fallback to window.location.origin
-  const prodUrl = import.meta.env.VITE_PRODUCTION_URL;
-  if (prodUrl) {
-    console.log('Using production origin for auth redirect:', prodUrl);
-    return prodUrl;
+  if (window.location.hostname === 'localhost') {
+    // For development, return localhost
+    return window.location.origin;
+  } else {
+    // For production, return your production domain
+    return 'https://wearabody.com';
   }
-  const origin = window.location.origin;
-  console.log('Current origin for auth redirect:', origin);
-  return origin;
 };
 
 // Create the supabase client with explicit options
