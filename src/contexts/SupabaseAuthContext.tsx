@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, getCurrentOrigin } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
 
 // Define the context type
@@ -87,27 +86,23 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     };
   }, []);
 
-  // Get the current origin dynamically for redirects - FIX HARDCODED LOCALHOST
-  const getRedirectUrl = () => {
-    const origin = window.location.origin;
-    // Using actual origin instead of hardcoded localhost
-    console.log('Auth redirect URL set to:', `${origin}/auth/callback`);
-    return `${origin}/auth/callback`;
-  };
+  // We'll replace this with the imported function
+  // No longer needed: const getRedirectUrl = () => { ... }
 
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      // IMPORTANT: Always explicitly set the redirectTo in the signUp method
-      const redirectUrl = getRedirectUrl();
+      // Get the current origin for redirect
+      const redirectUrl = `${getCurrentOrigin()}/auth/callback`;
+      console.log('Using redirect URL for signup:', redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: redirectUrl // Using dynamic redirect URL here
+          emailRedirectTo: redirectUrl
         }
       });
       

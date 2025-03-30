@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../types/supabase';
 
@@ -35,8 +34,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   window.sessionStorage.setItem('VITE_SUPABASE_ANON_KEY', supabaseAnonKey);
 }
 
-// Get the current origin for redirects - FIXING HARDCODED LOCALHOST
+// Get the current origin for redirects
 const getCurrentOrigin = (): string => {
+  // Use production URL if defined, otherwise fallback to window.location.origin
+  const prodUrl = import.meta.env.VITE_PRODUCTION_URL;
+  if (prodUrl) {
+    console.log('Using production origin for auth redirect:', prodUrl);
+    return prodUrl;
+  }
   const origin = window.location.origin;
   console.log('Current origin for auth redirect:', origin);
   return origin;
@@ -69,6 +74,9 @@ export const supabase = createClient<Database>(
 
 // Export the supabase client directly for import in other files
 export default supabase;
+
+// Export the getCurrentOrigin function for use in other files
+export { getCurrentOrigin };
 
 // Configure auth callback URL separately
 supabase.auth.onAuthStateChange((event, session) => {
