@@ -34,14 +34,16 @@ export const foodDb = {
 
   // Save a food from external API to database
   async saveFood(food: any, source: string, sourceId: string) {
-    // First check if food already exists to prevent duplicates
-    const { data, error: lookupError } = await selectFilteredFromTable<{ id: string }>(
-      supabase,
-      'foods',
-      'source_id',
-      sourceId,
-      'id'
-    ).eq('source', source).maybeSingle();
+    // Define the expected result type
+    type FoodLookupResult = { id: string } | null;
+    
+    // First check if food already exists using direct Supabase query to avoid type issues
+    const { data, error: lookupError } = await supabase
+      .from('foods')
+      .select('id')
+      .eq('source_id', sourceId)
+      .eq('source', source)
+      .maybeSingle();
     
     // Check if data exists and has an id property
     if (data?.id != null) {

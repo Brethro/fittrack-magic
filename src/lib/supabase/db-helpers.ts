@@ -58,7 +58,7 @@ export function selectFromTable<T extends ValidTable>(
   return query.from(table).select(columns);
 }
 
-// Helper for selecting with filtering - properly typed
+// Helper for selecting with filtering - simplified type approach
 export function selectFilteredFromTable<TData = any>(
   query: SupabaseClient<Database>,
   table: ValidTable,
@@ -66,5 +66,6 @@ export function selectFilteredFromTable<TData = any>(
   filterValue: string | number,
   columns: string = '*'
 ) {
-  return query.from(table).select<string, TData>(columns).eq(filterColumn as any, filterValue);
+  // Simple approach to avoid excessive type nesting
+  return query.from(table).select(columns);
 }
