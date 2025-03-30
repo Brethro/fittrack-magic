@@ -1,4 +1,3 @@
-
 import { supabase, fetcher } from './client';
 import { extractNutritionFromUsda } from './utils';
 import { 
