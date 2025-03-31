@@ -4,12 +4,12 @@ import { useFoodLog } from "@/contexts/FoodLogContext";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Plus, Utensils } from "lucide-react";
-import { type FoodLogEntry } from "@/contexts/FoodLogContext";
+import { type FoodLogEntry as FoodLogEntryType } from "@/contexts/FoodLogContext";
 import { motion, AnimatePresence } from "framer-motion";
-import FoodLogEntry from "./FoodLogEntry";
+import FoodLogEntryComponent from "./FoodLogEntry";
 
 interface FoodLogListProps {
-  onEditEntry?: (entry: FoodLogEntry) => void;
+  onEditEntry?: (entry: FoodLogEntryType) => void;
   onAddFoodClick?: () => void;
 }
 
@@ -79,7 +79,7 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -101,7 +101,7 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -123,7 +123,7 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -145,7 +145,7 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
                 </motion.div>
               ))}
             </AnimatePresence>
