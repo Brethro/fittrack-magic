@@ -54,6 +54,11 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
     fat: entry.nutrition?.fat || 0,
   };
   
+  // Handler for the delete button
+  const handleDelete = () => {
+    onDelete(entry.id);
+  };
+  
   return (
     <div className="w-full py-3 px-3 border-b border-border/20 last:border-0 hover:bg-muted/20 transition-colors">
       <div className="flex items-center w-full gap-3">
@@ -96,7 +101,7 @@ const FoodLogEntry = ({ entry, onEdit, onDelete }: FoodLogEntryProps) => {
             variant="ghost" 
             size="icon" 
             className="h-7 w-7 text-destructive"
-            onClick={() => onDelete(entry.id)}
+            onClick={handleDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

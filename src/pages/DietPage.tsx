@@ -73,8 +73,8 @@ const DietPage = () => {
           <FoodLogSummary onDateChange={handleDateChange} />
         </div>
         
-        {/* 2. Food Log Section - adjusted height based on content */}
-        <div className={`glass-panel p-4 rounded-lg ${hasFoodEntries ? 'h-auto min-h-[600px]' : 'h-auto'}`}>
+        {/* 2. Food Log Section - fixed height */}
+        <div className="glass-panel p-4 rounded-lg h-auto">
           <FoodLog />
         </div>
       </motion.div>

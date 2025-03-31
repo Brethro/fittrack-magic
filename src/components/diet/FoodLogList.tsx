@@ -7,6 +7,7 @@ import { Plus, Utensils } from "lucide-react";
 import { type FoodLogEntry as FoodLogEntryType } from "@/contexts/FoodLogContext";
 import { motion, AnimatePresence } from "framer-motion";
 import FoodLogEntryComponent from "./FoodLogEntry";
+import { toast } from "@/hooks/use-toast";
 
 interface FoodLogListProps {
   onEditEntry?: (entry: FoodLogEntryType) => void;
@@ -14,7 +15,7 @@ interface FoodLogListProps {
 }
 
 const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
-  const { getDailyFoodLog, currentDate, getDailyTotals } = useFoodLog();
+  const { getDailyFoodLog, currentDate, getDailyTotals, deleteFoodEntry } = useFoodLog();
   
   // Get daily entries and sort by mealType
   const dailyEntries = getDailyFoodLog(currentDate);
@@ -30,6 +31,16 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
   
   // Check if there are any food entries
   const hasFoodEntries = dailyEntries.length > 0;
+  
+  // Handle delete functionality
+  const handleDeleteEntry = (id: string, foodName: string) => {
+    deleteFoodEntry(id);
+    toast({
+      title: "Food removed",
+      description: `${foodName} has been removed from your log.`,
+      duration: 3000,
+    });
+  };
   
   if (!hasFoodEntries) {
     return (
@@ -79,7 +90,11 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
+                  <FoodLogEntryComponent 
+                    entry={entry} 
+                    onEdit={() => onEditEntry?.(entry)} 
+                    onDelete={() => handleDeleteEntry(entry.id, entry.foodName)} 
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -101,7 +116,11 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
+                  <FoodLogEntryComponent 
+                    entry={entry} 
+                    onEdit={() => onEditEntry?.(entry)} 
+                    onDelete={() => handleDeleteEntry(entry.id, entry.foodName)} 
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -123,7 +142,11 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
+                  <FoodLogEntryComponent 
+                    entry={entry} 
+                    onEdit={() => onEditEntry?.(entry)} 
+                    onDelete={() => handleDeleteEntry(entry.id, entry.foodName)} 
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -145,7 +168,11 @@ const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FoodLogEntryComponent entry={entry} onEdit={() => onEditEntry?.(entry)} onDelete={() => {}} />
+                  <FoodLogEntryComponent 
+                    entry={entry} 
+                    onEdit={() => onEditEntry?.(entry)} 
+                    onDelete={() => handleDeleteEntry(entry.id, entry.foodName)} 
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>

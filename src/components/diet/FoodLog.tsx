@@ -58,12 +58,12 @@ const FoodLog = () => {
   }, []);
   
   return (
-    <div className={`flex flex-col w-full h-full relative ${!hasFoodEntries && !searchOpen ? 'max-h-[450px]' : ''}`}>
+    <div className="flex flex-col w-full h-auto">
       {!searchOpen ? (
         <>
           <Tabs 
             defaultValue="log" 
-            className="w-full flex flex-col h-full"
+            className="w-full flex flex-col"
             value={activeTab}
             onValueChange={setActiveTab}
           >
