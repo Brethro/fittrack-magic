@@ -40,8 +40,14 @@ export function WeightChart() {
     today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparisons
     
     const goalDate = new Date(userData.goalDate);
+    goalDate.setHours(0, 0, 0, 0); // Ensure goal date has time set to start of day
+    
     // Critical fix: Ensure we get the full days between today and goal date
     const totalDays = Math.max(differenceInCalendarDays(goalDate, today), 1);
+    
+    console.log("Today:", format(today, "yyyy-MM-dd"));
+    console.log("Goal date:", format(goalDate, "yyyy-MM-dd"));
+    console.log("Total days until goal:", totalDays);
     
     // Can't generate proper data for past dates
     if (totalDays <= 0) return { projectionData: [], actualData: [] };
@@ -102,22 +108,18 @@ export function WeightChart() {
       for (let day = pastDays; day > 0; day--) {
         const currentDate = addDays(today, -day);
         projectionData.push({
-          date: format(currentDate, "MMM d"),
-          projection: startWeight, // Flat line at starting weight for past dates
-          tooltipDate: format(currentDate, "MMMM d, yyyy"),
           fullDate: currentDate,
-          timestamp: currentDate.getTime() // Add timestamp for proper ordering
+          projection: startWeight, // Flat line at starting weight for past dates
+          tooltipDate: format(currentDate, "MMMM d, yyyy")
         });
       }
     }
     
     // Add today's point
     projectionData.push({
-      date: format(today, "MMM d"),
-      projection: startWeight,
-      tooltipDate: format(today, "MMMM d, yyyy"),
       fullDate: today,
-      timestamp: today.getTime() // Add timestamp for proper ordering
+      projection: startWeight,
+      tooltipDate: format(today, "MMMM d, yyyy")
     });
     
     // Calculate an adjusted daily change rate based on the goal pace
@@ -176,11 +178,9 @@ export function WeightChart() {
       
       // Push the data point with proper timestamp for ordering
       projectionData.push({
-        date: format(currentDate, "MMM d"),
-        projection: projectedWeight,
-        tooltipDate: format(currentDate, "MMMM d, yyyy"),
         fullDate: currentDate,
-        timestamp: currentDate.getTime()
+        projection: projectedWeight,
+        tooltipDate: format(currentDate, "MMMM d, yyyy")
       });
     }
     
@@ -191,21 +191,14 @@ export function WeightChart() {
       sortedWeightLog.forEach(entry => {
         const entryDate = new Date(entry.date);
         actualData.push({
-          date: format(entryDate, "MMM d"),
-          actual: entry.weight,
-          tooltipDate: format(entryDate, "MMMM d, yyyy"),
           fullDate: entryDate,
-          timestamp: entryDate.getTime() // Add timestamp for proper ordering
+          actual: entry.weight,
+          tooltipDate: format(entryDate, "MMMM d, yyyy")
         });
       });
     }
     
-    // Sort both data arrays by timestamp to ensure chronological order
-    projectionData.sort((a, b) => a.timestamp - b.timestamp);
-    actualData.sort((a, b) => a.timestamp - b.timestamp);
-    
     console.log("Generated projection data points:", projectionData.length);
-    console.log("Generated actual data:", actualData);
     
     return { projectionData, actualData };
   };
@@ -237,30 +230,25 @@ export function WeightChart() {
   };
 
   // Custom formatter for X axis ticks that includes year when crossing years
-  const formatXAxisTick = (tickItem: string) => {
-    // Find the corresponding data point to get the full date
-    const dataPoint = projectionData.find(p => p.date === tickItem);
-    if (!dataPoint) return tickItem;
-    
-    const fullDate = dataPoint.fullDate;
+  const formatXAxisTick = (dateObj: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     // If the date is in a different year than today, show year
-    if (fullDate.getFullYear() !== today.getFullYear()) {
+    if (dateObj.getFullYear() !== today.getFullYear()) {
       // Show abbreviated month and year
-      return format(fullDate, "MMM''yy");
+      return format(dateObj, "MMM''yy");
     }
     
     // For current year, just show month and day
-    return tickItem;
+    return format(dateObj, "MMM d");
   };
 
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="glass-panel p-2 text-xs">
-          <p className="font-medium">{payload[0].payload.tooltipDate}</p>
+          <p className="font-medium">{payload[0]?.payload?.tooltipDate || ""}</p>
           {payload.map((entry: any, index: number) => {
             // Only show entries with values
             if (entry.value == null) return null;
@@ -306,10 +294,12 @@ export function WeightChart() {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis 
-              dataKey="date" 
-              tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+              dataKey="fullDate"
               tickFormatter={formatXAxisTick}
-              allowDuplicatedCategory={false}
+              type="category"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
             />
             <YAxis 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
@@ -320,7 +310,7 @@ export function WeightChart() {
             />
             <RechartsTooltip content={<CustomTooltip />} />
             
-            {/* Projection line - completely separate dataset */}
+            {/* Projection line */}
             <Line 
               data={projectionData}
               type="monotone" 
@@ -334,7 +324,7 @@ export function WeightChart() {
               isAnimationActive={true}
             />
             
-            {/* Actual line - completely separate dataset */}
+            {/* Actual line */}
             <Line 
               data={actualData}
               type="monotone" 
