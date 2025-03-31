@@ -86,9 +86,6 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     };
   }, []);
 
-  // We'll replace this with the imported function
-  // No longer needed: const getRedirectUrl = () => { ... }
-
   const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -113,7 +110,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
           description: error.message,
           variant: "destructive"
         });
-        return;
+        return null;
       }
       
       toast({
@@ -121,7 +118,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         description: "Please check your email to verify your account.",
       });
       
-      // No need to set user yet - they need to verify email first
+      // Return data so the component knows signup was successful
       return data;
     } catch (err: any) {
       setError(err.message || "An error occurred during sign up");
@@ -130,6 +127,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         description: err.message || "An error occurred during sign up",
         variant: "destructive"
       });
+      return null;
     } finally {
       setLoading(false);
     }
