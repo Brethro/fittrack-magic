@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format, differenceInCalendarDays, addDays, isAfter, parseISO, compareAsc } from "date-fns";
+import { format, differenceInCalendarDays, addDays, isAfter, parseISO } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useUserData } from "@/contexts/UserDataContext";
 
@@ -65,54 +65,63 @@ export function WeightChart() {
       goalPace: userData.goalPace
     });
     
-    // Calculate if this is a realistic timeframe
-    // For weight loss: safe rate is 1-2 lbs per week (0.5-1 kg)
-    // For weight gain: safe rate is 0.5-1 lb per week (0.25-0.5 kg)
-    
-    const isMetric = userData.useMetric;
-    const weightChange = Math.abs(targetWeight - startWeight);
-    
-    // Set maximum safe rates (in pounds or kg per week)
-    let maxWeeklyRate;
-    if (isWeightGain) {
-      maxWeeklyRate = isMetric ? 0.5 : 1; // 0.5 kg or 1 lb per week for gaining
-    } else {
-      maxWeeklyRate = isMetric ? 1 : 2; // 1 kg or 2 lbs per week for losing
-    }
-    
-    // Calculate minimum reasonable number of weeks needed
-    const minWeeksNeeded = Math.ceil(weightChange / maxWeeklyRate);
-    const minDaysNeeded = minWeeksNeeded * 7;
-    
-    // Determine if we need to extend the timeline
-    const isTimelineUnrealistic = totalDays < minDaysNeeded;
-    
-    // Use either the goal date or a more realistic date based on safe weight change rates
-    const projectionEndDate = isTimelineUnrealistic ? addDays(today, minDaysNeeded) : goalDate;
-    const projectionDays = isTimelineUnrealistic ? minDaysNeeded : totalDays;
-    
     // Sort weight log by date (oldest first) for consistent charting
     const sortedWeightLog = userData.weightLog ? 
-      [...userData.weightLog].sort((a, b) => compareAsc(new Date(a.date), new Date(b.date))) : 
+      [...userData.weightLog].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : 
       [];
     
+    // Find the earliest weight entry date
+    let earliestEntryDate = today;
+    if (sortedWeightLog.length > 0) {
+      // Find the earliest date among all entries
+      const dates = sortedWeightLog.map(entry => new Date(entry.date));
+      earliestEntryDate = new Date(Math.min(...dates.map(date => date.getTime())));
+      earliestEntryDate.setHours(0, 0, 0, 0);
+    }
+    
+    // Generate projection data
+    const projectionData = [];
+    
     // Calculate daily weight change needed to reach target
-    const weightChange2 = targetWeight - startWeight; // Positive for gain, negative for loss
-    const dailyChange = weightChange2 / projectionDays;
+    const weightChange = targetWeight - startWeight; // Positive for gain, negative for loss
+    const dailyChange = weightChange / totalDays;
     
     console.log("Projection calculation:", {
       projectionStartWeight: startWeight,
       targetWeight,
-      weightChange: weightChange2,
+      weightChange,
       dailyChange,
-      orginalDays: totalDays,
-      adjustedDays: projectionDays,
-      isTimelineUnrealistic,
-      minDaysNeeded
+      remainingDays: totalDays,
+      calculatedDailyChange: dailyChange
     });
     
-    // Apply pace-specific adjustments for more accurate projections
+    // For past dates (before today), create a flat line at starting weight
+    if (earliestEntryDate < today) {
+      const pastDays = differenceInCalendarDays(today, earliestEntryDate);
+      for (let day = pastDays; day > 0; day--) {
+        const currentDate = addDays(today, -day);
+        projectionData.push({
+          date: format(currentDate, "MMM d"),
+          projection: startWeight, // Flat line at starting weight for past dates
+          tooltipDate: format(currentDate, "MMMM d, yyyy"),
+          fullDate: currentDate
+        });
+      }
+    }
+    
+    // Add today's point
+    projectionData.push({
+      date: format(today, "MMM d"),
+      projection: startWeight,
+      tooltipDate: format(today, "MMMM d, yyyy"),
+      fullDate: today
+    });
+    
+    // Calculate an adjusted daily change rate based on the goal pace
+    // This ensures aggressive goals reach the target weight by the goal date
     let adjustedDailyChange = dailyChange;
+    
+    // Apply pace-specific adjustments for more accurate projections
     if (userData.goalPace) {
       if (isWeightGain) {
         // For weight gain, adjust based on surplus percentages
@@ -147,39 +156,27 @@ export function WeightChart() {
       }
     }
     
-    // Generate a single continuous array of projection points
-    const projectionData = [];
-    
-    // Start with today's point
-    const formattedToday = {
-      date: format(today, "yyyy-MM-dd"), // Using ISO format for consistent sorting
-      displayDate: format(today, "MMM d"),
-      projection: startWeight,
-      tooltipDate: format(today, "MMMM d, yyyy"),
-      fullDate: today,
-      timestamp: today.getTime() // Add timestamp for reliable sorting
-    };
-    projectionData.push(formattedToday);
+    // Log the adjusted daily change for debugging
+    console.log("Adjusted daily change based on pace:", {
+      originalDailyChange: dailyChange,
+      adjustedDailyChange: adjustedDailyChange,
+      pace: userData.goalPace
+    });
     
     // Generate future projection points with the adjusted daily change
-    for (let day = 1; day <= projectionDays; day++) {
+    for (let day = 1; day <= totalDays; day++) {
       const currentDate = addDays(today, day);
       
       // Calculate weight with precise decimal values for this day using the adjusted rate
       const projectedWeight = startWeight + (adjustedDailyChange * day);
       
       projectionData.push({
-        date: format(currentDate, "yyyy-MM-dd"), // Using ISO format for consistent sorting
-        displayDate: format(currentDate, "MMM d"),
+        date: format(currentDate, "MMM d"),
         projection: projectedWeight,
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
-        fullDate: currentDate,
-        timestamp: currentDate.getTime() // Add timestamp for reliable sorting
+        fullDate: currentDate
       });
     }
-    
-    // Sort projection data chronologically to ensure proper line rendering
-    projectionData.sort((a, b) => a.timestamp - b.timestamp);
     
     // Generate separate data array for actual weight entries
     const actualData = [];
@@ -188,37 +185,21 @@ export function WeightChart() {
       sortedWeightLog.forEach(entry => {
         const entryDate = new Date(entry.date);
         actualData.push({
-          date: format(entryDate, "yyyy-MM-dd"), // Using ISO format for consistent sorting
-          displayDate: format(entryDate, "MMM d"),
+          date: format(entryDate, "MMM d"),
           actual: entry.weight,
           tooltipDate: format(entryDate, "MMMM d, yyyy"),
-          fullDate: entryDate,
-          timestamp: entryDate.getTime() // Add timestamp for reliable sorting
+          fullDate: entryDate
         });
       });
-      
-      // Sort actual data chronologically
-      actualData.sort((a, b) => a.timestamp - b.timestamp);
     }
     
     console.log("Generated projection data:", projectionData);
     console.log("Generated actual data:", actualData);
     
-    return { 
-      projectionData, 
-      actualData, 
-      isTimelineUnrealistic,
-      projectionEndDate
-    };
+    return { projectionData, actualData };
   };
 
-  const { 
-    projectionData, 
-    actualData, 
-    isTimelineUnrealistic, 
-    projectionEndDate 
-  } = generateChartData();
-  
+  const { projectionData, actualData } = generateChartData();
   const targetBodyFatWeight = calculateTargetWeightFromBodyFat();
 
   // Determine Y-axis range based on data
@@ -236,12 +217,9 @@ export function WeightChart() {
     const minWeight = Math.min(...allWeights);
     const maxWeight = Math.max(...allWeights);
     
-    // Increase buffer for extreme weight changes (loss or gain)
-    const weightDifference = Math.abs(maxWeight - minWeight);
-    const bufferPercent = weightDifference > 50 ? 0.15 : 0.1; // Use bigger buffer for extreme changes
-    
-    const buffer = weightDifference * bufferPercent;
-    const minValue = Math.max(0, Math.floor(minWeight - buffer)); // Ensure min is never below 0
+    // Add buffer for better visualization
+    const buffer = (maxWeight - minWeight) * 0.1;
+    const minValue = Math.floor(minWeight - buffer);
     const maxValue = Math.ceil(maxWeight + buffer);
     
     return [minValue, maxValue];
@@ -297,7 +275,7 @@ export function WeightChart() {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis 
-              dataKey="displayDate" 
+              dataKey="date" 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
               allowDuplicatedCategory={false}
             />
@@ -318,7 +296,7 @@ export function WeightChart() {
               name="projection"
               stroke="#8b5cf6" 
               strokeWidth={2}
-              dot={false} 
+              dot={{ fill: '#8b5cf6', r: 4 }}
               activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
               connectNulls={true}
               isAnimationActive={true}
@@ -365,12 +343,6 @@ export function WeightChart() {
           <p className="text-xs text-primary mt-1">
             {isWeightGain ? 'Building muscle mass' : 'Reducing body fat'}
           </p>
-          
-          {isTimelineUnrealistic && (
-            <div className="mt-1 text-xs text-amber-400">
-              Projected end: {format(projectionEndDate, "MMM d, yyyy")}
-            </div>
-          )}
         </div>
       </div>
     </div>
