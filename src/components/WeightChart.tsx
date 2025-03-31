@@ -79,9 +79,6 @@ export function WeightChart() {
       earliestEntryDate.setHours(0, 0, 0, 0);
     }
     
-    // Generate projection data
-    const projectionData = [];
-    
     // Calculate daily weight change needed to reach target
     const weightChange = targetWeight - startWeight; // Positive for gain, negative for loss
     const dailyChange = weightChange / totalDays;
@@ -95,33 +92,8 @@ export function WeightChart() {
       calculatedDailyChange: dailyChange
     });
     
-    // For past dates (before today), create a flat line at starting weight
-    if (earliestEntryDate < today) {
-      const pastDays = differenceInCalendarDays(today, earliestEntryDate);
-      for (let day = pastDays; day > 0; day--) {
-        const currentDate = addDays(today, -day);
-        projectionData.push({
-          date: format(currentDate, "MMM d"),
-          projection: startWeight, // Flat line at starting weight for past dates
-          tooltipDate: format(currentDate, "MMMM d, yyyy"),
-          fullDate: currentDate
-        });
-      }
-    }
-    
-    // Add today's point
-    projectionData.push({
-      date: format(today, "MMM d"),
-      projection: startWeight,
-      tooltipDate: format(today, "MMMM d, yyyy"),
-      fullDate: today
-    });
-    
-    // Calculate an adjusted daily change rate based on the goal pace
-    // This ensures aggressive goals reach the target weight by the goal date
-    let adjustedDailyChange = dailyChange;
-    
     // Apply pace-specific adjustments for more accurate projections
+    let adjustedDailyChange = dailyChange;
     if (userData.goalPace) {
       if (isWeightGain) {
         // For weight gain, adjust based on surplus percentages
@@ -161,6 +133,17 @@ export function WeightChart() {
       originalDailyChange: dailyChange,
       adjustedDailyChange: adjustedDailyChange,
       pace: userData.goalPace
+    });
+    
+    // FIXED APPROACH: Generate a single continuous array of projection points
+    const projectionData = [];
+    
+    // Start with today's point
+    projectionData.push({
+      date: format(today, "MMM d"),
+      projection: startWeight,
+      tooltipDate: format(today, "MMMM d, yyyy"),
+      fullDate: today
     });
     
     // Generate future projection points with the adjusted daily change
@@ -217,9 +200,12 @@ export function WeightChart() {
     const minWeight = Math.min(...allWeights);
     const maxWeight = Math.max(...allWeights);
     
-    // Add buffer for better visualization
-    const buffer = (maxWeight - minWeight) * 0.1;
-    const minValue = Math.floor(minWeight - buffer);
+    // Increase buffer for extreme weight changes (loss or gain)
+    const weightDifference = Math.abs(maxWeight - minWeight);
+    const bufferPercent = weightDifference > 50 ? 0.15 : 0.1; // Use bigger buffer for extreme changes
+    
+    const buffer = weightDifference * bufferPercent;
+    const minValue = Math.max(0, Math.floor(minWeight - buffer)); // Ensure min is never below 0
     const maxValue = Math.ceil(maxWeight + buffer);
     
     return [minValue, maxValue];
@@ -296,7 +282,7 @@ export function WeightChart() {
               name="projection"
               stroke="#8b5cf6" 
               strokeWidth={2}
-              dot={{ fill: '#8b5cf6', r: 4 }}
+              dot={false} 
               activeDot={{ fill: '#c4b5fd', r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
               connectNulls={true}
               isAnimationActive={true}
