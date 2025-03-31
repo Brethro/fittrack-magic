@@ -4,7 +4,15 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useToast } from "@/hooks/use-toast";
 import { SupabaseAuthContext } from './AuthContext';
-import { signUp as authSignUp, signIn as authSignIn, signOut as authSignOut } from './authFunctions';
+import { 
+  signUp as authSignUp, 
+  signIn as authSignIn, 
+  signOut as authSignOut,
+  updateUserPassword as authUpdatePassword,
+  updateUserEmail as authUpdateEmail,
+  sendPasswordResetEmail as authSendResetEmail,
+  deleteUserAccount as authDeleteAccount
+} from './authFunctions';
 import type { SupabaseAuthProviderProps } from './AuthContext';
 
 // Your context component implementation
@@ -73,6 +81,23 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     return authSignOut(setLoading, setError, setUser);
   };
 
+  // Add new profile management functions
+  const updateUserPassword = (currentPassword: string, newPassword: string) => {
+    return authUpdatePassword(currentPassword, newPassword, setLoading, setError);
+  };
+
+  const updateUserEmail = (newEmail: string) => {
+    return authUpdateEmail(newEmail, setLoading, setError);
+  };
+
+  const sendPasswordResetEmail = (email: string) => {
+    return authSendResetEmail(email, setLoading, setError);
+  };
+
+  const deleteUserAccount = () => {
+    return authDeleteAccount(setLoading, setError);
+  };
+
   const value = {
     user,
     loading,
@@ -80,6 +105,10 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     signUp,
     signIn,
     signOut,
+    updateUserPassword,
+    updateUserEmail,
+    sendPasswordResetEmail,
+    deleteUserAccount,
   };
 
   return (
