@@ -1,14 +1,16 @@
 
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { ToastProps } from '@/hooks/use-toast';
+import { toast as toastFunction } from "@/hooks/use-toast";
+
+type ToastFunction = typeof toastFunction;
 
 /**
  * Handles the verification code flow in the authentication callback
  */
 export const handleVerificationCode = async (
   navigate: NavigateFunction,
-  toast: (props: ToastProps) => void
+  toast: ToastFunction
 ) => {
   console.log('Found code in URL, handling email verification');
   
@@ -49,7 +51,7 @@ export const handleTokenFromQuery = async (
   type: string | null,
   errorDesc: string | null,
   navigate: NavigateFunction,
-  toast: (props: ToastProps) => void
+  toast: ToastFunction
 ) => {
   if (errorDesc) {
     console.error('Error in query parameters:', errorDesc);
@@ -112,7 +114,7 @@ export const handleTokenFromQuery = async (
  */
 export const handleHashFragment = async (
   navigate: NavigateFunction,
-  toast: (props: ToastProps) => void
+  toast: ToastFunction
 ) => {
   console.log('Detected hash fragment, processing as magic link...');
   
@@ -155,7 +157,7 @@ export const handleHashFragment = async (
  */
 export const checkSession = async (
   navigate: NavigateFunction,
-  toast: (props: ToastProps) => void
+  toast: ToastFunction
 ) => {
   const { data, error } = await supabase.auth.getSession();
   
