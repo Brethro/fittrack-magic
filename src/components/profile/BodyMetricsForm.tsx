@@ -35,6 +35,7 @@ const BodyMetricsForm: React.FC<BodyMetricsFormProps> = ({
   clearUserData,
   recalculateNutrition,
 }) => {
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -141,140 +142,143 @@ const BodyMetricsForm: React.FC<BodyMetricsFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex justify-end">
-        <div className="flex items-center space-x-2 bg-background/60 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-2 shadow-sm">
-          <span className={cn(
-            "text-sm transition-colors", 
-            form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
-          )}>
-            Imperial
-          </span>
-          <Switch 
-            checked={form.useMetric}
-            onCheckedChange={handleUnitToggle}
-            id="metric-toggle"
-          />
-          <span className={cn(
-            "text-sm transition-colors", 
-            !form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
-          )}>
-            Metric
-          </span>
-        </div>
-      </div>
-      
-      <div className="glass-panel p-4 rounded-lg space-y-4">
-        <div>
-          <Label htmlFor="age" className="flex items-center gap-1">
-            Age
-            <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="age"
-            name="age"
-            type="number"
-            placeholder="Enter your age"
-            value={form.age}
-            onChange={handleChange}
-            className="mt-1"
-          />
-        </div>
-
-        <div>
-          <Label className="flex items-center gap-1 mb-2">
-            Gender
-            <span className="text-destructive">*</span>
-          </Label>
-          <RadioGroup 
-            value={form.gender} 
-            onValueChange={handleGenderChange}
-            className="flex gap-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="male" id="gender-male" />
-              <Label htmlFor="gender-male" className="font-normal cursor-pointer">Male</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="female" id="gender-female" />
-              <Label htmlFor="gender-female" className="font-normal cursor-pointer">Female</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div>
-          <Label htmlFor="weight" className="flex items-center gap-1">
-            Weight
-            <span className="text-destructive">*</span>
-            <span className="text-muted-foreground text-sm">
-              ({form.useMetric ? "kg" : "lbs"})
+      <div className="glass-panel p-4 rounded-lg">
+        <div className="flex justify-between items-center mb-4">
+          <Label className="text-lg font-medium">Body Metrics</Label>
+          <div className="flex items-center space-x-2 bg-black/30 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1 shadow-sm">
+            <span className={cn(
+              "text-sm transition-colors", 
+              form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
+            )}>
+              Imperial
             </span>
-          </Label>
-          <Input
-            id="weight"
-            name="weight"
-            type="number"
-            step="0.1"
-            placeholder={form.useMetric ? "Enter weight in kg" : "Enter weight in lbs"}
-            value={form.weight}
-            onChange={handleChange}
-            className="mt-1"
-          />
+            <Switch 
+              checked={form.useMetric}
+              onCheckedChange={handleUnitToggle}
+              id="metric-toggle"
+            />
+            <span className={cn(
+              "text-sm transition-colors", 
+              !form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
+            )}>
+              Metric
+            </span>
+          </div>
         </div>
 
-        <div>
-          <Label className="flex items-center gap-1">
-            Height
-            <span className="text-destructive">*</span>
-          </Label>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="age" className="flex items-center gap-1">
+              Age
+              <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="age"
+              name="age"
+              type="number"
+              placeholder="Enter your age"
+              value={form.age}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label className="flex items-center gap-1 mb-2">
+              Gender
+              <span className="text-destructive">*</span>
+            </Label>
+            <RadioGroup 
+              value={form.gender} 
+              onValueChange={handleGenderChange}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="male" id="gender-male" />
+                <Label htmlFor="gender-male" className="font-normal cursor-pointer">Male</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="female" id="gender-female" />
+                <Label htmlFor="gender-female" className="font-normal cursor-pointer">Female</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div>
+            <Label htmlFor="weight" className="flex items-center gap-1">
+              Weight
+              <span className="text-destructive">*</span>
+              <span className="text-muted-foreground text-sm">
+                ({form.useMetric ? "kg" : "lbs"})
+              </span>
+            </Label>
+            <Input
+              id="weight"
+              name="weight"
+              type="number"
+              step="0.1"
+              placeholder={form.useMetric ? "Enter weight in kg" : "Enter weight in lbs"}
+              value={form.weight}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label className="flex items-center gap-1">
+              Height
+              <span className="text-destructive">*</span>
+            </Label>
+            
+            {form.useMetric ? (
+              <div className="mt-1">
+                <Input
+                  id="heightCm"
+                  name="heightCm"
+                  type="number"
+                  placeholder="Enter height in cm"
+                  value={form.heightCm}
+                  onChange={handleChange}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Input
+                  id="heightFeet"
+                  name="heightFeet"
+                  type="number"
+                  placeholder="Feet"
+                  value={form.heightFeet}
+                  onChange={handleChange}
+                />
+                <Input
+                  id="heightInches"
+                  name="heightInches"
+                  type="number"
+                  placeholder="Inches"
+                  value={form.heightInches}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
+          </div>
           
-          {form.useMetric ? (
-            <div className="mt-1">
-              <Input
-                id="heightCm"
-                name="heightCm"
-                type="number"
-                placeholder="Enter height in cm"
-                value={form.heightCm}
-                onChange={handleChange}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <Input
-                id="heightFeet"
-                name="heightFeet"
-                type="number"
-                placeholder="Feet"
-                value={form.heightFeet}
-                onChange={handleChange}
-              />
-              <Input
-                id="heightInches"
-                name="heightInches"
-                type="number"
-                placeholder="Inches"
-                value={form.heightInches}
-                onChange={handleChange}
-              />
-            </div>
-          )}
-        </div>
-        
-        <div>
-          <Label htmlFor="bodyFatPercentage" className="flex items-center gap-1">
-            Body Fat Percentage
-            <span className="text-muted-foreground text-sm">(optional)</span>
-          </Label>
-          <Input
-            id="bodyFatPercentage"
-            name="bodyFatPercentage"
-            type="number"
-            step="0.1"
-            placeholder="Enter body fat %"
-            value={form.bodyFatPercentage}
-            onChange={handleChange}
-            className="mt-1"
-          />
+          <div>
+            <Label htmlFor="bodyFatPercentage" className="flex items-center gap-1">
+              Body Fat Percentage
+              <span className="text-muted-foreground text-sm">(optional)</span>
+            </Label>
+            <Input
+              id="bodyFatPercentage"
+              name="bodyFatPercentage"
+              type="number"
+              step="0.1"
+              placeholder="Enter body fat %"
+              value={form.bodyFatPercentage}
+              onChange={handleChange}
+              className="mt-1"
+            />
+          </div>
         </div>
       </div>
       
