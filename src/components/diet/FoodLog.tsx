@@ -36,6 +36,11 @@ const FoodLog = () => {
     setActiveTab("add");
   };
 
+  // Handle the "Add Food" button click from FoodLogList
+  const handleAddFoodClick = () => {
+    setActiveTab("add");
+  };
+
   // Handle keyboard shortcut for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -82,7 +87,10 @@ const FoodLog = () => {
                 value="log" 
                 className="m-0 h-full data-[state=active]:flex data-[state=active]:flex-col"
               >
-                <FoodLogList onEditEntry={handleEditEntry} />
+                <FoodLogList 
+                  onEditEntry={handleEditEntry} 
+                  onAddFoodClick={handleAddFoodClick} 
+                />
               </TabsContent>
               
               <TabsContent 

@@ -1,20 +1,22 @@
 
-import { useState } from "react";
-import { format, isToday, isYesterday } from "date-fns";
-import { Utensils, Plus } from "lucide-react";
-import { useFoodLog, type FoodLogEntry } from "@/contexts/FoodLogContext";
-import FoodLogEntryComponent from "./FoodLogEntry";
-import { Card } from "@/components/ui/card";
+import React from "react";
+import { useFoodLog } from "@/contexts/FoodLogContext";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Plus, Utensils } from "lucide-react";
+import { type FoodLogEntry } from "@/contexts/FoodLogContext";
+import { motion, AnimatePresence } from "framer-motion";
+import FoodLogEntry from "./FoodLogEntry";
 
 interface FoodLogListProps {
   onEditEntry?: (entry: FoodLogEntry) => void;
+  onAddFoodClick?: () => void;
 }
 
-const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
-  const { currentDate, getDailyFoodLog, deleteFoodEntry, getDailyTotals } = useFoodLog();
+const FoodLogList = ({ onEditEntry, onAddFoodClick }: FoodLogListProps) => {
+  const { getDailyFoodLog, currentDate, getDailyTotals } = useFoodLog();
   
-  // Get food entries for current date
+  // Get daily entries and sort by mealType
   const dailyEntries = getDailyFoodLog(currentDate);
   const dailyTotals = getDailyTotals(currentDate);
   
@@ -26,142 +28,143 @@ const FoodLogList = ({ onEditEntry }: FoodLogListProps) => {
     snack: dailyEntries.filter(entry => entry.mealType === "snack"),
   };
   
-  // Helper function to format date header
-  const getDateHeader = () => {
-    if (isToday(currentDate)) {
-      return "Today";
-    } else if (isYesterday(currentDate)) {
-      return "Yesterday";
-    } else {
-      return format(currentDate, "EEEE, MMMM d");
-    }
-  };
+  // Check if there are any food entries
+  const hasFoodEntries = dailyEntries.length > 0;
   
-  // Handle editing a log entry
-  const handleEdit = (entry: FoodLogEntry) => {
-    if (onEditEntry) {
-      onEditEntry(entry);
-    }
-  };
-  
-  // Handle deleting a log entry
-  const handleDelete = (id: string) => {
-    deleteFoodEntry(id);
-  };
-  
-  // Meal type styling
-  const mealTypeStyles = {
-    breakfast: "text-amber-500 border-amber-500/20 bg-amber-500/5",
-    lunch: "text-green-500 border-green-500/20 bg-green-500/5",
-    dinner: "text-indigo-500 border-indigo-500/20 bg-indigo-500/5",
-    snack: "text-purple-500 border-purple-500/20 bg-purple-500/5",
-  };
+  if (!hasFoodEntries) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <div className="text-muted-foreground text-8xl mb-4">
+          <Utensils className="h-20 w-20 mx-auto opacity-20" />
+        </div>
+        <h3 className="text-xl font-semibold mb-2">No foods logged yet</h3>
+        <p className="text-muted-foreground mb-6">
+          Use the Quick Add tab to add foods to your daily log
+        </p>
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2 rounded-full px-6 border-2"
+          onClick={onAddFoodClick}
+        >
+          <Plus className="h-5 w-5" />
+          <span>Add Food</span>
+        </Button>
+      </div>
+    );
+  }
   
   return (
-    <Card className="h-full flex flex-col bg-card">
-      <div className="px-4 py-3 border-b bg-muted/30">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">{getDateHeader()}</h3>
-          <div className="text-sm font-medium">
-            {dailyTotals.calories} kcal
-          </div>
+    <div className="flex-1 overflow-y-auto border rounded-lg p-4 bg-card">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">
+          {format(currentDate, "EEEE, MMMM d")}
+        </h2>
+        <div className="text-sm">
+          <span className="font-medium">{Math.round(dailyTotals.calories)}</span>
+          <span className="text-muted-foreground ml-1">kcal</span>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto">
-        {dailyEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 px-6 text-center h-auto">
-            <Utensils className="h-10 w-10 text-muted-foreground mb-3 opacity-40" />
-            <p className="text-base font-medium">No foods logged yet</p>
-            <p className="text-xs text-muted-foreground max-w-[220px] mt-1 mb-4">
-              Use the Quick Add tab to add foods to your daily log
-            </p>
-            <Button size="sm" variant="outline" className="gap-1">
-              <Plus className="h-4 w-4" />
-              Add Food
-            </Button>
+      {/* Breakfast section */}
+      {mealGroups.breakfast.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase">Breakfast</h3>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {mealGroups.breakfast.map(entry => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        ) : (
-          <div className="w-full max-w-full">
-            {/* Breakfast */}
-            {mealGroups.breakfast.length > 0 && (
-              <div className="w-full">
-                <h4 className={`${mealTypeStyles.breakfast} font-medium px-4 py-2 text-base border-b border-border/20`}>
-                  Breakfast
-                </h4>
-                <div className="w-full">
-                  {mealGroups.breakfast.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`breakfast-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Lunch */}
-            {mealGroups.lunch.length > 0 && (
-              <div className="w-full">
-                <h4 className={`${mealTypeStyles.lunch} font-medium px-4 py-2 text-base border-b border-border/20`}>
-                  Lunch
-                </h4>
-                <div className="w-full">
-                  {mealGroups.lunch.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`lunch-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Dinner */}
-            {mealGroups.dinner.length > 0 && (
-              <div className="w-full">
-                <h4 className={`${mealTypeStyles.dinner} font-medium px-4 py-2 text-base border-b border-border/20`}>
-                  Dinner
-                </h4>
-                <div className="w-full">
-                  {mealGroups.dinner.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`dinner-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Snacks */}
-            {mealGroups.snack.length > 0 && (
-              <div className="w-full">
-                <h4 className={`${mealTypeStyles.snack} font-medium px-4 py-2 text-base border-b border-border/20`}>
-                  Snacks
-                </h4>
-                <div className="w-full">
-                  {mealGroups.snack.map((entry) => (
-                    <FoodLogEntryComponent
-                      key={`snack-${entry.id}`}
-                      entry={entry}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        </section>
+      )}
+      
+      {/* Lunch section */}
+      {mealGroups.lunch.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase">Lunch</h3>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {mealGroups.lunch.map(entry => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        )}
+        </section>
+      )}
+      
+      {/* Dinner section */}
+      {mealGroups.dinner.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase">Dinner</h3>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {mealGroups.dinner.map(entry => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
+      )}
+      
+      {/* Snack section */}
+      {mealGroups.snack.length > 0 && (
+        <section className="mb-4">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground uppercase">Snacks</h3>
+          <div className="space-y-2">
+            <AnimatePresence>
+              {mealGroups.snack.map(entry => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FoodLogEntry entry={entry} onEdit={() => onEditEntry?.(entry)} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
+      )}
+      
+      {/* Add button at the bottom of entries */}
+      <div className="flex justify-center mt-4">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2 rounded-full px-6 border-2"
+          onClick={onAddFoodClick}
+        >
+          <Plus className="h-5 w-5" />
+          <span>Add More</span>
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
