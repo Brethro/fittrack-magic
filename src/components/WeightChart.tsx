@@ -104,7 +104,8 @@ export function WeightChart() {
           date: format(currentDate, "MMM d"),
           projection: startWeight, // Flat line at starting weight for past dates
           tooltipDate: format(currentDate, "MMMM d, yyyy"),
-          fullDate: currentDate
+          fullDate: currentDate,
+          timestamp: currentDate.getTime() // Add timestamp for proper ordering
         });
       }
     }
@@ -114,7 +115,8 @@ export function WeightChart() {
       date: format(today, "MMM d"),
       projection: startWeight,
       tooltipDate: format(today, "MMMM d, yyyy"),
-      fullDate: today
+      fullDate: today,
+      timestamp: today.getTime() // Add timestamp for proper ordering
     });
     
     // Calculate an adjusted daily change rate based on the goal pace
@@ -170,11 +172,13 @@ export function WeightChart() {
       // Calculate weight with precise decimal values for this day using the adjusted rate
       const projectedWeight = startWeight + (adjustedDailyChange * day);
       
+      // Format includes the date for display but we'll use timestamp for ordering
       projectionData.push({
         date: format(currentDate, "MMM d"),
         projection: projectedWeight,
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
-        fullDate: currentDate
+        fullDate: currentDate,
+        timestamp: currentDate.getTime() // Add timestamp for proper ordering
       });
     }
     
@@ -188,10 +192,15 @@ export function WeightChart() {
           date: format(entryDate, "MMM d"),
           actual: entry.weight,
           tooltipDate: format(entryDate, "MMMM d, yyyy"),
-          fullDate: entryDate
+          fullDate: entryDate,
+          timestamp: entryDate.getTime() // Add timestamp for proper ordering
         });
       });
     }
+    
+    // Sort both data arrays by timestamp to ensure chronological order
+    projectionData.sort((a, b) => a.timestamp - b.timestamp);
+    actualData.sort((a, b) => a.timestamp - b.timestamp);
     
     console.log("Generated projection data:", projectionData);
     console.log("Generated actual data:", actualData);
@@ -223,6 +232,26 @@ export function WeightChart() {
     const maxValue = Math.ceil(maxWeight + buffer);
     
     return [minValue, maxValue];
+  };
+
+  // Custom formatter for X axis ticks that includes year when crossing years
+  const formatXAxisTick = (tickItem: string) => {
+    // Find the corresponding data point to get the full date
+    const dataPoint = projectionData.find(p => p.date === tickItem);
+    if (!dataPoint) return tickItem;
+    
+    const fullDate = dataPoint.fullDate;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // If the date is in a different year than today, show year
+    if (fullDate.getFullYear() !== today.getFullYear()) {
+      // Show abbreviated month and year
+      return format(fullDate, "MMM''yy");
+    }
+    
+    // For current year, just show month and day
+    return tickItem;
   };
 
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -277,6 +306,7 @@ export function WeightChart() {
             <XAxis 
               dataKey="date" 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+              tickFormatter={formatXAxisTick}
               allowDuplicatedCategory={false}
             />
             <YAxis 
