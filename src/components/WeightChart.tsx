@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format, differenceInCalendarDays, addDays, isAfter, parseISO } from "date-fns";
+import { format, differenceInCalendarDays, addDays, isAfter, parseISO, compareAsc } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useUserData } from "@/contexts/UserDataContext";
 
@@ -67,7 +67,7 @@ export function WeightChart() {
     
     // Sort weight log by date (oldest first) for consistent charting
     const sortedWeightLog = userData.weightLog ? 
-      [...userData.weightLog].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : 
+      [...userData.weightLog].sort((a, b) => compareAsc(new Date(a.date), new Date(b.date))) : 
       [];
     
     // Find the earliest weight entry date
@@ -135,16 +135,19 @@ export function WeightChart() {
       pace: userData.goalPace
     });
     
-    // FIXED APPROACH: Generate a single continuous array of projection points
+    // Generate a single continuous array of projection points
     const projectionData = [];
     
     // Start with today's point
-    projectionData.push({
-      date: format(today, "MMM d"),
+    const formattedToday = {
+      date: format(today, "yyyy-MM-dd"), // Using ISO format for consistent sorting
+      displayDate: format(today, "MMM d"),
       projection: startWeight,
       tooltipDate: format(today, "MMMM d, yyyy"),
-      fullDate: today
-    });
+      fullDate: today,
+      timestamp: today.getTime() // Add timestamp for reliable sorting
+    };
+    projectionData.push(formattedToday);
     
     // Generate future projection points with the adjusted daily change
     for (let day = 1; day <= totalDays; day++) {
@@ -154,12 +157,17 @@ export function WeightChart() {
       const projectedWeight = startWeight + (adjustedDailyChange * day);
       
       projectionData.push({
-        date: format(currentDate, "MMM d"),
+        date: format(currentDate, "yyyy-MM-dd"), // Using ISO format for consistent sorting
+        displayDate: format(currentDate, "MMM d"),
         projection: projectedWeight,
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
-        fullDate: currentDate
+        fullDate: currentDate,
+        timestamp: currentDate.getTime() // Add timestamp for reliable sorting
       });
     }
+    
+    // Sort projection data chronologically to ensure proper line rendering
+    projectionData.sort((a, b) => a.timestamp - b.timestamp);
     
     // Generate separate data array for actual weight entries
     const actualData = [];
@@ -168,12 +176,17 @@ export function WeightChart() {
       sortedWeightLog.forEach(entry => {
         const entryDate = new Date(entry.date);
         actualData.push({
-          date: format(entryDate, "MMM d"),
+          date: format(entryDate, "yyyy-MM-dd"), // Using ISO format for consistent sorting
+          displayDate: format(entryDate, "MMM d"),
           actual: entry.weight,
           tooltipDate: format(entryDate, "MMMM d, yyyy"),
-          fullDate: entryDate
+          fullDate: entryDate,
+          timestamp: entryDate.getTime() // Add timestamp for reliable sorting
         });
       });
+      
+      // Sort actual data chronologically
+      actualData.sort((a, b) => a.timestamp - b.timestamp);
     }
     
     console.log("Generated projection data:", projectionData);
@@ -261,7 +274,7 @@ export function WeightChart() {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis 
-              dataKey="date" 
+              dataKey="displayDate" 
               tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
               allowDuplicatedCategory={false}
             />
