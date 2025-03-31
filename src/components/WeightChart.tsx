@@ -65,31 +65,50 @@ export function WeightChart() {
       goalPace: userData.goalPace
     });
     
+    // Calculate if this is a realistic timeframe
+    // For weight loss: safe rate is 1-2 lbs per week (0.5-1 kg)
+    // For weight gain: safe rate is 0.5-1 lb per week (0.25-0.5 kg)
+    
+    const isMetric = userData.useMetric;
+    const weightChange = Math.abs(targetWeight - startWeight);
+    
+    // Set maximum safe rates (in pounds or kg per week)
+    let maxWeeklyRate;
+    if (isWeightGain) {
+      maxWeeklyRate = isMetric ? 0.5 : 1; // 0.5 kg or 1 lb per week for gaining
+    } else {
+      maxWeeklyRate = isMetric ? 1 : 2; // 1 kg or 2 lbs per week for losing
+    }
+    
+    // Calculate minimum reasonable number of weeks needed
+    const minWeeksNeeded = Math.ceil(weightChange / maxWeeklyRate);
+    const minDaysNeeded = minWeeksNeeded * 7;
+    
+    // Determine if we need to extend the timeline
+    const isTimelineUnrealistic = totalDays < minDaysNeeded;
+    
+    // Use either the goal date or a more realistic date based on safe weight change rates
+    const projectionEndDate = isTimelineUnrealistic ? addDays(today, minDaysNeeded) : goalDate;
+    const projectionDays = isTimelineUnrealistic ? minDaysNeeded : totalDays;
+    
     // Sort weight log by date (oldest first) for consistent charting
     const sortedWeightLog = userData.weightLog ? 
       [...userData.weightLog].sort((a, b) => compareAsc(new Date(a.date), new Date(b.date))) : 
       [];
     
-    // Find the earliest weight entry date
-    let earliestEntryDate = today;
-    if (sortedWeightLog.length > 0) {
-      // Find the earliest date among all entries
-      const dates = sortedWeightLog.map(entry => new Date(entry.date));
-      earliestEntryDate = new Date(Math.min(...dates.map(date => date.getTime())));
-      earliestEntryDate.setHours(0, 0, 0, 0);
-    }
-    
     // Calculate daily weight change needed to reach target
-    const weightChange = targetWeight - startWeight; // Positive for gain, negative for loss
-    const dailyChange = weightChange / totalDays;
+    const weightChange2 = targetWeight - startWeight; // Positive for gain, negative for loss
+    const dailyChange = weightChange2 / projectionDays;
     
     console.log("Projection calculation:", {
       projectionStartWeight: startWeight,
       targetWeight,
-      weightChange,
+      weightChange: weightChange2,
       dailyChange,
-      remainingDays: totalDays,
-      calculatedDailyChange: dailyChange
+      orginalDays: totalDays,
+      adjustedDays: projectionDays,
+      isTimelineUnrealistic,
+      minDaysNeeded
     });
     
     // Apply pace-specific adjustments for more accurate projections
@@ -128,13 +147,6 @@ export function WeightChart() {
       }
     }
     
-    // Log the adjusted daily change for debugging
-    console.log("Adjusted daily change based on pace:", {
-      originalDailyChange: dailyChange,
-      adjustedDailyChange: adjustedDailyChange,
-      pace: userData.goalPace
-    });
-    
     // Generate a single continuous array of projection points
     const projectionData = [];
     
@@ -150,7 +162,7 @@ export function WeightChart() {
     projectionData.push(formattedToday);
     
     // Generate future projection points with the adjusted daily change
-    for (let day = 1; day <= totalDays; day++) {
+    for (let day = 1; day <= projectionDays; day++) {
       const currentDate = addDays(today, day);
       
       // Calculate weight with precise decimal values for this day using the adjusted rate
@@ -192,10 +204,21 @@ export function WeightChart() {
     console.log("Generated projection data:", projectionData);
     console.log("Generated actual data:", actualData);
     
-    return { projectionData, actualData };
+    return { 
+      projectionData, 
+      actualData, 
+      isTimelineUnrealistic,
+      projectionEndDate
+    };
   };
 
-  const { projectionData, actualData } = generateChartData();
+  const { 
+    projectionData, 
+    actualData, 
+    isTimelineUnrealistic, 
+    projectionEndDate 
+  } = generateChartData();
+  
   const targetBodyFatWeight = calculateTargetWeightFromBodyFat();
 
   // Determine Y-axis range based on data
@@ -342,6 +365,12 @@ export function WeightChart() {
           <p className="text-xs text-primary mt-1">
             {isWeightGain ? 'Building muscle mass' : 'Reducing body fat'}
           </p>
+          
+          {isTimelineUnrealistic && (
+            <div className="mt-1 text-xs text-amber-400">
+              Projected end: {format(projectionEndDate, "MMM d, yyyy")}
+            </div>
+          )}
         </div>
       </div>
     </div>
