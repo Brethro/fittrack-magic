@@ -203,11 +203,11 @@ export const updateUserEmail = async (
     // Get the current origin for redirect
     const redirectUrl = `${getCurrentOrigin()}/auth/callback`;
     
+    // The 'options' needs to be passed separately from the UserAttributes object
     const { error } = await supabase.auth.updateUser({
-      email: newEmail,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+      email: newEmail
+    }, {
+      emailRedirectTo: redirectUrl
     });
     
     if (error) {

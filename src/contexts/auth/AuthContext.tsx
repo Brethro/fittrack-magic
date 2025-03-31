@@ -10,6 +10,10 @@ export const SupabaseAuthContext = createContext<SupabaseAuthContextType>({
   signUp: async () => {},
   signIn: async () => {},
   signOut: async () => {},
+  updateUserPassword: async () => false,
+  updateUserEmail: async () => false,
+  sendPasswordResetEmail: async () => false,
+  deleteUserAccount: async () => false,
 });
 
 // Define the props for the provider component
