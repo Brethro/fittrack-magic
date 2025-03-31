@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ import AuthCallback from "./components/auth/AuthCallback";
 
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { FoodLogProvider } from "./contexts/FoodLogContext";
-import { SupabaseAuthProvider, useAuth } from "./contexts/SupabaseAuthContext";
+import { SupabaseAuthProvider, useAuth } from "./contexts/auth";
 import { useToast } from "./hooks/use-toast";
 
 // Initialize React Query client with error handling
