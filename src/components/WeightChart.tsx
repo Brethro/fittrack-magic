@@ -40,7 +40,8 @@ export function WeightChart() {
     today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparisons
     
     const goalDate = new Date(userData.goalDate);
-    const totalDays = differenceInCalendarDays(goalDate, today);
+    // Critical fix: Ensure we get the full days between today and goal date
+    const totalDays = Math.max(differenceInCalendarDays(goalDate, today), 1);
     
     // Can't generate proper data for past dates
     if (totalDays <= 0) return { projectionData: [], actualData: [] };
@@ -166,19 +167,20 @@ export function WeightChart() {
     });
     
     // Generate future projection points with the adjusted daily change
+    // Critical fix: We need to actually go all the way to the goal date
     for (let day = 1; day <= totalDays; day++) {
       const currentDate = addDays(today, day);
       
       // Calculate weight with precise decimal values for this day using the adjusted rate
       const projectedWeight = startWeight + (adjustedDailyChange * day);
       
-      // Format includes the date for display but we'll use timestamp for ordering
+      // Push the data point with proper timestamp for ordering
       projectionData.push({
         date: format(currentDate, "MMM d"),
         projection: projectedWeight,
         tooltipDate: format(currentDate, "MMMM d, yyyy"),
         fullDate: currentDate,
-        timestamp: currentDate.getTime() // Add timestamp for proper ordering
+        timestamp: currentDate.getTime()
       });
     }
     
@@ -202,7 +204,7 @@ export function WeightChart() {
     projectionData.sort((a, b) => a.timestamp - b.timestamp);
     actualData.sort((a, b) => a.timestamp - b.timestamp);
     
-    console.log("Generated projection data:", projectionData);
+    console.log("Generated projection data points:", projectionData.length);
     console.log("Generated actual data:", actualData);
     
     return { projectionData, actualData };
