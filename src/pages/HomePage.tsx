@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, Dumbbell, LineChart, Info, UserRound } from "lucide-react";
@@ -15,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import AuthForm from "@/components/auth/AuthForm";
-import { useAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuth } from "@/contexts/auth";
 import UpcomingFeaturesCard from "@/components/UpcomingFeaturesCard";
 
 const HomePage = () => {
