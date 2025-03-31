@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -143,15 +142,24 @@ const BodyMetricsForm: React.FC<BodyMetricsFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex justify-end">
-        <div className="flex items-center glass-panel rounded-lg px-3 py-2">
-          <span className={form.useMetric ? "text-muted-foreground" : "text-foreground"}>Imperial</span>
+        <div className="flex items-center space-x-2 bg-background/60 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-2 shadow-sm">
+          <span className={cn(
+            "text-sm transition-colors", 
+            form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
+          )}>
+            Imperial
+          </span>
           <Switch 
-            className="mx-2"
             checked={form.useMetric}
             onCheckedChange={handleUnitToggle}
             id="metric-toggle"
           />
-          <span className={!form.useMetric ? "text-muted-foreground" : "text-foreground"}>Metric</span>
+          <span className={cn(
+            "text-sm transition-colors", 
+            !form.useMetric ? "text-muted-foreground" : "text-foreground font-medium"
+          )}>
+            Metric
+          </span>
         </div>
       </div>
       
